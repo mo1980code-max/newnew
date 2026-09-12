@@ -2,9 +2,9 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 34
-    namespace 'com.clock.livewallpaper'
+    namespace 'org.Allah_Clock_Live_Wallpaper'
     defaultConfig {
-        applicationId "com.clock.livewallpaper"
+        applicationId "org.Allah_Clock_Live_Wallpaper"
         minSdkVersion 19
         targetSdkVersion 34
         versionCode 1

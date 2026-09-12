@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.clock.livewallpaper.viewUtils.SquareRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<org.Allah_Clock_Live_Wallpaper.viewUtils.SquareRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layoutBackground"
     android:layout_width="match_parent"
@@ -15,9 +15,9 @@
     app:cardCornerRadius="15dp"
     app:cardUseCompatPadding="true">
 
-    <com.clock.livewallpaper.viewUtils.AnalogClock
+    <org.Allah_Clock_Live_Wallpaper.viewUtils.AnalogClock
         android:id="@+id/iv_clock"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center" />
-</com.clock.livewallpaper.viewUtils.SquareRelativeLayout>
+</org.Allah_Clock_Live_Wallpaper.viewUtils.SquareRelativeLayout>

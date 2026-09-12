@@ -28,3 +28,7 @@
 
 -dontwarn com.androidlab.bokehoverlay.**
 
+
+# Keep every class of the app package: activities, WallpaperServices and custom
+# views are referenced by fully-qualified name from AndroidManifest.xml and layout XML.
+-keep class org.Allah_Clock_Live_Wallpaper.** { *; }

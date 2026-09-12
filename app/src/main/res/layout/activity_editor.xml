@@ -11,19 +11,19 @@
         android:clickable="true"
         android:focusable="true" />
 
-    <com.clock.livewallpaper.viewUtils.AnalogClock
+    <org.Allah_Clock_Live_Wallpaper.viewUtils.AnalogClock
         android:id="@+id/analogClock"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone" />
 
-    <com.clock.livewallpaper.viewUtils.TextClockPreview
+    <org.Allah_Clock_Live_Wallpaper.viewUtils.TextClockPreview
         android:id="@+id/textClockPreview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
-    <com.clock.livewallpaper.viewUtils.SmartClockPreview
+    <org.Allah_Clock_Live_Wallpaper.viewUtils.SmartClockPreview
         android:id="@+id/smartClockPreview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

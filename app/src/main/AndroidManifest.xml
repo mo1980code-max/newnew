@@ -13,7 +13,7 @@
 
 
     <application
-        android:name="com.clock.livewallpaper.AppClass"
+        android:name="org.Allah_Clock_Live_Wallpaper.AppClass"
         android:allowBackup="true"
         android:icon="@drawable/icon200"
         android:label="@string/app_name"
@@ -21,14 +21,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name="com.clock.livewallpaper.activity.ClockCardActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.WallpaperCategoryActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.ClockFuntionActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.SetWallpaperActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.WallpaperActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.EditorActivity" />
+        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.ClockCardActivity" />
+        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.WallpaperCategoryActivity" />
+        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.ClockFuntionActivity" />
+        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.SetWallpaperActivity" />
+        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.WallpaperActivity" />
+        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.EditorActivity" />
         <activity
-            android:name="com.clock.livewallpaper.activity.MainActivity"
+            android:name="org.Allah_Clock_Live_Wallpaper.activity.MainActivity"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -38,7 +38,7 @@
         </activity>
 
         <service
-            android:name="com.clock.livewallpaper.LiveClockWallpaper"
+            android:name="org.Allah_Clock_Live_Wallpaper.LiveClockWallpaper"
             android:enabled="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_WALLPAPER"
@@ -51,7 +51,7 @@
                 android:resource="@xml/bosswallpaper" />
         </service>
         <service
-            android:name="com.clock.livewallpaper.CustomWallpaper"
+            android:name="org.Allah_Clock_Live_Wallpaper.CustomWallpaper"
             android:enabled="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_WALLPAPER"
