@@ -6,6 +6,8 @@ import android.graphics.Canvas;
 import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.os.Looper;
+
+import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 import android.service.wallpaper.WallpaperService;
 import android.view.SurfaceHolder;
 import android.view.ViewGroup;
@@ -20,6 +22,7 @@ public class CustomWallpaper extends WallpaperService {
     private Context context;
     int height;
     protected ImageView imageView;
+    protected WallpaperOverlayView overlayView;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     TinyDB tinyDB;
     protected WidgetGroup widgetGroup;
@@ -44,6 +47,8 @@ public class CustomWallpaper extends WallpaperService {
         this.widgetGroup.setLayoutParams(new LinearLayout.LayoutParams(-1, -1));
         this.widgetGroup.setAddStatesFromChildren(true);
         this.widgetGroup.addView(this.imageView);
+        this.overlayView = new WallpaperOverlayView(context);
+        this.widgetGroup.addView(this.overlayView);
     }
 
     @Override
@@ -182,6 +187,7 @@ public class CustomWallpaper extends WallpaperService {
             CustomWallpaper.this.widgetGroup.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
             CustomWallpaper.this.imageView.setImageBitmap(BitmapFactory.decodeFile(CustomWallpaper.this.tinyDB.getString("isWallpaper")));
             CustomWallpaper.this.imageView.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
+            CustomWallpaper.this.overlayView.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
             CustomWallpaper.this.widgetGroup.draw(canvas);
         }
     }

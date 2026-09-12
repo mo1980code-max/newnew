@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Kaaba cube with its golden band -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M4,7 L12,3 L20,7 L20,18 L12,22 L4,18 Z" />
+    <path
+        android:fillColor="#FFD4AF37"
+        android:pathData="M4,9.2 L12,5.4 L20,9.2 L20,10.8 L12,7 L4,10.8 Z" />
+</vector>

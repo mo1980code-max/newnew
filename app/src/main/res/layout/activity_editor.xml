@@ -30,6 +30,11 @@
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
+    <org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView
+        android:id="@+id/overlayPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/seekBar"
         android:layout_width="match_parent"
@@ -173,6 +178,15 @@
             android:layout_weight="1"
             android:padding="15dp"
             android:src="@drawable/ic_background" />
+
+        <ImageView
+            android:id="@+id/ivOptions"
+            android:contentDescription="@string/cd_options"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="15dp"
+            android:src="@drawable/ic_options" />
 
         <ImageView
             android:id="@+id/btn_ok"

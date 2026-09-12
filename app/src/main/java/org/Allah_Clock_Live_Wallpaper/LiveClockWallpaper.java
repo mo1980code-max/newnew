@@ -22,6 +22,7 @@ import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.AnalogClock;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.SmartClockPreview;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.TextClockPreview;
+import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 
 
 public class LiveClockWallpaper extends WallpaperService {
@@ -33,6 +34,7 @@ public class LiveClockWallpaper extends WallpaperService {
     private int mClockSize;
     private int mHalfWidth;
     protected SmartClockPreview smartClockPreview;
+    protected WallpaperOverlayView overlayView;
     TinyDB tinyDB;
     protected WidgetGroup widgetGroup;
     int width;
@@ -67,6 +69,8 @@ public class LiveClockWallpaper extends WallpaperService {
         this.imageViewBase.setVisibility(View.GONE);
         this.widgetGroup.addView(this.cat1Clock);
         this.widgetGroup.addView(this.smartClockPreview);
+        this.overlayView = new WallpaperOverlayView(context);
+        this.widgetGroup.addView(this.overlayView);
     }
 
     @Override
@@ -231,6 +235,7 @@ public class LiveClockWallpaper extends WallpaperService {
                 LiveClockWallpaper.this.imageView.setBackgroundColor(LiveClockWallpaper.this.tinyDB.getInt("bgColor"));
             }
             LiveClockWallpaper.this.imageView.layout(0, 0, LiveClockWallpaper.this.width, LiveClockWallpaper.this.height);
+            LiveClockWallpaper.this.overlayView.layout(0, 0, LiveClockWallpaper.this.width, LiveClockWallpaper.this.height);
             if (LiveClockWallpaper.this.tinyDB.getInt("clockType") == 0) {
                 LiveClockWallpaper.this.imageViewBase.setClock(clocks);
                 LiveClockWallpaper.this.imageViewBase.setClockSize((float) LiveClockWallpaper.this.mClockSize);
