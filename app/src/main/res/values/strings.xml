@@ -88,6 +88,11 @@
     <string name="options_hint">The Hijri date appears at the top of the live wallpaper and a short dhikr rotates at the bottom every few hours.</string>
     <string name="hijri_format">%1$d %2$s %3$d AH</string>
 
+    <!-- Home screen widgets -->
+    <string name="widget_name_square">Allah Clock 2×2</string>
+    <string name="widget_name_wide">Allah Clock 4×2</string>
+    <string name="widget_desc">Your chosen clock design with the Hijri date and a rotating dhikr. Refreshes once a minute, far lighter on battery than the live wallpaper.</string>
+
     <string name="privacy_settings">Privacy settings</string>
     <string name="privacy_settings_content_description">Change your advertising and privacy choices</string>
 
