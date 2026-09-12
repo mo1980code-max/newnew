@@ -11,7 +11,7 @@
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
-# ── Gson (wallpapernew.json -> model classes) ──────────────────────────────
+# ── Gson (TinyDB persists the selected Clocks model) ───────────────────────
 -keep class org.Allah_Clock_Live_Wallpaper.model.** { *; }
 -keepclassmembers,allowobfuscation class * {
     @com.google.gson.annotations.SerializedName <fields>;
@@ -30,9 +30,6 @@
 -dontwarn com.google.android.ump.**
 
 # ── OkDownload / OkHttp / Okio ────────────────────────────────────────────
--keep class com.liulishuo.okdownload.** { *; }
--dontwarn com.liulishuo.okdownload.**
--dontwarn okhttp3.**
 -dontwarn okio.**
 -dontwarn org.slf4j.**
 -dontwarn org.conscrypt.**

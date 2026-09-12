@@ -9,27 +9,24 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
-
 import org.Allah_Clock_Live_Wallpaper.R;
-import org.Allah_Clock_Live_Wallpaper.model.ImageUrlsItem;
-import org.Allah_Clock_Live_Wallpaper.model.ResponseWallpaperItem;
+import org.Allah_Clock_Live_Wallpaper.model.WallpaperCategory;
 
 import java.util.List;
 
-/** Wallpaper category grid. */
-public class CategoryWallpaperAdapter extends RecyclerView.Adapter<CategoryWallpaperAdapter.ViewHolder> {
+/** Wallpaper category grid. Cover image and title both come from bundled resources. */
+public class CategoryWallpaperAdapter
+        extends RecyclerView.Adapter<CategoryWallpaperAdapter.ViewHolder> {
 
     private ClickListener clickListener;
-    private final List<ResponseWallpaperItem> imagesItems;
+    private final List<WallpaperCategory> items;
 
     public interface ClickListener {
-        void setClick(ResponseWallpaperItem responseWallpaperItem);
+        void setClick(int position);
     }
 
-    public CategoryWallpaperAdapter(List<ResponseWallpaperItem> list) {
-        this.imagesItems = list;
+    public CategoryWallpaperAdapter(List<WallpaperCategory> list) {
+        this.items = list;
     }
 
     public ClickListener getClickListener() {
@@ -60,43 +57,22 @@ public class CategoryWallpaperAdapter extends RecyclerView.Adapter<CategoryWallp
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, final int i) {
-        ResponseWallpaperItem item = this.imagesItems.get(i);
-        String thumbnail = firstImageUrl(item);
-
-        Glide.with(viewHolder.viewStub.getContext())
-                .load(thumbnail)
-                .apply(new RequestOptions().override(600, 600).centerCrop())
-                .placeholder(R.drawable.placeholder)
-                .error(R.drawable.placeholder)
-                .into(viewHolder.viewStub);
-
-        viewHolder.textName.setText(item.getCategoryName());
+        WallpaperCategory category = this.items.get(i);
+        viewHolder.viewStub.setImageResource(category.getCoverRes());
+        viewHolder.textName.setText(category.getTitleRes());
 
         viewHolder.viewStub.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (CategoryWallpaperAdapter.this.clickListener != null) {
-                    CategoryWallpaperAdapter.this.clickListener.setClick(
-                            CategoryWallpaperAdapter.this.imagesItems.get(i));
+                    CategoryWallpaperAdapter.this.clickListener.setClick(i);
                 }
             }
         });
     }
 
-    /** Guards against a category that ships without any image url. */
-    private static String firstImageUrl(ResponseWallpaperItem item) {
-        if (item == null) {
-            return null;
-        }
-        List<ImageUrlsItem> urls = item.getImageUrls();
-        if (urls == null || urls.isEmpty()) {
-            return null;
-        }
-        return urls.get(0).getImageUrl();
-    }
-
     @Override
     public int getItemCount() {
-        return this.imagesItems == null ? 0 : this.imagesItems.size();
+        return this.items == null ? 0 : this.items.size();
     }
 }
