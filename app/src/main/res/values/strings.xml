@@ -89,6 +89,18 @@
     <string name="options_hint">The Hijri date appears at the top of the live wallpaper and a short dhikr rotates at the bottom every few hours. Power saver keeps the wallpaper redraw at one frame per second; switch it off for a continuously sweeping second hand, which looks smoother but uses noticeably more battery.</string>
     <string name="hijri_format">%1$d %2$s %3$d AH</string>
 
+    <!-- Floating tasbeeh -->
+    <string name="cd_tasbeeh">Start or stop the floating tasbeeh</string>
+    <string name="tasbeeh_started">Floating tasbeeh is on — tap it to count</string>
+    <string name="tasbeeh_stopped">Floating tasbeeh stopped</string>
+    <string name="tasbeeh_permission_needed">Allow “Display over other apps” so the tasbeeh can float above other apps</string>
+    <string name="tasbeeh_locked">Counter locked</string>
+    <string name="tasbeeh_unlocked">Counter unlocked</string>
+    <string name="tasbeeh_reset_done">Counter reset to zero</string>
+    <string name="tasbeeh_lock_glyph">🔒</string>
+    <string name="tasbeeh_count_content_description">Dhikr count</string>
+    <string name="tasbeeh_reset_content_description">Reset the counter, long press</string>
+
     <!-- Home screen widgets -->
     <string name="widget_name_square">Allah Clock 2×2</string>
     <string name="widget_name_wide">Allah Clock 4×2</string>

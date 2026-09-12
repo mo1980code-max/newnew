@@ -13,6 +13,13 @@
       needed on any API level. Fewer permissions = fewer Play Console questions.
     -->
 
+    <!--
+      Only used when the user explicitly switches the floating tasbeeh on from the home
+      screen; the app never requests it silently and never starts the overlay by itself.
+    -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <!-- Required by the Google Mobile Ads SDK for the Data Safety form. -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
@@ -74,6 +81,10 @@
           a single non-waking alarm, plus instant refreshes on screen-on / time changes.
           "keyguard" is declared so OEMs that still offer lock-screen placement can use it.
         -->
+        <service
+            android:name=".service.FloatingTasbeehService"
+            android:exported="false" />
+
         <receiver
             android:name=".widget.ClockWidgetSquare"
             android:exported="true"

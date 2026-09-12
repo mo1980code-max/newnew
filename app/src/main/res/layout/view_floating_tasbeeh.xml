@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tasbeehRoot"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <FrameLayout
+        android:layout_width="92dp"
+        android:layout_height="92dp"
+        android:background="@drawable/bg_tasbeeh_circle">
+
+        <TextView
+            android:id="@+id/tasbeehCount"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/tasbeeh_count_content_description"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="0"
+            android:textColor="@color/textColor"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tasbeehLockBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="8dp"
+            android:text="@string/tasbeeh_lock_glyph"
+            android:textColor="@color/textColor"
+            android:textSize="11sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/tasbeehReset"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:layout_gravity="end|bottom"
+        android:background="@drawable/bg_tasbeeh_reset"
+        android:contentDescription="@string/tasbeeh_reset_content_description"
+        android:padding="6dp"
+        android:src="@drawable/ic_tasbeeh_reset" />
+</FrameLayout>

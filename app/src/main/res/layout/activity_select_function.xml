@@ -20,6 +20,20 @@
 
 
             <ImageView
+                android:id="@+id/tasbeeh"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/cd_tasbeeh"
+                android:padding="5dp"
+                android:src="@drawable/ic_tasbeeh"
+                app:tint="@color/adBg" />
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="?attr/actionBarSize"
+                android:padding="5dp" />
+
+            <ImageView
                 android:id="@+id/qibla"
                 android:layout_width="40dp"
                 android:layout_height="40dp"

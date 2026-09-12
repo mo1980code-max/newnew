@@ -3,16 +3,20 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
+import android.provider.Settings;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.ads.AdManager;
+import org.Allah_Clock_Live_Wallpaper.service.FloatingTasbeehService;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
 /**
@@ -32,6 +36,16 @@ public class MainActivity extends AppCompatActivity {
     private ImageView share;
     private ImageView privacy;
     private ImageView qibla;
+    private ImageView tasbeeh;
+
+    /** Returns from the “display over other apps” settings screen. */
+    private final ActivityResultLauncher<Intent> overlayLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (Settings.canDrawOverlays(this)) {
+                            startTasbeehService();
+                        }
+                    });
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -67,11 +81,14 @@ public class MainActivity extends AppCompatActivity {
         this.share = findViewById(R.id.share);
         this.privacy = findViewById(R.id.privacy);
         this.qibla = findViewById(R.id.qibla);
+        this.tasbeeh = findViewById(R.id.tasbeeh);
 
         this.privacy.setOnClickListener(v -> AdManager.showPrivacyOptions(MainActivity.this));
 
         this.qibla.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, QiblaActivity.class)));
+
+        this.tasbeeh.setOnClickListener(v -> toggleTasbeeh());
 
         this.rate.setOnClickListener(v -> {
             String packageName = getPackageName();
@@ -103,5 +120,41 @@ public class MainActivity extends AppCompatActivity {
 
         this.frameWallpaper.setOnClickListener(view ->
                 startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class)));
+    }
+
+    /**
+     * The floating tasbeeh is strictly opt-in: it never starts by itself, and the sensitive
+     * SYSTEM_ALERT_WINDOW permission is only requested here, on an explicit user tap.
+     */
+    private void toggleTasbeeh() {
+        if (FloatingTasbeehService.isRunning()) {
+            stopService(new Intent(this, FloatingTasbeehService.class));
+            Toast.makeText(this, R.string.tasbeeh_stopped, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (Settings.canDrawOverlays(this)) {
+            startTasbeehService();
+            return;
+        }
+        Toast.makeText(this, R.string.tasbeeh_permission_needed, Toast.LENGTH_LONG).show();
+        try {
+            this.overlayLauncher.launch(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName())));
+        } catch (Throwable t) {
+            try {
+                this.overlayLauncher.launch(
+                        new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    private void startTasbeehService() {
+        try {
+            startService(new Intent(this, FloatingTasbeehService.class));
+            Toast.makeText(this, R.string.tasbeeh_started, Toast.LENGTH_SHORT).show();
+        } catch (Throwable t) {
+            Toast.makeText(this, R.string.tasbeeh_stopped, Toast.LENGTH_LONG).show();
+        }
     }
 }
