@@ -12,7 +12,6 @@ import android.os.Build;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
-import androidx.core.view.InputDeviceCompat;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
@@ -139,12 +138,12 @@ public class SmartClockPreview extends View {
         this.mPaintDigital_time_Hour.setAntiAlias(true);
         TextPaint textPaint5 = new TextPaint();
         this.mPaintDigital_time_Min = textPaint5;
-        textPaint5.setColor(InputDeviceCompat.SOURCE_ANY);
+        textPaint5.setColor(Color.WHITE);
         this.mPaintDigital_time_Min.setTextAlign(Paint.Align.CENTER);
         this.mPaintDigital_time_Min.setAntiAlias(true);
         TextPaint textPaint6 = new TextPaint();
         this.mPaintDigital_time_Colon = textPaint6;
-        textPaint6.setColor(InputDeviceCompat.SOURCE_ANY);
+        textPaint6.setColor(Color.WHITE);
         this.mPaintDigital_time_Colon.setTextAlign(Paint.Align.CENTER);
         this.mPaintDigital_time_Colon.setAntiAlias(true);
         setTextFace();

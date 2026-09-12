@@ -6,6 +6,7 @@
 
     <ImageView
         android:id="@+id/imageView"
+        android:contentDescription="@string/cd_wallpaper_preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clickable="true"
@@ -66,7 +67,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
-                android:text="Color1" />
+                android:text="@string/color_1" />
         </LinearLayout>
 
         <LinearLayout
@@ -81,7 +82,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
-                android:text="Color2" />
+                android:text="@string/color_2" />
         </LinearLayout>
 
         <LinearLayout
@@ -91,6 +92,7 @@
 
             <ImageView
                 android:id="@+id/icDone"
+                android:contentDescription="@string/cd_done"
                 android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:layout_marginRight="10dp"
@@ -103,12 +105,13 @@
         android:id="@+id/layoutBottom"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_above="@+id/adContainer"
+        android:layout_alignParentBottom="true"
         android:background="@color/appColor"
         android:orientation="horizontal">
 
         <ImageView
             android:id="@+id/ivZoomOut"
+                android:contentDescription="@string/cd_zoom_out"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -117,6 +120,7 @@
 
         <ImageView
             android:id="@+id/ivZoomIn"
+                android:contentDescription="@string/cd_zoom_in"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -125,6 +129,7 @@
 
         <ImageView
             android:id="@+id/ivCenter"
+                android:contentDescription="@string/cd_center"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -133,6 +138,7 @@
 
         <ImageView
             android:id="@+id/ivColor"
+                android:contentDescription="@string/cd_background_color"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -142,6 +148,7 @@
 
         <ImageView
             android:id="@+id/ivTextColor"
+                android:contentDescription="@string/cd_text_color"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -151,6 +158,7 @@
 
         <ImageView
             android:id="@+id/ivGallery"
+                android:contentDescription="@string/cd_gallery"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -159,6 +167,7 @@
 
         <ImageView
             android:id="@+id/ivBackground"
+                android:contentDescription="@string/cd_backgrounds"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -167,16 +176,11 @@
 
         <ImageView
             android:id="@+id/btn_ok"
+                android:contentDescription="@string/cd_apply_wallpaper"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:padding="15dp"
             android:src="@drawable/ic_done" />
     </LinearLayout>
-
-    <RelativeLayout
-        android:id="@+id/adContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true" />
 </RelativeLayout>

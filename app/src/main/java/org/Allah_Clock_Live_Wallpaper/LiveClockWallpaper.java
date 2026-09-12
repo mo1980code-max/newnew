@@ -1,11 +1,13 @@
 package org.Allah_Clock_Live_Wallpaper;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PorterDuff;
 import android.os.Handler;
+import android.os.Looper;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -14,7 +16,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import androidx.core.view.InputDeviceCompat;
 
 import org.Allah_Clock_Live_Wallpaper.model.Clocks;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
@@ -35,7 +36,7 @@ public class LiveClockWallpaper extends WallpaperService {
     TinyDB tinyDB;
     protected WidgetGroup widgetGroup;
     int width;
-    private final Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
     private float mClockPosX = -1.0f;
     private float mClockPosY = -1.0f;
 
@@ -248,7 +249,7 @@ public class LiveClockWallpaper extends WallpaperService {
             } else if (LiveClockWallpaper.this.tinyDB.getInt("clockType") == 2) {
                 LiveClockWallpaper.this.cat1Clock.layout(0, 0, LiveClockWallpaper.this.width, LiveClockWallpaper.this.height);
                 LiveClockWallpaper.this.cat1Clock.setTextClockPosition(i);
-                LiveClockWallpaper.this.cat1Clock.setColors(LiveClockWallpaper.this.tinyDB.getInt("textColor1", -1), LiveClockWallpaper.this.tinyDB.getInt("textColor2", InputDeviceCompat.SOURCE_ANY));
+                LiveClockWallpaper.this.cat1Clock.setColors(LiveClockWallpaper.this.tinyDB.getInt("textColor1", -1), LiveClockWallpaper.this.tinyDB.getInt("textColor2", Color.WHITE));
                 LiveClockWallpaper.this.cat1Clock.config(LiveClockWallpaper.this.mClockPosX, LiveClockWallpaper.this.mClockPosY, LiveClockWallpaper.this.mClockSize * 2);
                 LiveClockWallpaper.this.imageViewBase.setVisibility(View.GONE);
                 LiveClockWallpaper.this.smartClockPreview.setVisibility(View.GONE);

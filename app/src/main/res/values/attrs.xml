@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!--
+      AnalogClock.handleAttrs() reads R.styleable.CustomAnalogClock. An *empty*
+      declare-styleable produces a zero-length int[] which makes TypedArray.hasValue(0)
+      read out of bounds on some platform versions. Declaring one attribute keeps the
+      array non-empty; it is never set from XML, so hasValue(0) stays false and the
+      default init() path runs exactly as before.
+    -->
     <declare-styleable name="CustomAnalogClock">
-
-
+        <attr name="clockAutoInitialise" format="boolean" />
     </declare-styleable>
+
 </resources>

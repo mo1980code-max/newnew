@@ -20,11 +20,27 @@
 
 
             <ImageView
+                android:id="@+id/privacy"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/privacy_settings_content_description"
+                android:padding="5dp"
+                android:src="@drawable/ic_privacy_shield"
+                android:visibility="gone"
+                app:tint="@color/adBg" />
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="?attr/actionBarSize"
+                android:padding="5dp" />
+
+            <ImageView
                 android:id="@+id/rateus"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:contentDescription="@string/cd_rate"
                 android:src="@drawable/star"
-                app:tint="@color/adBg"></ImageView>
+                app:tint="@color/adBg" />
 
             <ImageView
                 android:layout_width="10dp"
@@ -35,9 +51,10 @@
                 android:id="@+id/share"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:contentDescription="@string/share_application"
                 android:padding="5dp"
                 android:src="@drawable/ic_share"
-                app:tint="@color/adBg"></ImageView>
+                app:tint="@color/adBg" />
 
         </LinearLayout>
 
@@ -91,7 +108,7 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/myfont"
                 android:gravity="center"
-                android:text="Android 12 Clock"
+                android:text="@string/tile_android_clock"
                 android:textColor="@color/textColor"
                 android:textSize="20sp" />
 
@@ -131,7 +148,7 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/myfont"
                 android:gravity="center"
-                android:text="Wallpaper"
+                android:text="@string/title_wallpaper"
                 android:textColor="@color/textColor"
                 android:textSize="20sp" />
 
@@ -148,21 +165,5 @@
                     android:src="@drawable/wallpaper_logo" />
             </LinearLayout>
         </LinearLayout>
-    </FrameLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <RelativeLayout
-            android:id="@+id/bannerAd"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_gravity="center">
-
-
-        </RelativeLayout>
     </FrameLayout>
 </LinearLayout>

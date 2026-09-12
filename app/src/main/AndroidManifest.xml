@@ -1,48 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-   >
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 
+    <!--
+      Storage permissions were removed on purpose.
+      Picked gallery images are copied into app-private storage and wallpapers are
+      downloaded into getExternalCacheDir(), so no runtime storage permission is
+      needed on any API level. Fewer permissions = fewer Play Console questions.
+    -->
+
+    <!-- Required by the Google Mobile Ads SDK for the Data Safety form. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
     <application
-        android:name="org.Allah_Clock_Live_Wallpaper.AppClass"
+        android:name=".AppClass"
         android:allowBackup="true"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@drawable/icon200"
         android:label="@string/app_name"
-        android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:targetApi="33">
 
-        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.ClockCardActivity" />
-        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.WallpaperCategoryActivity" />
-        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.ClockFuntionActivity" />
-        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.SetWallpaperActivity" />
-        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.WallpaperActivity" />
-        <activity android:name="org.Allah_Clock_Live_Wallpaper.activity.EditorActivity" />
         <activity
-            android:name="org.Allah_Clock_Live_Wallpaper.activity.MainActivity"
+            android:name=".activity.MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".activity.ClockFuntionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.ClockCardActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.WallpaperCategoryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.WallpaperActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.SetWallpaperActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.EditorActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+
         <service
-            android:name="org.Allah_Clock_Live_Wallpaper.LiveClockWallpaper"
+            android:name=".LiveClockWallpaper"
             android:enabled="true"
+            android:exported="true"
             android:label="@string/app_name"
-            android:permission="android.permission.BIND_WALLPAPER"
-            android:exported="true">
+            android:permission="android.permission.BIND_WALLPAPER">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
             </intent-filter>
@@ -50,12 +81,13 @@
                 android:name="android.service.wallpaper"
                 android:resource="@xml/bosswallpaper" />
         </service>
+
         <service
-            android:name="org.Allah_Clock_Live_Wallpaper.CustomWallpaper"
+            android:name=".CustomWallpaper"
             android:enabled="true"
+            android:exported="true"
             android:label="@string/app_name"
-            android:permission="android.permission.BIND_WALLPAPER"
-            android:exported="true">
+            android:permission="android.permission.BIND_WALLPAPER">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
             </intent-filter>
@@ -73,12 +105,22 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
-        <meta-data
-            android:name="com.google.android.gms.ads.AD_MANAGER_APP"
-            android:value="true" />
+
+        <!--
+          AdMob application id.
+          "com.google.android.gms.ads.AD_MANAGER_APP" was removed: it tells the SDK the
+          app is an Ad Manager (DFP) publisher, which makes plain AdMob ad units fail.
+          Keep this value in sync with AdConfig.ADMOB_APP_ID.
+        -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+            android:value="true" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
+            android:value="true" />
     </application>
 
 </manifest>

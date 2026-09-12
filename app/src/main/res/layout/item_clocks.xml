@@ -20,4 +20,26 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center" />
+
+    <!-- Premium (golden) clock markers – hidden for free entries -->
+    <View
+        android:id="@+id/premiumOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/premiumOverlay"
+        android:clickable="false"
+        android:focusable="false"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/premiumLock"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="10dp"
+        android:background="@drawable/bg_premium_badge"
+        android:contentDescription="@string/premium_lock_content_description"
+        android:padding="7dp"
+        android:src="@drawable/ic_lock_gold"
+        android:visibility="gone" />
 </org.Allah_Clock_Live_Wallpaper.viewUtils.SquareRelativeLayout>

@@ -1,6 +1,73 @@
 <resources>
 
-    <string name="app_name">clock live wallpaper</string>
+    <string name="app_name">Allah Clock Live Wallpaper</string>
 
+    <!-- ── Screen titles ─────────────────────────────────────────────── -->
+    <string name="title_analog_clock">Analog Clock</string>
+    <string name="title_digital_clock">Digital Clock</string>
+    <string name="title_smart_clock">Smart Clock</string>
+    <string name="title_wallpaper">Wallpaper</string>
+    <string name="tile_android_clock">Android 12 Clock</string>
+    <string name="tile_analog_clock">Analog\nClock</string>
+    <string name="tile_digital_clock">Digital\nClock</string>
+    <string name="tile_smart_clock">Smart\nClock</string>
+
+    <!-- ── Editor ────────────────────────────────────────────────────── -->
+    <string name="choose_color">Choose color</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="color_1">Color 1</string>
+    <string name="color_2">Color 2</string>
+    <string name="select_picture">Select picture</string>
+    <string name="image_loading">Importing image…</string>
+    <string name="image_failed">Could not read that image, please pick another one</string>
+
+    <!-- ── Wallpaper ─────────────────────────────────────────────────── -->
+    <string name="set_wallpaper">Set Wallpaper</string>
+    <string name="download_wallpaper">Download Wallpaper</string>
+    <string name="downloading">Downloading…</string>
+    <string name="downloading_percent">Downloading %1$d%%</string>
+    <string name="download_failed">Download failed, please try again</string>
+    <string name="wallpaper_chooser_unavailable">No wallpaper picker is available on this device</string>
+    <string name="wallpaper_preview_content_description">Wallpaper preview</string>
+
+    <!-- ── Share / rate ──────────────────────────────────────────────── -->
+    <string name="share_application">Share application</string>
+    <string name="rate_unavailable">Could not open the Play Store</string>
+
+    <!-- ── Content descriptions (accessibility) ──────────────────────── -->
+    <string name="cd_rate">Rate this app</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_done">Done</string>
+    <string name="cd_zoom_in">Zoom in</string>
+    <string name="cd_zoom_out">Zoom out</string>
+    <string name="cd_center">Center the clock</string>
+    <string name="cd_background_color">Background color</string>
+    <string name="cd_text_color">Text color</string>
+    <string name="cd_gallery">Pick an image from the gallery</string>
+    <string name="cd_backgrounds">Choose a built-in background</string>
+    <string name="cd_apply_wallpaper">Apply as live wallpaper</string>
+    <string name="cd_wallpaper_preview">Wallpaper preview</string>
+    <string name="cd_clock_type">Clock type</string>
+
+    <!-- ── Native ad ─────────────────────────────────────────────────── -->
+    <string name="ad_badge">Ad</string>
+    <string name="ad_badge_content_description">Advertisement</string>
+    <string name="ad_media_content_description">Advertisement media</string>
+    <string name="ad_icon_content_description">Advertiser logo</string>
+
+    <!-- ── Premium (golden) clocks ───────────────────────────────────── -->
+    <string name="premium_lock_content_description">Premium clock, watch an ad to unlock</string>
+    <string name="premium_dialog_title">Premium Clocks</string>
+    <string name="premium_dialog_message">Watch one short video to unlock every Premium golden clock for this session. You can always cancel and keep using the free clocks.</string>
+    <string name="premium_dialog_watch">Watch ad &amp; unlock</string>
+    <string name="premium_dialog_cancel">Not now</string>
+    <string name="premium_unlocked">Premium clocks unlocked</string>
+    <string name="premium_not_unlocked">Premium clocks are still locked</string>
+    <string name="ad_loading">Loading…</string>
+
+    <!-- ── Privacy / consent ─────────────────────────────────────────── -->
+    <string name="privacy_settings">Privacy settings</string>
+    <string name="privacy_settings_content_description">Change your advertising and privacy choices</string>
 
 </resources>

@@ -20,4 +20,19 @@
     <color name="themeColor">#eeeeee</color>
     <color name="themeDarkColor">#dedede</color>
     <color name="transparent">#00000000</color>
+
+    <!-- ── Native ad card ─────────────────────────────────────────────── -->
+    <color name="nativeAdCard">#F5F5FA</color>
+    <color name="nativeAdBorder">#D9D9E3</color>
+    <color name="nativeAdText">#22222A</color>
+    <color name="nativeAdTextSecondary">#6B6B78</color>
+    <!-- The "Ad" badge is mandatory: a native ad must never look like app content. -->
+    <color name="adBadge">#CC3A3A45</color>
+    <color name="adBadgeText">#FFFFFF</color>
+
+    <!-- ── Premium / golden clocks ────────────────────────────────────── -->
+    <color name="goldLight">#FFE08A</color>
+    <color name="goldDark">#E0A100</color>
+    <color name="goldVeryDark">#6E4A00</color>
+    <color name="premiumOverlay">#26FFD86B</color>
 </resources>

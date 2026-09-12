@@ -1,13 +1,13 @@
 package org.Allah_Clock_Live_Wallpaper.viewUtils;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
-import androidx.core.view.InputDeviceCompat;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -50,7 +50,7 @@ public class TextClockPreview extends View {
     private int radius = 880;
     private String[] stringsDays = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
     private int color1 = -1;
-    private int color2 = InputDeviceCompat.SOURCE_ANY;
+    private int color2 = Color.WHITE;
 
     public TextClockPreview(Context context) {
         super(context);

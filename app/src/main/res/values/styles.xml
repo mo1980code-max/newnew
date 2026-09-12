@@ -4,10 +4,9 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <!-- Edge-to-edge is enforced from targetSdk 35; a white window background matches
+             the list screens so the system-bar padding never shows a different colour. -->
+        <item name="android:windowBackground">@color/textColor</item>
     </style>
 
-    <style name="TabTextAppearance" parent="@style/TextAppearance.Design.Tab">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/appColor</item>
-    </style>
 </resources>

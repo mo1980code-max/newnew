@@ -39,7 +39,7 @@
                     android:layout_weight="1"
                     android:fontFamily="@font/myfont"
                     android:gravity="center"
-                    android:text="Analog\nClock"
+                    android:text="@string/tile_analog_clock"
                     android:textColor="@color/textColor"
                     android:textSize="20sp" />
 
@@ -77,7 +77,7 @@
                     android:layout_weight="1"
                     android:fontFamily="@font/myfont"
                     android:gravity="center"
-                    android:text="Digital\nClock"
+                    android:text="@string/tile_digital_clock"
                     android:textColor="@color/textColor"
                     android:textSize="20sp" />
 
@@ -121,7 +121,7 @@
                     android:layout_weight="1"
                     android:fontFamily="@font/myfont"
                     android:gravity="center"
-                    android:text="Smart\nClock"
+                    android:text="@string/tile_smart_clock"
                     android:textColor="@color/textColor"
                     android:textSize="20sp" />
 

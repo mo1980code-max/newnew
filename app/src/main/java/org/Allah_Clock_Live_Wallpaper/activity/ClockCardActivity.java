@@ -3,18 +3,16 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.Allah_Clock_Live_Wallpaper.AdAdmob;
 import org.Allah_Clock_Live_Wallpaper.R;
-
+import org.Allah_Clock_Live_Wallpaper.ads.BannerAdController;
+import org.Allah_Clock_Live_Wallpaper.ads.NativeAdListAdapter;
 import org.Allah_Clock_Live_Wallpaper.adapter.CustomAdapter;
 import org.Allah_Clock_Live_Wallpaper.adapter.SmartTextAdapter;
 import org.Allah_Clock_Live_Wallpaper.adapter.TextAdapter;
@@ -23,116 +21,150 @@ import org.Allah_Clock_Live_Wallpaper.model.SmartClocks;
 import org.Allah_Clock_Live_Wallpaper.model.TextClocks;
 import org.Allah_Clock_Live_Wallpaper.utils.GetClocks;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
+import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
-
-
+/**
+ * Clock list (Analog / Digital / Smart depending on the {@code isWhich} extra).
+ *
+ * <p>Ads here: an anchored-adaptive banner at the bottom plus one native card injected in
+ * the middle of the grid. The golden entries at the end of the list are gated behind a
+ * rewarded video.</p>
+ */
 public class ClockCardActivity extends AppCompatActivity {
-    private CustomAdapter customAdapter;
 
-    private ImageView ivBack;
-    private RecyclerView recyclerViewCategory;
+    private static final int GRID_SPAN = 2;
+
+    private CustomAdapter customAdapter;
     private SmartTextAdapter smartTextAdapter;
     private TextAdapter textAdapter;
+    private NativeAdListAdapter listAdapter;
+
+    private BannerAdController banner;
+    private ImageView ivBack;
+    private RecyclerView recyclerViewCategory;
     private TinyDB tinyDB;
     private TextView txtTitle;
 
     @Override
-
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         this.tinyDB = new TinyDB(this);
         setContentView(R.layout.activity_clock_card);
+        UiCompat.applyEdgeToEdge(this);
         initView();
 
-        AdAdmob adAdmob = new AdAdmob(this);
-        adAdmob.BannerAd((RelativeLayout) findViewById(R.id.bannerAd), this);
-        adAdmob.FullscreenAd(this);
-
+        this.banner = new BannerAdController(this, (RelativeLayout) findViewById(R.id.bannerAd));
+        this.banner.load();
     }
 
-
     private void initView() {
-        this.txtTitle = (TextView) findViewById(R.id.txtTitle);
-        this.recyclerViewCategory = (RecyclerView) findViewById(R.id.recyclerViewCategory);
-        if (getIntent().getIntExtra("isWhich", 0) == 0) {
-            GetClocks getClocks = new GetClocks();
-            this.txtTitle.setText("Analog Clock");
-            CustomAdapter customAdapter = new CustomAdapter(getClocks.getClocks());
-            this.customAdapter = customAdapter;
-            GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+        this.txtTitle = findViewById(R.id.txtTitle);
+        this.recyclerViewCategory = findViewById(R.id.recyclerViewCategory);
+        this.ivBack = findViewById(R.id.ivBack);
+        this.ivBack.setOnClickListener(view -> finish());
 
-            this.recyclerViewCategory.setLayoutManager(gridLayoutManager);
-            this.recyclerViewCategory.setAdapter(customAdapter);
-            this.customAdapter.setClickListener(new CustomAdapter.ClickListener() {
-                @Override
-                public void setClick(final Clocks clocks) {
-
-                    ClockCardActivity.this.tinyDB.putObject("clocks", clocks);
-                    ClockCardActivity.this.tinyDB.putInt("clockType", 0);
-                    ClockCardActivity.this.tinyDB.putBoolean("isImage", false);
-                    ClockCardActivity.this.tinyDB.putBoolean("isCustomBg", false);
-                    ClockCardActivity.this.tinyDB.putInt("bgColor", Color.parseColor(clocks.getBgColor()));
-                    ClockCardActivity.this.startActivity(new Intent(ClockCardActivity.this, EditorActivity.class));
-
-                }
-            });
-        } else if (getIntent().getIntExtra("isWhich", 0) == 1) {
-            TextAdapter textAdapter = new TextAdapter(new GetClocks().getTextClocks());
-            this.textAdapter = textAdapter;
-            this.txtTitle.setText("Digital Clock");
-            GridLayoutManager gridLayoutManager2 = new GridLayoutManager(this, 2);
-
-            this.recyclerViewCategory.setLayoutManager(gridLayoutManager2);
-            this.recyclerViewCategory.setAdapter(textAdapter);
-            this.textAdapter.setClickListener(new TextAdapter.ClickListener() {
-                @Override
-                public void setClick(final int i, final TextClocks textClocks) {
-
-                    ClockCardActivity.this.tinyDB.putInt("textClockPosition", i);
-                    ClockCardActivity.this.tinyDB.putInt("clockType", 2);
-                    ClockCardActivity.this.tinyDB.putBoolean("isImage", false);
-                    ClockCardActivity.this.tinyDB.putBoolean("isCustomBg", false);
-                    ClockCardActivity.this.tinyDB.putInt("bgColor", Color.parseColor(textClocks.getBgColor()));
-                    ClockCardActivity.this.startActivity(new Intent(ClockCardActivity.this, EditorActivity.class));
-
-                }
-            });
-        } else if (getIntent().getIntExtra("isWhich", 0) == 2) {
-            SmartTextAdapter smartTextAdapter = new SmartTextAdapter(new GetClocks().getSmartClocks());
-            this.smartTextAdapter = smartTextAdapter;
-            this.txtTitle.setText("Smart Clock");
-            GridLayoutManager gridLayoutManager3 = new GridLayoutManager(this, 2);
-
-            this.recyclerViewCategory.setLayoutManager(gridLayoutManager3);
-            this.recyclerViewCategory.setAdapter(smartTextAdapter);
-            this.smartTextAdapter.setClickListener(new SmartTextAdapter.ClickListener() {
-                @Override
-                public void setClick(final int i, final SmartClocks smartClocks) {
-
-                    ClockCardActivity.this.tinyDB.putInt("customBg", smartClocks.getBgColor());
-                    ClockCardActivity.this.tinyDB.putBoolean("isImage", false);
-                    ClockCardActivity.this.tinyDB.putBoolean("isCustomBg", true);
-                    ClockCardActivity.this.tinyDB.putInt("textClockPosition", i);
-                    ClockCardActivity.this.tinyDB.putInt("clockType", 1);
-                    ClockCardActivity.this.startActivity(new Intent(ClockCardActivity.this, EditorActivity.class));
-
-                }
-            });
+        int which = getIntent().getIntExtra("isWhich", 0);
+        if (which == 0) {
+            setupAnalogClocks();
+        } else if (which == 1) {
+            setupDigitalClocks();
+        } else {
+            setupSmartClocks();
         }
-        ImageView imageView = (ImageView) findViewById(R.id.ivBack);
-        this.ivBack = imageView;
-        imageView.setOnClickListener(new View.OnClickListener() {
+    }
+
+    private void setupAnalogClocks() {
+        this.txtTitle.setText(R.string.title_analog_clock);
+        CustomAdapter adapter = new CustomAdapter(new GetClocks().getClocks());
+        this.customAdapter = adapter;
+        adapter.setClickListener(new CustomAdapter.ClickListener() {
             @Override
-            public void onClick(View view) {
-                ClockCardActivity.this.onBackPressed();
+            public void setClick(final Clocks clocks) {
+                tinyDB.putObject("clocks", clocks);
+                tinyDB.putInt("clockType", 0);
+                tinyDB.putBoolean("isImage", false);
+                tinyDB.putBoolean("isCustomBg", false);
+                tinyDB.putInt("bgColor", Color.parseColor(clocks.getBgColor()));
+                startActivity(new Intent(ClockCardActivity.this, EditorActivity.class));
             }
         });
+        installList(adapter);
+    }
+
+    private void setupDigitalClocks() {
+        this.txtTitle.setText(R.string.title_digital_clock);
+        TextAdapter adapter = new TextAdapter(new GetClocks().getTextClocks());
+        this.textAdapter = adapter;
+        adapter.setClickListener(new TextAdapter.ClickListener() {
+            @Override
+            public void setClick(final int i, final TextClocks textClocks) {
+                tinyDB.putInt("textClockPosition", i);
+                tinyDB.putInt("clockType", 2);
+                tinyDB.putBoolean("isImage", false);
+                tinyDB.putBoolean("isCustomBg", false);
+                tinyDB.putInt("bgColor", Color.parseColor(textClocks.getBgColor()));
+                startActivity(new Intent(ClockCardActivity.this, EditorActivity.class));
+            }
+        });
+        installList(adapter);
+    }
+
+    private void setupSmartClocks() {
+        this.txtTitle.setText(R.string.title_smart_clock);
+        SmartTextAdapter adapter = new SmartTextAdapter(new GetClocks().getSmartClocks());
+        this.smartTextAdapter = adapter;
+        adapter.setClickListener(new SmartTextAdapter.ClickListener() {
+            @Override
+            public void setClick(final int i, final SmartClocks smartClocks) {
+                tinyDB.putInt("customBg", smartClocks.getBgColor());
+                tinyDB.putBoolean("isImage", false);
+                tinyDB.putBoolean("isCustomBg", true);
+                tinyDB.putInt("textClockPosition", i);
+                tinyDB.putInt("clockType", 1);
+                startActivity(new Intent(ClockCardActivity.this, EditorActivity.class));
+            }
+        });
+        installList(adapter);
+    }
+
+    /** Puts the native-ad wrapper around the real adapter and shows the grid. */
+    @SuppressWarnings("rawtypes")
+    private void installList(RecyclerView.Adapter adapter) {
+        this.listAdapter = new NativeAdListAdapter(this, adapter, GRID_SPAN);
+        this.listAdapter.attachTo(this.recyclerViewCategory);
+        this.listAdapter.loadNativeAd();
     }
 
     @Override
-    public void onBackPressed() {
+    protected void onResume() {
+        super.onResume();
+        if (banner != null) {
+            banner.resume();
+        }
+        // Consent can still arrive after onCreate; the call is a no-op once loaded.
+        if (listAdapter != null) {
+            listAdapter.loadNativeAd();
+        }
+    }
 
-        ClockCardActivity.this.finish();
+    @Override
+    protected void onPause() {
+        if (banner != null) {
+            banner.pause();
+        }
+        super.onPause();
+    }
 
+    @Override
+    protected void onDestroy() {
+        if (banner != null) {
+            banner.destroy();
+            banner = null;
+        }
+        if (listAdapter != null) {
+            listAdapter.destroy();
+            listAdapter = null;
+        }
+        super.onDestroy();
     }
 }
