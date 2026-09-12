@@ -85,7 +85,8 @@
     <string name="cd_options">Wallpaper options</string>
     <string name="option_hijri">Show the Hijri date</string>
     <string name="option_dhikr">Show rotating Adhkar</string>
-    <string name="options_hint">The Hijri date appears at the top of the live wallpaper and a short dhikr rotates at the bottom every few hours.</string>
+    <string name="option_power">Power saver: second hand ticks once per second</string>
+    <string name="options_hint">The Hijri date appears at the top of the live wallpaper and a short dhikr rotates at the bottom every few hours. Power saver keeps the wallpaper redraw at one frame per second; switch it off for a continuously sweeping second hand, which looks smoother but uses noticeably more battery.</string>
     <string name="hijri_format">%1$d %2$s %3$d AH</string>
 
     <!-- Home screen widgets -->

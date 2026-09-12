@@ -38,6 +38,17 @@
         android:textColor="@color/textColor"
         android:textSize="16sp" />
 
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchPower"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:text="@string/option_power"
+        android:textColor="@color/textColor"
+        android:textSize="16sp" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

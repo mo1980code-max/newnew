@@ -54,6 +54,14 @@ public final class AdManager {
     private static final AtomicBoolean CONSENT_FLOW_STARTED = new AtomicBoolean(false);
     private static final AtomicBoolean SDK_INITIALISED = new AtomicBoolean(false);
 
+    /** Raised while an interstitial or rewarded ad owns the screen. */
+    private static final AtomicBoolean FULL_SCREEN_ACTIVE = new AtomicBoolean(false);
+
+    /** True while another full-screen ad is on screen; app-open ads must never stack. */
+    public static boolean isFullScreenAdActive() {
+        return FULL_SCREEN_ACTIVE.get();
+    }
+
     @Nullable
     private static ConsentInformation consentInformation;
 
@@ -138,7 +146,10 @@ public final class AdManager {
                 .build();
         MobileAds.setRequestConfiguration(configuration);
 
-        MobileAds.initialize(activity, initializationStatus -> Log.i(TAG, "ads sdk ready"));
+        MobileAds.initialize(activity, initializationStatus -> {
+            Log.i(TAG, "ads sdk ready");
+            AppOpenAdController.preload(activity);
+        });
     }
 
     /** True when consent is in place and the SDK may be asked for ads. */
@@ -218,6 +229,7 @@ public final class AdManager {
         ad.setFullScreenContentCallback(new FullScreenContentCallback() {
             @Override
             public void onAdDismissedFullScreenContent() {
+                FULL_SCREEN_ACTIVE.set(false);
                 if (finished.compareAndSet(false, true)) {
                     runOnce(onFinished);
                 }
@@ -226,6 +238,7 @@ public final class AdManager {
 
             @Override
             public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
+                FULL_SCREEN_ACTIVE.set(false);
                 Log.w(TAG, "interstitial show failed: " + adError.getMessage());
                 if (finished.compareAndSet(false, true)) {
                     runOnce(onFinished);
@@ -239,6 +252,7 @@ public final class AdManager {
             }
         });
 
+        FULL_SCREEN_ACTIVE.set(true);
         try {
             ad.show(activity);
         } catch (Throwable t) {
@@ -288,11 +302,13 @@ public final class AdManager {
                         rewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                             @Override
                             public void onAdDismissedFullScreenContent() {
+                FULL_SCREEN_ACTIVE.set(false);
                                 settle(settled, rewarded, shown, callback);
                             }
 
                             @Override
                             public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
+                FULL_SCREEN_ACTIVE.set(false);
                                 Log.w(TAG, "rewarded show failed: " + adError.getMessage());
                                 settle(settled, rewarded, shown, callback);
                             }
@@ -302,7 +318,8 @@ public final class AdManager {
                                 shown.set(true);
                             }
                         });
-                        rewardedAd.show(activity, rewardItem -> rewarded.set(true));
+                    FULL_SCREEN_ACTIVE.set(true);
+                    rewardedAd.show(activity, rewardItem -> rewarded.set(true));
                     }
 
                     @Override

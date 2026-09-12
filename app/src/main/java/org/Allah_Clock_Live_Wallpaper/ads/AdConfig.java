@@ -29,6 +29,9 @@ public final class AdConfig {
     /** Rewarded video that unlocks the premium (golden) clocks. */
     public static final String REWARDED_UNIT_ID = "ca-app-pub-3940256099942544/5224354917";
 
+    /** App-open ad, shown at most once every 4 hours when the app returns to foreground. */
+    public static final String APP_OPEN_UNIT_ID = "ca-app-pub-3940256099942544/9257395921";
+
     /** Native card injected in the middle of the clock / wallpaper grids. */
     public static final String NATIVE_UNIT_ID = "ca-app-pub-3940256099942544/2247696110";
 
