@@ -5,25 +5,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.BaseRequestOptions;
 import com.bumptech.glide.request.RequestOptions;
+
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.model.ImageUrlsItem;
 
 import java.util.List;
 
-
-
-
-
+/** Wallpaper grid inside a category. */
 public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.ViewHolder> {
+
     private ClickListener clickListener;
-    List<ImageUrlsItem> imagesItems;
-
-
+    private final List<ImageUrlsItem> imagesItems;
 
     public interface ClickListener {
         void setClick(int i);
@@ -41,8 +38,6 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
         this.clickListener = clickListener;
     }
 
-
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private final ImageView viewStub;
 
@@ -52,13 +47,24 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
         }
     }
 
-    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        return new ViewHolder(LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_wallpaper, viewGroup, false));
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+        return new ViewHolder(LayoutInflater.from(viewGroup.getContext())
+                .inflate(R.layout.item_wallpaper, viewGroup, false));
     }
 
-    public void onBindViewHolder(ViewHolder viewHolder, final int i) {
-        Glide.with(viewHolder.viewStub.getContext()).load(this.imagesItems.get(i).getImageUrl()).centerCrop().placeholder(R.drawable.placeholder).apply((BaseRequestOptions<?>) new RequestOptions().override(600, 600).centerCrop()).into(viewHolder.viewStub);
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder viewHolder, final int i) {
+        Glide.with(viewHolder.viewStub.getContext())
+                .load(this.imagesItems.get(i).getImageUrl())
+                .apply(new RequestOptions().override(600, 600).centerCrop())
+                .placeholder(R.drawable.placeholder)
+                .error(R.drawable.placeholder)
+                .into(viewHolder.viewStub);
+
         viewHolder.viewStub.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View view) {
                 if (WallpaperAdapter.this.clickListener != null) {
                     WallpaperAdapter.this.clickListener.setClick(i);
@@ -69,6 +75,6 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
 
     @Override
     public int getItemCount() {
-        return this.imagesItems.size();
+        return this.imagesItems == null ? 0 : this.imagesItems.size();
     }
 }

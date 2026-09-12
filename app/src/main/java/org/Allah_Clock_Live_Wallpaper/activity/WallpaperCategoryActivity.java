@@ -2,91 +2,151 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.load.Key;
-import org.Allah_Clock_Live_Wallpaper.AdAdmob;
-import org.Allah_Clock_Live_Wallpaper.R;
 import com.google.gson.Gson;
 
+import org.Allah_Clock_Live_Wallpaper.R;
+import org.Allah_Clock_Live_Wallpaper.ads.BannerAdController;
+import org.Allah_Clock_Live_Wallpaper.ads.NativeAdListAdapter;
 import org.Allah_Clock_Live_Wallpaper.adapter.CategoryWallpaperAdapter;
 import org.Allah_Clock_Live_Wallpaper.model.ResponseWallpaper;
 import org.Allah_Clock_Live_Wallpaper.model.ResponseWallpaperItem;
+import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
-
-
+/** Wallpaper categories. Banner at the bottom, one native card in the middle of the grid. */
 public class WallpaperCategoryActivity extends AppCompatActivity {
-    CategoryWallpaperAdapter categoryWallpaperAdapter;
+
+    private static final String TAG = "WallpaperCategory";
+    private static final int GRID_SPAN = 2;
+    private static final String ASSET = "wallpapernew.json";
+
+    private CategoryWallpaperAdapter categoryWallpaperAdapter;
+    private NativeAdListAdapter listAdapter;
+    private BannerAdController banner;
 
     private ImageView ivBack;
     private RecyclerView recyclerViewCategory;
 
     @Override
-
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_wallpaper_category);
+        UiCompat.applyEdgeToEdge(this);
         initView();
 
-        AdAdmob adAdmob = new AdAdmob(this);
-        adAdmob.BannerAd((RelativeLayout) findViewById(R.id.bannerAd), this);
-
+        this.banner = new BannerAdController(this, (RelativeLayout) findViewById(R.id.bannerAd));
+        this.banner.load();
     }
 
     private void initView() {
-        this.recyclerViewCategory = (RecyclerView) findViewById(R.id.recyclerViewCategory);
-        CategoryWallpaperAdapter categoryWallpaperAdapter = new CategoryWallpaperAdapter(((ResponseWallpaper) new Gson().fromJson(loadJSONFromAsset(), ResponseWallpaper.class)).getResponseWallpaper());
-        this.categoryWallpaperAdapter = categoryWallpaperAdapter;
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+        this.recyclerViewCategory = findViewById(R.id.recyclerViewCategory);
+        this.ivBack = findViewById(R.id.ivBack);
+        this.ivBack.setOnClickListener(view -> finish());
 
-        this.recyclerViewCategory.setLayoutManager(gridLayoutManager);
-        this.recyclerViewCategory.setAdapter(categoryWallpaperAdapter);
-        this.categoryWallpaperAdapter.setClickListener(new CategoryWallpaperAdapter.ClickListener() {
+        List<ResponseWallpaperItem> categories = loadCategories();
+        CategoryWallpaperAdapter adapter = new CategoryWallpaperAdapter(categories);
+        this.categoryWallpaperAdapter = adapter;
+        adapter.setClickListener(new CategoryWallpaperAdapter.ClickListener() {
             @Override
             public void setClick(final ResponseWallpaperItem responseWallpaperItem) {
-
                 Intent intent = new Intent(WallpaperCategoryActivity.this, WallpaperActivity.class);
                 intent.putExtra("responseWallpaperItem", responseWallpaperItem);
-                WallpaperCategoryActivity.this.startActivity(intent);
+                startActivity(intent);
+            }
+        });
 
-            }
-        });
-        ImageView imageView = (ImageView) findViewById(R.id.ivBack);
-        this.ivBack = imageView;
-        imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                WallpaperCategoryActivity.this.onBackPressed();
-            }
-        });
+        this.listAdapter = new NativeAdListAdapter(this, adapter, GRID_SPAN);
+        this.listAdapter.attachTo(this.recyclerViewCategory);
+        this.listAdapter.loadNativeAd();
     }
 
+    /** Never throws: a missing or malformed asset simply yields an empty list. */
+    private List<ResponseWallpaperItem> loadCategories() {
+        String json = loadJsonFromAsset(ASSET);
+        if (json == null) {
+            return new ArrayList<>();
+        }
+        try {
+            ResponseWallpaper parsed = new Gson().fromJson(json, ResponseWallpaper.class);
+            if (parsed == null || parsed.getResponseWallpaper() == null) {
+                return new ArrayList<>();
+            }
+            return parsed.getResponseWallpaper();
+        } catch (Throwable t) {
+            Log.e(TAG, "could not parse " + ASSET, t);
+            return new ArrayList<>();
+        }
+    }
+
+    private String loadJsonFromAsset(String fileName) {
+        InputStream input = null;
+        try {
+            input = getAssets().open(fileName);
+            ByteArrayOutputStream out = new ByteArrayOutputStream(Math.max(input.available(), 1024));
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = input.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+            return new String(out.toByteArray(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            Log.e(TAG, "could not read asset " + fileName, e);
+            return null;
+        } catch (Throwable t) {
+            Log.e(TAG, "could not read asset " + fileName, t);
+            return null;
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
 
     @Override
-    public void onBackPressed() {
-        WallpaperCategoryActivity.this.finish();
-
+    protected void onResume() {
+        super.onResume();
+        if (banner != null) {
+            banner.resume();
+        }
+        if (listAdapter != null) {
+            listAdapter.loadNativeAd();
+        }
     }
 
-    public String loadJSONFromAsset() {
-        try {
-            InputStream open = getAssets().open("wallpapernew.json");
-            byte[] bArr = new byte[open.available()];
-            open.read(bArr);
-            open.close();
-            return new String(bArr, Key.STRING_CHARSET_NAME);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+    @Override
+    protected void onPause() {
+        if (banner != null) {
+            banner.pause();
         }
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (banner != null) {
+            banner.destroy();
+            banner = null;
+        }
+        if (listAdapter != null) {
+            listAdapter.destroy();
+            listAdapter = null;
+        }
+        super.onDestroy();
     }
 }

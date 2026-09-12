@@ -2,76 +2,115 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.core.content.IntentCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-
-import org.Allah_Clock_Live_Wallpaper.AdAdmob;
 import org.Allah_Clock_Live_Wallpaper.R;
+import org.Allah_Clock_Live_Wallpaper.ads.BannerAdController;
+import org.Allah_Clock_Live_Wallpaper.ads.NativeAdListAdapter;
 import org.Allah_Clock_Live_Wallpaper.adapter.WallpaperAdapter;
+import org.Allah_Clock_Live_Wallpaper.model.ImageUrlsItem;
 import org.Allah_Clock_Live_Wallpaper.model.ResponseWallpaperItem;
+import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
+import java.util.ArrayList;
+import java.util.List;
 
-
-
+/** Wallpapers inside one category. Banner at the bottom, native card in the middle. */
 public class WallpaperActivity extends AppCompatActivity {
+
+    private static final int GRID_SPAN = 2;
+
+    private WallpaperAdapter wallpaperAdapter;
+    private NativeAdListAdapter listAdapter;
+    private BannerAdController banner;
 
     private ImageView ivBack;
     private RecyclerView recyclerViewCategory;
     private TextView txtTitle;
 
     @Override
-
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_wallpaper);
-        initView();
+        UiCompat.applyEdgeToEdge(this);
 
-        AdAdmob adAdmob = new AdAdmob(this);
-        adAdmob.BannerAd((RelativeLayout) findViewById(R.id.bannerAd), this);
-        adAdmob.FullscreenAd(this);
+        final ResponseWallpaperItem category = IntentCompat.getParcelableExtra(
+                getIntent(), "responseWallpaperItem", ResponseWallpaperItem.class);
+        if (category == null) {
+            finish();
+            return;
+        }
 
+        initView(category);
+
+        this.banner = new BannerAdController(this, (RelativeLayout) findViewById(R.id.bannerAd));
+        this.banner.load();
     }
 
-    private void initView() {
-        this.ivBack = (ImageView) findViewById(R.id.ivBack);
-        this.txtTitle = (TextView) findViewById(R.id.txtTitle);
-        final ResponseWallpaperItem responseWallpaperItem = (ResponseWallpaperItem) getIntent().getParcelableExtra("responseWallpaperItem");
-        this.txtTitle.setText(responseWallpaperItem.getCategoryName());
-        this.recyclerViewCategory = (RecyclerView) findViewById(R.id.recyclerViewCategory);
-        WallpaperAdapter wallpaperAdapter = new WallpaperAdapter(responseWallpaperItem.getImageUrls());
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
-        this.recyclerViewCategory.setLayoutManager(gridLayoutManager);
-        this.recyclerViewCategory.setAdapter(wallpaperAdapter);
-        wallpaperAdapter.setClickListener(new WallpaperAdapter.ClickListener() {
+    private void initView(final ResponseWallpaperItem category) {
+        this.ivBack = findViewById(R.id.ivBack);
+        this.txtTitle = findViewById(R.id.txtTitle);
+        this.recyclerViewCategory = findViewById(R.id.recyclerViewCategory);
+
+        this.txtTitle.setText(category.getCategoryName());
+        this.ivBack.setOnClickListener(view -> finish());
+
+        final List<ImageUrlsItem> images =
+                category.getImageUrls() != null ? category.getImageUrls() : new ArrayList<ImageUrlsItem>();
+        WallpaperAdapter adapter = new WallpaperAdapter(images);
+        this.wallpaperAdapter = adapter;
+        adapter.setClickListener(new WallpaperAdapter.ClickListener() {
             @Override
             public void setClick(final int i) {
-
+                if (i < 0 || i >= images.size()) {
+                    return;
+                }
                 Intent intent = new Intent(WallpaperActivity.this, SetWallpaperActivity.class);
-                intent.putExtra("imageFile", responseWallpaperItem.getImageUrls().get(i).getImageUrl());
-                WallpaperActivity.this.startActivity(intent);
+                intent.putExtra("imageFile", images.get(i).getImageUrl());
+                startActivity(intent);
+            }
+        });
 
-            }
-        });
-        this.ivBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                WallpaperActivity.this.onBackPressed();
-            }
-        });
+        this.listAdapter = new NativeAdListAdapter(this, adapter, GRID_SPAN);
+        this.listAdapter.attachTo(this.recyclerViewCategory);
+        this.listAdapter.loadNativeAd();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (banner != null) {
+            banner.resume();
+        }
+        if (listAdapter != null) {
+            listAdapter.loadNativeAd();
+        }
+    }
 
     @Override
-    public void onBackPressed() {
+    protected void onPause() {
+        if (banner != null) {
+            banner.pause();
+        }
+        super.onPause();
+    }
 
-        WallpaperActivity.this.finish();
-
+    @Override
+    protected void onDestroy() {
+        if (banner != null) {
+            banner.destroy();
+            banner = null;
+        }
+        if (listAdapter != null) {
+            listAdapter.destroy();
+            listAdapter = null;
+        }
+        super.onDestroy();
     }
 }

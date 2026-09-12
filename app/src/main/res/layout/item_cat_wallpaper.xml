@@ -36,7 +36,7 @@
             android:layout_marginRight="10dp"
             android:layout_marginBottom="10dp"
             android:fontFamily="@font/myfont"
-            android:text="Wallpaper"
+            android:text="@string/title_wallpaper"
             android:textColor="@color/textColor"
             android:textSize="16sp" />
     </androidx.cardview.widget.CardView>

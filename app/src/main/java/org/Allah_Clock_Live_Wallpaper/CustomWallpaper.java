@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PorterDuff;
 import android.os.Handler;
+import android.os.Looper;
 import android.service.wallpaper.WallpaperService;
 import android.view.SurfaceHolder;
 import android.view.ViewGroup;
@@ -19,7 +20,7 @@ public class CustomWallpaper extends WallpaperService {
     private Context context;
     int height;
     protected ImageView imageView;
-    private final Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
     TinyDB tinyDB;
     protected WidgetGroup widgetGroup;
     int width;

@@ -7,85 +7,96 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import org.Allah_Clock_Live_Wallpaper.AdAdmob;
 import org.Allah_Clock_Live_Wallpaper.R;
+import org.Allah_Clock_Live_Wallpaper.ads.AdManager;
+import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
-
+/**
+ * Home screen.
+ *
+ * <p>Deliberately carries <b>no</b> banner: it is the entry point of the app and the two
+ * big tiles are the primary action. Banners live only on the sub-screens.</p>
+ *
+ * <p>This is also where the UMP consent flow runs, before the ads SDK is initialised, so
+ * every later screen can simply ask {@link AdManager#canRequestAds()}.</p>
+ */
 public class MainActivity extends AppCompatActivity {
-    private RelativeLayout adContainer;
+
     private FrameLayout frameClock;
     private FrameLayout frameWallpaper;
-
-
-    ImageView rate, share;
+    private ImageView rate;
+    private ImageView share;
+    private ImageView privacy;
 
     @Override
-
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_select_function);
+        UiCompat.applyEdgeToEdge(this);
         initView();
 
-        AdAdmob adAdmob = new AdAdmob(this);
-        adAdmob.BannerAd((RelativeLayout) findViewById(R.id.bannerAd), this);
+        AdManager.requestConsentAndInitialize(this, this::refreshPrivacyEntry);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshPrivacyEntry();
+    }
+
+    /**
+     * Google requires a persistent, easy-to-find "Privacy options" control whenever the
+     * UMP SDK reports that privacy options are required.
+     */
+    private void refreshPrivacyEntry() {
+        if (privacy == null) {
+            return;
+        }
+        privacy.setVisibility(AdManager.isPrivacyOptionsRequired() ? View.VISIBLE : View.GONE);
     }
 
     private void initView() {
-        this.frameClock = (FrameLayout) findViewById(R.id.frameClock);
-        this.frameWallpaper = (FrameLayout) findViewById(R.id.frameWallpaper);
-        this.adContainer = (RelativeLayout) findViewById(R.id.adContainer);
-        rate = findViewById(R.id.rateus);
-        share = findViewById(R.id.share);
-        rate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        this.frameClock = findViewById(R.id.frameClock);
+        this.frameWallpaper = findViewById(R.id.frameWallpaper);
+        this.rate = findViewById(R.id.rateus);
+        this.share = findViewById(R.id.share);
+        this.privacy = findViewById(R.id.privacy);
+
+        this.privacy.setOnClickListener(v -> AdManager.showPrivacyOptions(MainActivity.this));
+
+        this.rate.setOnClickListener(v -> {
+            String packageName = getPackageName();
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("market://details?id=" + packageName)));
+            } catch (ActivityNotFoundException unused) {
                 try {
-                    startActivity(new Intent("android.intent.action.VIEW", Uri.parse("market://details?id=" + getPackageName())));
-                } catch (ActivityNotFoundException unused) {
-                    Toast.makeText(MainActivity.this, " unable to find market app", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(
+                            "https://play.google.com/store/apps/details?id=" + packageName)));
+                } catch (ActivityNotFoundException ignored) {
+                    Toast.makeText(MainActivity.this, R.string.rate_unavailable,
+                            Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
-        share.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String string = getString(R.string.app_name);
-                Intent intent2 = new Intent("android.intent.action.SEND");
-                intent2.setType("text/plain");
-                intent2.putExtra("android.intent.extra.TEXT", string + "\n\nOpen this Link on Play Store\n\nhttps://play.google.com/store/apps/details?id=" + getPackageName());
-                startActivity(Intent.createChooser(intent2, "Share Application"));
-            }
+        this.share.setOnClickListener(v -> {
+            String message = getString(R.string.app_name)
+                    + "\n\nhttps://play.google.com/store/apps/details?id=" + getPackageName();
+            Intent send = new Intent(Intent.ACTION_SEND);
+            send.setType("text/plain");
+            send.putExtra(Intent.EXTRA_TEXT, message);
+            startActivity(Intent.createChooser(send, getString(R.string.share_application)));
         });
 
-        this.frameClock.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        this.frameClock.setOnClickListener(view ->
+                startActivity(new Intent(MainActivity.this, ClockFuntionActivity.class)));
 
-                MainActivity.this.startActivity(new Intent(MainActivity.this, ClockFuntionActivity.class));
-
-            }
-        });
-        this.frameWallpaper.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                MainActivity.this.startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class));
-
-            }
-        });
-    }
-
-    @Override
-    public void onBackPressed() {
-
-        MainActivity.this.finish();
-
+        this.frameWallpaper.setOnClickListener(view ->
+                startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class)));
     }
 }

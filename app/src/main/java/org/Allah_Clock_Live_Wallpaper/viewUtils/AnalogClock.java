@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
@@ -137,7 +138,7 @@ public class AnalogClock extends View {
         this.mCalendar = calendar;
         invalidate();
         if (this.autoUpdate) {
-            new Handler().postDelayed(new Runnable() {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     AnalogClock.this.setTime(Calendar.getInstance());

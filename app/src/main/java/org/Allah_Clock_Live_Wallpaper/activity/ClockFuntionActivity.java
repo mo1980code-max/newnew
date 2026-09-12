@@ -2,77 +2,72 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import org.Allah_Clock_Live_Wallpaper.AdAdmob;
 import org.Allah_Clock_Live_Wallpaper.R;
+import org.Allah_Clock_Live_Wallpaper.ads.BannerAdController;
+import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
-
+/** Clock type picker: Analog / Digital / Smart. */
 public class ClockFuntionActivity extends AppCompatActivity {
-    private RelativeLayout adContainer;
+
     private FrameLayout frameAnalogClock;
-    private FrameLayout frameSmartClock;
     private FrameLayout frameTextClock;
+    private FrameLayout frameSmartClock;
+    private BannerAdController banner;
 
     @Override
-
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_clock_funtion);
+        UiCompat.applyEdgeToEdge(this);
         initView();
 
-
-        AdAdmob adAdmob = new AdAdmob(this);
-        adAdmob.BannerAd((RelativeLayout) findViewById(R.id.bannerAd), this);
-
+        this.banner = new BannerAdController(this, (RelativeLayout) findViewById(R.id.bannerAd));
+        this.banner.load();
     }
 
     private void initView() {
-        this.frameAnalogClock = (FrameLayout) findViewById(R.id.frameAnalogClock);
-        this.frameTextClock = (FrameLayout) findViewById(R.id.frameTextClock);
-        this.frameSmartClock = (FrameLayout) findViewById(R.id.frameSmartClock);
-        RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.adContainer);
-        this.adContainer = relativeLayout;
-        this.frameAnalogClock.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        this.frameAnalogClock = findViewById(R.id.frameAnalogClock);
+        this.frameTextClock = findViewById(R.id.frameTextClock);
+        this.frameSmartClock = findViewById(R.id.frameSmartClock);
 
-                Intent intent = new Intent(ClockFuntionActivity.this, ClockCardActivity.class);
-                intent.putExtra("isWhich", 0);
-                ClockFuntionActivity.this.startActivity(intent);
+        this.frameAnalogClock.setOnClickListener(view -> openClockList(0));
+        this.frameTextClock.setOnClickListener(view -> openClockList(1));
+        this.frameSmartClock.setOnClickListener(view -> openClockList(2));
+    }
 
-            }
-        });
-        this.frameTextClock.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                Intent intent = new Intent(ClockFuntionActivity.this, ClockCardActivity.class);
-                intent.putExtra("isWhich", 1);
-                ClockFuntionActivity.this.startActivity(intent);
-
-            }
-        });
-        this.frameSmartClock.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                Intent intent = new Intent(ClockFuntionActivity.this, ClockCardActivity.class);
-                intent.putExtra("isWhich", 2);
-                ClockFuntionActivity.this.startActivity(intent);
-
-            }
-        });
+    private void openClockList(int which) {
+        Intent intent = new Intent(ClockFuntionActivity.this, ClockCardActivity.class);
+        intent.putExtra("isWhich", which);
+        startActivity(intent);
     }
 
     @Override
-    public void onBackPressed() {
+    protected void onResume() {
+        super.onResume();
+        if (banner != null) {
+            banner.resume();
+        }
+    }
 
-        ClockFuntionActivity.this.finish();
+    @Override
+    protected void onPause() {
+        if (banner != null) {
+            banner.pause();
+        }
+        super.onPause();
+    }
 
+    @Override
+    protected void onDestroy() {
+        if (banner != null) {
+            banner.destroy();
+            banner = null;
+        }
+        super.onDestroy();
     }
 }
