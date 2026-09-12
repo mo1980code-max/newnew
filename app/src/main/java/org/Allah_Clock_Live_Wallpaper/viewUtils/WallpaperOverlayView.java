@@ -108,16 +108,12 @@ public class WallpaperOverlayView extends View {
         }
 
         if (this.showDhikr) {
-            String[] adhkar = getResources().getStringArray(R.array.adhkar);
-            if (adhkar.length > 0) {
-                int index = (int) ((now / DHIKR_ROTATION_MS) % adhkar.length);
-                if (index < 0) {
-                    index = 0;
-                }
+            String dhikr = currentDhikr(getContext(), now);
+            if (dhikr.length() > 0) {
                 TextPaint dhikrPaint = new TextPaint(this.paint);
                 int maxWidth = (int) (width * 0.82f);
                 this.dhikrLayout = StaticLayout.Builder
-                        .obtain(adhkar[index], 0, adhkar[index].length(), dhikrPaint, maxWidth)
+                        .obtain(dhikr, 0, dhikr.length(), dhikrPaint, maxWidth)
                         .setAlignment(Layout.Alignment.ALIGN_CENTER)
                         .setLineSpacing(0f, 1.2f)
                         .setIncludePad(false)
@@ -128,6 +124,23 @@ public class WallpaperOverlayView extends View {
         } else {
             this.dhikrLayout = null;
         }
+    }
+
+    /**
+     * The dhikr that is "on air" at the given moment: derived purely from wall-clock time so
+     * the wallpaper overlay and the home-screen widget always show the same one, with no
+     * timers and no shared state.
+     */
+    public static String currentDhikr(Context context, long millis) {
+        String[] adhkar = context.getResources().getStringArray(R.array.adhkar);
+        if (adhkar.length == 0) {
+            return "";
+        }
+        int index = (int) ((millis / DHIKR_ROTATION_MS) % adhkar.length);
+        if (index < 0) {
+            index = 0;
+        }
+        return adhkar[index];
     }
 
     private static float clamp(float value, float min, float max) {

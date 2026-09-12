@@ -68,6 +68,46 @@
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
+        <!--
+          Home-screen clock widgets (2×2 and 4×2). No permissions needed: they render the
+          user's selected clock design from local resources and refresh once per minute with
+          a single non-waking alarm, plus instant refreshes on screen-on / time changes.
+          "keyguard" is declared so OEMs that still offer lock-screen placement can use it.
+        -->
+        <receiver
+            android:name=".widget.ClockWidgetSquare"
+            android:exported="true"
+            android:label="@string/widget_name_square">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="org.Allah_Clock_Live_Wallpaper.action.CLOCK_TICK" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.SCREEN_ON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_clock_square" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.ClockWidgetWide"
+            android:exported="true"
+            android:label="@string/widget_name_wide">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="org.Allah_Clock_Live_Wallpaper.action.CLOCK_TICK" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.SCREEN_ON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_clock_wide" />
+        </receiver>
+
         <activity
             android:name=".activity.QiblaActivity"
             android:exported="false"
