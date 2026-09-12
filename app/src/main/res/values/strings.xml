@@ -24,10 +24,12 @@
 
     <!-- ── Wallpaper ─────────────────────────────────────────────────── -->
     <string name="set_wallpaper">Set Wallpaper</string>
-    <string name="download_wallpaper">Download Wallpaper</string>
-    <string name="downloading">Downloading…</string>
-    <string name="downloading_percent">Downloading %1$d%%</string>
-    <string name="download_failed">Download failed, please try again</string>
+    <string name="save_failed">Could not prepare this wallpaper, please try again</string>
+
+    <!-- Wallpaper categories (all images are bundled inside the APK) -->
+    <string name="cat_kaaba">Kaaba &amp; Masjid al-Haram</string>
+    <string name="cat_madina">The Prophet\'s Mosque</string>
+    <string name="cat_classic">Classic Gradients</string>
     <string name="wallpaper_chooser_unavailable">No wallpaper picker is available on this device</string>
     <string name="wallpaper_preview_content_description">Wallpaper preview</string>
 

@@ -3,6 +3,8 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,13 +21,6 @@ import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.FileProvider;
 
-import com.bumptech.glide.Glide;
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.liulishuo.okdownload.core.listener.DownloadListener1;
-import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
-
 import org.Allah_Clock_Live_Wallpaper.CustomWallpaper;
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.ads.AdManager;
@@ -34,9 +29,17 @@ import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 import org.Allah_Clock_Live_Wallpaper.utils.WallpaperHelper;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
- * Full-screen wallpaper preview + "download / set wallpaper" action.
+ * Full-screen preview of a bundled wallpaper + "set wallpaper" / "share" actions.
+ *
+ * <p>The image ships inside the APK, so there is no download step any more: the drawable is
+ * decoded once into an app-private JPEG file (that path is what the live wallpaper service
+ * reads) and can then be applied or shared instantly, online or offline.</p>
  *
  * <p>No banner here on purpose: the action button sits at the very bottom of the screen and
  * an ad next to it would be an accidental-click magnet, which AdMob treats as a policy
@@ -47,6 +50,13 @@ public class SetWallpaperActivity extends AppCompatActivity {
 
     private static final String TAG = "SetWallpaperActivity";
 
+    /** Intent extra: {@code R.drawable.*} id of the bundled wallpaper to preview/apply. */
+    public static final String EXTRA_WALLPAPER_RES = "wallpaperRes";
+
+    /** Longest decoded side in px; bounds the memory of a single decode. */
+    private static final int MAX_DECODE_SIDE = 2048;
+    private static final int JPEG_QUALITY = 92;
+
     private CardView cardShare;
     private ImageView imageMain;
     private AppCompatImageButton ivShare;
@@ -54,9 +64,9 @@ public class SetWallpaperActivity extends AppCompatActivity {
     private TextView setWallpaper;
 
     private TinyDB tinyDB;
+    private ExecutorService worker;
+    private int wallpaperRes;
     private File localFile;
-    private String remoteUrl;
-    private boolean downloading;
 
     /** Runs after the system "set live wallpaper" screen comes back. */
     private final ActivityResultLauncher<Intent> wallpaperLauncher =
@@ -76,25 +86,20 @@ public class SetWallpaperActivity extends AppCompatActivity {
         super.onCreate(bundle);
         setContentView(R.layout.activity_set_wallpaper);
         this.tinyDB = new TinyDB(this);
+        this.worker = Executors.newSingleThreadExecutor();
 
-        this.remoteUrl = getIntent().getStringExtra("imageFile");
-        if (this.remoteUrl == null || this.remoteUrl.length() == 0) {
+        this.wallpaperRes = getIntent().getIntExtra(EXTRA_WALLPAPER_RES, 0);
+        if (this.wallpaperRes == 0) {
             finish();
             return;
         }
-        this.localFile = new File(downloadDir(), new File(this.remoteUrl).getName());
 
         initView();
         UiCompat.applyImmersive(this);
 
         // Ready before the user can possibly come back from the system chooser.
         AdManager.preloadInterstitial(this);
-    }
-
-    /** App-private external cache when available, internal cache otherwise. Never null. */
-    private File downloadDir() {
-        File external = getExternalCacheDir();
-        return external != null ? external : getCacheDir();
+        prepareFile();
     }
 
     private void initView() {
@@ -104,33 +109,96 @@ public class SetWallpaperActivity extends AppCompatActivity {
         this.cardShare = findViewById(R.id.cardShare);
         this.ivShare = findViewById(R.id.ivShare);
 
-        if (this.localFile.exists() && this.localFile.length() > 0) {
-            this.setWallpaper.setText(R.string.set_wallpaper);
-            Glide.with(this).load(this.localFile).centerCrop().into(this.imageMain);
-            this.cardShare.setVisibility(View.VISIBLE);
-        } else {
-            Glide.with(this).load(this.remoteUrl).centerCrop()
-                    .placeholder(R.drawable.placeholder).error(R.drawable.placeholder)
-                    .into(this.imageMain);
-            this.setWallpaper.setText(R.string.download_wallpaper);
-            this.cardShare.setVisibility(View.GONE);
-        }
-
-        this.setWallpaper.setOnClickListener(view -> onActionButtonClicked());
+        this.imageMain.setImageResource(this.wallpaperRes);
+        this.setWallpaper.setOnClickListener(view -> applyAsLiveWallpaper());
         this.ivShare.setOnClickListener(view -> shareLocalFile());
     }
 
-    private void onActionButtonClicked() {
-        if (this.localFile.exists() && this.localFile.length() > 0) {
-            applyAsLiveWallpaper();
+    /**
+     * Decodes the bundled drawable once into {@code files/wallpapers/wallpaper.jpg}.
+     * One fixed name keeps the directory self-pruning: there is never more than one copy.
+     */
+    private void prepareFile() {
+        this.progressBar.setVisibility(View.VISIBLE);
+        this.setWallpaper.setEnabled(false);
+        this.worker.execute(() -> {
+            final File file = writeWallpaperFile();
+            runOnUiThread(() -> onFileReady(file));
+        });
+    }
+
+    private void onFileReady(File file) {
+        if (isFinishing() || isDestroyed()) {
             return;
         }
-        if (!downloading) {
-            startDownload();
+        this.progressBar.setVisibility(View.GONE);
+        this.setWallpaper.setEnabled(true);
+        this.localFile = file;
+        if (file == null) {
+            Toast.makeText(this, R.string.save_failed, Toast.LENGTH_LONG).show();
+            return;
+        }
+        this.cardShare.setVisibility(View.VISIBLE);
+    }
+
+    private File writeWallpaperFile() {
+        File dir = new File(getFilesDir(), "wallpapers");
+        if (!dir.exists() && !dir.mkdirs()) {
+            Log.e(TAG, "could not create " + dir);
+            return null;
+        }
+        File out = new File(dir, "wallpaper.jpg");
+
+        Bitmap bitmap = decodeSampled(this.wallpaperRes, MAX_DECODE_SIDE);
+        if (bitmap == null) {
+            Log.e(TAG, "could not decode drawable " + this.wallpaperRes);
+            return null;
+        }
+        OutputStream output = null;
+        try {
+            output = new FileOutputStream(out);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, output);
+            output.flush();
+        } catch (Throwable t) {
+            Log.e(TAG, "could not write " + out, t);
+            return null;
+        } finally {
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (Throwable ignored) {
+                }
+            }
+            bitmap.recycle();
+        }
+        return out.length() > 0 ? out : null;
+    }
+
+    /** Decodes with the smallest power-of-two sample that fits inside {@code maxSide}. */
+    private Bitmap decodeSampled(int res, int maxSide) {
+        try {
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            BitmapFactory.decodeResource(getResources(), res, bounds);
+
+            int sample = 1;
+            while (Math.max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxSide) {
+                sample *= 2;
+            }
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = sample;
+            return BitmapFactory.decodeResource(getResources(), res, options);
+        } catch (Throwable t) {
+            Log.e(TAG, "decode failed", t);
+            return null;
         }
     }
 
     private void applyAsLiveWallpaper() {
+        if (this.localFile == null || !this.localFile.exists() || this.localFile.length() == 0) {
+            Toast.makeText(this, R.string.save_failed, Toast.LENGTH_LONG).show();
+            return;
+        }
         this.tinyDB.putString("isWallpaper", this.localFile.getAbsolutePath());
         Intent intent = new Intent("android.service.wallpaper.CHANGE_LIVE_WALLPAPER");
         intent.putExtra("android.service.wallpaper.extra.LIVE_WALLPAPER_COMPONENT",
@@ -141,64 +209,6 @@ public class SetWallpaperActivity extends AppCompatActivity {
             Log.e(TAG, "no wallpaper chooser available", t);
             Toast.makeText(this, R.string.wallpaper_chooser_unavailable, Toast.LENGTH_LONG).show();
         }
-    }
-
-    private void startDownload() {
-        this.downloading = true;
-        this.progressBar.setVisibility(View.VISIBLE);
-        this.setWallpaper.setText(R.string.downloading);
-
-        new DownloadTask.Builder(this.remoteUrl, downloadDir())
-                .setFilename(this.localFile.getName())
-                .setMinIntervalMillisCallbackProcess(50)
-                .setPassIfAlreadyCompleted(false)
-                .build()
-                .enqueue(new DownloadListener1() {
-                    @Override
-                    public void retry(DownloadTask downloadTask, ResumeFailedCause resumeFailedCause) {
-                    }
-
-                    @Override
-                    public void taskStart(DownloadTask downloadTask, Listener1Assist.Listener1Model listener1Model) {
-                        progressBar.setVisibility(View.VISIBLE);
-                    }
-
-                    @Override
-                    public void connected(DownloadTask downloadTask, int i, long j, long j2) {
-                        progressBar.setVisibility(View.VISIBLE);
-                    }
-
-                    @Override
-                    public void progress(DownloadTask downloadTask, long current, long total) {
-                        if (isFinishing() || isDestroyed()) {
-                            return;
-                        }
-                        int percent = total > 0 ? (int) ((current * 100) / total) : 0;
-                        setWallpaper.setText(getString(R.string.downloading_percent, percent));
-                    }
-
-                    @Override
-                    public void taskEnd(DownloadTask downloadTask, EndCause endCause,
-                                        Exception exc, Listener1Assist.Listener1Model listener1Model) {
-                        downloading = false;
-                        progressBar.setVisibility(View.GONE);
-                        if (isFinishing() || isDestroyed()) {
-                            return;
-                        }
-                        File downloaded = downloadTask.getFile();
-                        if (downloaded == null || !downloaded.exists() || downloaded.length() == 0) {
-                            setWallpaper.setText(R.string.download_wallpaper);
-                            Toast.makeText(SetWallpaperActivity.this, R.string.download_failed,
-                                    Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        localFile = downloaded;
-                        setWallpaper.setText(R.string.set_wallpaper);
-                        cardShare.setVisibility(View.VISIBLE);
-                        Glide.with(SetWallpaperActivity.this).load(downloaded).centerCrop()
-                                .into(imageMain);
-                    }
-                });
     }
 
     private void shareLocalFile() {
@@ -221,5 +231,14 @@ public class SetWallpaperActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         UiCompat.applyImmersive(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (this.worker != null) {
+            this.worker.shutdownNow();
+            this.worker = null;
+        }
+        super.onDestroy();
     }
 }

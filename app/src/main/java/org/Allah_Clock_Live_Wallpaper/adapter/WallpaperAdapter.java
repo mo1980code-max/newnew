@@ -8,26 +8,23 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
-
 import org.Allah_Clock_Live_Wallpaper.R;
-import org.Allah_Clock_Live_Wallpaper.model.ImageUrlsItem;
+import org.Allah_Clock_Live_Wallpaper.model.WallpaperItem;
 
 import java.util.List;
 
-/** Wallpaper grid inside a category. */
+/** Wallpaper grid inside one category. Every image is a bundled drawable resource. */
 public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.ViewHolder> {
 
     private ClickListener clickListener;
-    private final List<ImageUrlsItem> imagesItems;
+    private final List<WallpaperItem> items;
 
     public interface ClickListener {
         void setClick(int i);
     }
 
-    public WallpaperAdapter(List<ImageUrlsItem> list) {
-        this.imagesItems = list;
+    public WallpaperAdapter(List<WallpaperItem> list) {
+        this.items = list;
     }
 
     public ClickListener getClickListener() {
@@ -56,12 +53,8 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, final int i) {
-        Glide.with(viewHolder.viewStub.getContext())
-                .load(this.imagesItems.get(i).getImageUrl())
-                .apply(new RequestOptions().override(600, 600).centerCrop())
-                .placeholder(R.drawable.placeholder)
-                .error(R.drawable.placeholder)
-                .into(viewHolder.viewStub);
+        WallpaperItem item = this.items.get(i);
+        viewHolder.viewStub.setImageResource(item.getDrawableRes());
 
         viewHolder.viewStub.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,6 +68,6 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
 
     @Override
     public int getItemCount() {
-        return this.imagesItems == null ? 0 : this.imagesItems.size();
+        return this.items == null ? 0 : this.items.size();
     }
 }

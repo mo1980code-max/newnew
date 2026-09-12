@@ -7,26 +7,27 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.IntentCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.ads.BannerAdController;
 import org.Allah_Clock_Live_Wallpaper.ads.NativeAdListAdapter;
 import org.Allah_Clock_Live_Wallpaper.adapter.WallpaperAdapter;
-import org.Allah_Clock_Live_Wallpaper.model.ImageUrlsItem;
-import org.Allah_Clock_Live_Wallpaper.model.ResponseWallpaperItem;
+import org.Allah_Clock_Live_Wallpaper.model.WallpaperCategory;
+import org.Allah_Clock_Live_Wallpaper.model.WallpaperItem;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
+import org.Allah_Clock_Live_Wallpaper.utils.WallpaperCatalog;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /** Wallpapers inside one category. Banner at the bottom, native card in the middle. */
 public class WallpaperActivity extends AppCompatActivity {
 
+    /** Intent extra: index of the category inside {@link WallpaperCatalog}. */
+    public static final String EXTRA_CATEGORY_INDEX = "categoryIndex";
+
     private static final int GRID_SPAN = 2;
 
-    private WallpaperAdapter wallpaperAdapter;
     private NativeAdListAdapter listAdapter;
     private BannerAdController banner;
 
@@ -40,8 +41,8 @@ public class WallpaperActivity extends AppCompatActivity {
         setContentView(R.layout.activity_wallpaper);
         UiCompat.applyEdgeToEdge(this);
 
-        final ResponseWallpaperItem category = IntentCompat.getParcelableExtra(
-                getIntent(), "responseWallpaperItem", ResponseWallpaperItem.class);
+        WallpaperCategory category = WallpaperCatalog.getCategory(
+                getIntent().getIntExtra(EXTRA_CATEGORY_INDEX, -1));
         if (category == null) {
             finish();
             return;
@@ -53,18 +54,16 @@ public class WallpaperActivity extends AppCompatActivity {
         this.banner.load();
     }
 
-    private void initView(final ResponseWallpaperItem category) {
+    private void initView(final WallpaperCategory category) {
         this.ivBack = findViewById(R.id.ivBack);
         this.txtTitle = findViewById(R.id.txtTitle);
         this.recyclerViewCategory = findViewById(R.id.recyclerViewCategory);
 
-        this.txtTitle.setText(category.getCategoryName());
+        this.txtTitle.setText(category.getTitleRes());
         this.ivBack.setOnClickListener(view -> finish());
 
-        final List<ImageUrlsItem> images =
-                category.getImageUrls() != null ? category.getImageUrls() : new ArrayList<ImageUrlsItem>();
+        final List<WallpaperItem> images = category.getItems();
         WallpaperAdapter adapter = new WallpaperAdapter(images);
-        this.wallpaperAdapter = adapter;
         adapter.setClickListener(new WallpaperAdapter.ClickListener() {
             @Override
             public void setClick(final int i) {
@@ -72,7 +71,8 @@ public class WallpaperActivity extends AppCompatActivity {
                     return;
                 }
                 Intent intent = new Intent(WallpaperActivity.this, SetWallpaperActivity.class);
-                intent.putExtra("imageFile", images.get(i).getImageUrl());
+                intent.putExtra(SetWallpaperActivity.EXTRA_WALLPAPER_RES,
+                        images.get(i).getDrawableRes());
                 startActivity(intent);
             }
         });
