@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView rate;
     private ImageView share;
     private ImageView privacy;
+    private ImageView qibla;
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -65,8 +66,12 @@ public class MainActivity extends AppCompatActivity {
         this.rate = findViewById(R.id.rateus);
         this.share = findViewById(R.id.share);
         this.privacy = findViewById(R.id.privacy);
+        this.qibla = findViewById(R.id.qibla);
 
         this.privacy.setOnClickListener(v -> AdManager.showPrivacyOptions(MainActivity.this));
+
+        this.qibla.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, QiblaActivity.class)));
 
         this.rate.setOnClickListener(v -> {
             String packageName = getPackageName();

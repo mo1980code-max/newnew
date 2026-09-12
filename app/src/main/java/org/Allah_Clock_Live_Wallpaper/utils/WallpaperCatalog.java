@@ -40,6 +40,18 @@ public final class WallpaperCatalog {
             R.drawable.wp_madina_4, R.drawable.wp_madina_5,
     };
 
+    /** Jerusalem — Al-Aqsa and the Dome of the Rock. */
+    private static final int[] AQSA = {
+            R.drawable.wp_aqsa_1, R.drawable.wp_aqsa_2, R.drawable.wp_aqsa_3,
+            R.drawable.wp_aqsa_4, R.drawable.wp_aqsa_5,
+    };
+
+    /** Mosques, minarets and lantern-lit courtyards. */
+    private static final int[] MOSQUES = {
+            R.drawable.wp_mosque_1, R.drawable.wp_mosque_2, R.drawable.wp_mosque_3,
+            R.drawable.wp_mosque_4, R.drawable.wp_mosque_5,
+    };
+
     /** Gradient / abstract backgrounds that shipped with the first releases. */
     private static final int[] CLASSIC = {
             R.drawable.bg2, R.drawable.wp_min_1, R.drawable.bg, R.drawable.bg1,
@@ -53,6 +65,8 @@ public final class WallpaperCatalog {
         List<WallpaperCategory> list = new ArrayList<>();
         list.add(category(R.string.cat_kaaba, R.drawable.wp_kaaba_1, KAABA));
         list.add(category(R.string.cat_madina, R.drawable.wp_madina_1, MADINA));
+        list.add(category(R.string.cat_aqsa, R.drawable.wp_aqsa_1, AQSA));
+        list.add(category(R.string.cat_mosques, R.drawable.wp_mosque_1, MOSQUES));
         list.add(category(R.string.cat_classic, R.drawable.bg2, CLASSIC));
         return list;
     }

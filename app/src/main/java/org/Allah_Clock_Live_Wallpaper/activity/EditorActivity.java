@@ -20,8 +20,10 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatSeekBar;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -42,6 +44,7 @@ import org.Allah_Clock_Live_Wallpaper.utils.WallpaperHelper;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.AnalogClock;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.SmartClockPreview;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.TextClockPreview;
+import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 
 import java.io.File;
 
@@ -76,6 +79,8 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     private ImageView ivTextColor;
     private ImageView ivZoomIn;
     private ImageView ivZoomOut;
+    private ImageView ivOptions;
+    private WallpaperOverlayView overlayPreview;
     private LinearLayout layoutBottom;
     private LinearLayout layoutColor;
     private int mClockSize;
@@ -136,6 +141,9 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     protected void onResume() {
         super.onResume();
         UiCompat.applyImmersive(this);
+        if (this.overlayPreview != null) {
+            this.overlayPreview.refresh();
+        }
     }
 
     private void initView() {
@@ -158,6 +166,8 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         this.btnColor1 = findViewById(R.id.btnColor1);
         this.btnColor2 = findViewById(R.id.btnColor2);
         this.seekBar = findViewById(R.id.seekBar);
+        this.ivOptions = findViewById(R.id.ivOptions);
+        this.overlayPreview = findViewById(R.id.overlayPreview);
 
         this.analogClock.setAutoUpdate(true);
         this.bgRecyclerView.setLayoutManager(
@@ -176,6 +186,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         this.btnColor2.setOnClickListener(this);
         this.icDone.setOnClickListener(this);
         this.btnOk.setOnClickListener(this);
+        this.ivOptions.setOnClickListener(this);
 
         BgAdapter adapter = new BgAdapter();
         this.bgAdapter = adapter;
@@ -238,6 +249,11 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     @Override
     public void onClick(View view) {
         int id = view.getId();
+
+        if (id == R.id.ivOptions) {
+            showOptionsDialog();
+            return;
+        }
 
         if (id == R.id.btnColor1) {
             showColorPicker(selected -> {
@@ -483,5 +499,30 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 Log.w(TAG, "could not delete " + files[i].getAbsolutePath());
             }
         }
+    }
+
+    /** Hijri date + rotating adhkar toggles for the live wallpaper overlay. */
+    private void showOptionsDialog() {
+        View content = getLayoutInflater().inflate(R.layout.dialog_wallpaper_options, null);
+        SwitchCompat switchHijri = content.findViewById(R.id.switchHijri);
+        SwitchCompat switchDhikr = content.findViewById(R.id.switchDhikr);
+        switchHijri.setChecked(this.tinyDB.getBoolean("showHijri"));
+        switchDhikr.setChecked(this.tinyDB.getBoolean("showDhikr"));
+        switchHijri.setOnCheckedChangeListener((button, checked) -> {
+            this.tinyDB.putBoolean("showHijri", checked);
+            if (this.overlayPreview != null) {
+                this.overlayPreview.refresh();
+            }
+        });
+        switchDhikr.setOnCheckedChangeListener((button, checked) -> {
+            this.tinyDB.putBoolean("showDhikr", checked);
+            if (this.overlayPreview != null) {
+                this.overlayPreview.refresh();
+            }
+        });
+        new AlertDialog.Builder(this)
+                .setView(content)
+                .setPositiveButton(R.string.ok, null)
+                .show();
     }
 }

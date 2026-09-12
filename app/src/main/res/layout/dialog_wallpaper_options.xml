@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingLeft="24dp"
+    android:paddingTop="20dp"
+    android:paddingRight="24dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/myfont"
+        android:text="@string/options_title"
+        android:textColor="@color/appColor"
+        android:textSize="19sp" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchHijri"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:text="@string/option_hijri"
+        android:textColor="@color/textColor"
+        android:textSize="16sp" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchDhikr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:text="@string/option_dhikr"
+        android:textColor="@color/textColor"
+        android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/options_hint"
+        android:textColor="@color/adBg"
+        android:textSize="13sp" />
+</LinearLayout>

@@ -29,6 +29,8 @@
     <!-- Wallpaper categories (all images are bundled inside the APK) -->
     <string name="cat_kaaba">Kaaba &amp; Masjid al-Haram</string>
     <string name="cat_madina">The Prophet\'s Mosque</string>
+    <string name="cat_aqsa">Al-Aqsa &amp; Jerusalem</string>
+    <string name="cat_mosques">Mosques &amp; Minarets</string>
     <string name="cat_classic">Classic Gradients</string>
     <string name="wallpaper_chooser_unavailable">No wallpaper picker is available on this device</string>
     <string name="wallpaper_preview_content_description">Wallpaper preview</string>
@@ -69,6 +71,23 @@
     <string name="ad_loading">Loading…</string>
 
     <!-- ── Privacy / consent ─────────────────────────────────────────── -->
+    <!-- Qibla compass -->
+    <string name="title_qibla">Qibla Compass</string>
+    <string name="cd_qibla">Open the Qibla compass</string>
+    <string name="qibla_city">Choose your city</string>
+    <string name="qibla_bearing">Qibla direction: %1$d° from north</string>
+    <string name="qibla_distance">Distance to Makkah: %1$d km</string>
+    <string name="qibla_sensor_unavailable">The compass sensor is not available on this device</string>
+    <string name="qibla_calibrate">Move your phone in a figure of eight to calibrate the compass</string>
+
+    <!-- Wallpaper overlay options -->
+    <string name="options_title">Wallpaper options</string>
+    <string name="cd_options">Wallpaper options</string>
+    <string name="option_hijri">Show the Hijri date</string>
+    <string name="option_dhikr">Show rotating Adhkar</string>
+    <string name="options_hint">The Hijri date appears at the top of the live wallpaper and a short dhikr rotates at the bottom every few hours.</string>
+    <string name="hijri_format">%1$d %2$s %3$d AH</string>
+
     <string name="privacy_settings">Privacy settings</string>
     <string name="privacy_settings_content_description">Change your advertising and privacy choices</string>
 
