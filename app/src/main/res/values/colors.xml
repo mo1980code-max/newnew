@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorAccent">#4d4d4d</color>
+    <color name="colorPrimary">#646464</color>
+    <color name="colorPrimaryDark">#363636</color>
+
+    <color name="adBg">#7e83ff</color>
+    <color name="adButton">#54c7c9</color>
+    <color name="appColor">#4d52de</color>
+    <color name="black">#ff000000</color>
+    <color name="colorWhite">#fff</color>
+    <color name="colorWidgetBackground">#222121</color>
+    <color name="colorYellow">#ffc107</color>
+    <color name="ic_launcher_background">#4d52de</color>
+    <color name="purple_200">#ffbb86fc</color>
+    <color name="purple_700">#ff3700b3</color>
+    <color name="teal_200">#ff03dac5</color>
+    <color name="textColor">#fff</color>
+    <color name="textWhite">#fff</color>
+    <color name="themeColor">#eeeeee</color>
+    <color name="themeDarkColor">#dedede</color>
+    <color name="transparent">#00000000</color>
+</resources>

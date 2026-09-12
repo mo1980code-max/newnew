@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.clock.livewallpaper.viewUtils.SquareRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layoutBackground"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:layout_margin="10dp"
+    android:paddingLeft="5dp"
+    android:paddingTop="3dp"
+    android:paddingRight="5dp"
+
+    android:paddingBottom="3dp"
+    app:cardBackgroundColor="@color/themeDarkColor"
+    app:cardCornerRadius="15dp"
+    app:cardUseCompatPadding="true">
+
+    <com.clock.livewallpaper.viewUtils.AnalogClock
+        android:id="@+id/iv_clock"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+</com.clock.livewallpaper.viewUtils.SquareRelativeLayout>
