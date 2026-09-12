@@ -38,6 +38,7 @@ import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.adapter.BgAdapter;
 import org.Allah_Clock_Live_Wallpaper.ads.AdManager;
 import org.Allah_Clock_Live_Wallpaper.model.Clocks;
+import org.Allah_Clock_Live_Wallpaper.utils.FrameRate;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 import org.Allah_Clock_Live_Wallpaper.utils.WallpaperHelper;
@@ -506,6 +507,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         View content = getLayoutInflater().inflate(R.layout.dialog_wallpaper_options, null);
         SwitchCompat switchHijri = content.findViewById(R.id.switchHijri);
         SwitchCompat switchDhikr = content.findViewById(R.id.switchDhikr);
+        SwitchCompat switchPower = content.findViewById(R.id.switchPower);
         switchHijri.setChecked(this.tinyDB.getBoolean("showHijri"));
         switchDhikr.setChecked(this.tinyDB.getBoolean("showDhikr"));
         switchHijri.setOnCheckedChangeListener((button, checked) -> {
@@ -520,6 +522,9 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 this.overlayPreview.refresh();
             }
         });
+        switchPower.setChecked(FrameRate.isPowerSaver(this.tinyDB));
+        switchPower.setOnCheckedChangeListener((button, checked) ->
+                this.tinyDB.putBoolean("powerSaver", checked));
         new AlertDialog.Builder(this)
                 .setView(content)
                 .setPositiveButton(R.string.ok, null)

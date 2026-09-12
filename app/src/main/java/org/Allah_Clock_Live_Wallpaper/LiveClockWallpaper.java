@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 
 
 import org.Allah_Clock_Live_Wallpaper.model.Clocks;
+import org.Allah_Clock_Live_Wallpaper.utils.FrameRate;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.AnalogClock;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.SmartClockPreview;
@@ -61,7 +62,9 @@ public class LiveClockWallpaper extends WallpaperService {
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         this.cat1Clock = new TextClockPreview(context);
         this.smartClockPreview = new SmartClockPreview(context);
-        this.imageViewBase.setAutoUpdate(true);
+        // The engine drives the frame rate itself (see FrameRate), so the view must not
+        // run its own 800ms ticker on top of it.
+        this.imageViewBase.setAutoUpdate(false);
         this.widgetGroup.setLayoutParams(new LinearLayout.LayoutParams(-1, -1));
         this.widgetGroup.setAddStatesFromChildren(true);
         this.widgetGroup.addView(this.imageView);
@@ -189,7 +192,9 @@ public class LiveClockWallpaper extends WallpaperService {
                 }
                 LiveClockWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
                 if (this.mVisible) {
-                    LiveClockWallpaper.this.mHandler.postDelayed(this.mDrawClock, 1000);
+                    LiveClockWallpaper.this.mHandler.postDelayed(this.mDrawClock,
+                            FrameRate.liveClockDelayMs(LiveClockWallpaper.this.tinyDB,
+                                    LiveClockWallpaper.this.tinyDB.getInt("clockType")));
                 }
             } catch (Throwable th3) {
                 th = th3;
@@ -238,6 +243,7 @@ public class LiveClockWallpaper extends WallpaperService {
             LiveClockWallpaper.this.overlayView.layout(0, 0, LiveClockWallpaper.this.width, LiveClockWallpaper.this.height);
             if (LiveClockWallpaper.this.tinyDB.getInt("clockType") == 0) {
                 LiveClockWallpaper.this.imageViewBase.setClock(clocks);
+                LiveClockWallpaper.this.imageViewBase.setTime(System.currentTimeMillis());
                 LiveClockWallpaper.this.imageViewBase.setClockSize((float) LiveClockWallpaper.this.mClockSize);
                 LiveClockWallpaper.this.imageViewBase.setPosition(LiveClockWallpaper.this.mClockPosX, LiveClockWallpaper.this.mClockPosY);
                 LiveClockWallpaper.this.imageViewBase.layout(0, 0, LiveClockWallpaper.this.width, LiveClockWallpaper.this.height);
