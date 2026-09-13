@@ -1,0 +1,133 @@
+<resources>
+
+    <string name="app_name">ساعة الله الخلفية الحية</string>
+
+    <!-- عناوين الشاشات -->
+    <string name="title_analog_clock">ساعة تناظرية</string>
+    <string name="title_digital_clock">ساعة رقمية</string>
+    <string name="title_smart_clock">ساعة ذكية</string>
+    <string name="title_wallpaper">الخلفيات</string>
+    <string name="tile_android_clock">ساعة أندرويد 12</string>
+    <string name="tile_analog_clock">ساعة\nتناظرية</string>
+    <string name="tile_digital_clock">ساعة\nرقمية</string>
+    <string name="tile_smart_clock">ساعة\nذكية</string>
+
+    <!-- المحرر -->
+    <string name="choose_color">اختر اللون</string>
+    <string name="ok">موافق</string>
+    <string name="cancel">إلغاء</string>
+    <string name="color_1">اللون 1</string>
+    <string name="color_2">اللون 2</string>
+    <string name="select_picture">اختر صورة</string>
+    <string name="image_loading">جارٍ استيراد الصورة…</string>
+    <string name="image_failed">تعذّر قراءة هذه الصورة، اختر صورة أخرى</string>
+
+    <!-- الخلفيات -->
+    <string name="set_wallpaper">تعيين الخلفية</string>
+    <string name="save_failed">تعذّر تجهيز هذه الخلفية، حاول مجددًا</string>
+    <string name="cat_kaaba">الكعبة والمسجد الحرام</string>
+    <string name="cat_madina">المسجد النبوي</string>
+    <string name="cat_aqsa">الأقصى والقدس</string>
+    <string name="cat_mosques">مساجد ومآذن</string>
+    <string name="cat_classic">تدرجات كلاسيكية</string>
+    <string name="wallpaper_chooser_unavailable">لا يتوفر منتقي خلفيات على هذا الجهاز</string>
+    <string name="wallpaper_preview_content_description">معاينة الخلفية</string>
+
+    <!-- مشاركة وتقييم -->
+    <string name="share_application">مشاركة التطبيق</string>
+    <string name="rate_unavailable">تعذّر فتح متجر Play</string>
+
+    <!-- أوصاف الوصول -->
+    <string name="cd_rate">قيّم هذا التطبيق</string>
+    <string name="cd_back">رجوع</string>
+    <string name="cd_done">تم</string>
+    <string name="cd_zoom_in">تكبير</string>
+    <string name="cd_zoom_out">تصغير</string>
+    <string name="cd_center">توسيط الساعة</string>
+    <string name="cd_background_color">لون الخلفية</string>
+    <string name="cd_text_color">لون النص</string>
+    <string name="cd_gallery">اختر صورة من المعرض</string>
+    <string name="cd_backgrounds">اختر خلفية مدمجة</string>
+    <string name="cd_apply_wallpaper">تعيين كخلفية حية</string>
+    <string name="cd_wallpaper_preview">معاينة الخلفية</string>
+    <string name="cd_clock_type">نوع الساعة</string>
+
+    <!-- الإعلان الأصلي -->
+    <string name="ad_badge">إعلان</string>
+    <string name="ad_badge_content_description">إعلان</string>
+    <string name="ad_media_content_description">وسائط الإعلان</string>
+    <string name="ad_icon_content_description">شعار المعلن</string>
+
+    <!-- الساعات الذهبية -->
+    <string name="premium_lock_content_description">ساعة مميزة، شاهد إعلانًا لفتحها</string>
+    <string name="premium_dialog_title">الساعات الذهبية</string>
+    <string name="premium_dialog_message">شاهد فيديو قصيرًا لفتح كل الساعات الذهبية المميزة في هذه الجلسة. يمكنك الإلغاء دائمًا والاستمرار بالساعات المجانية.</string>
+    <string name="premium_dialog_watch">شاهد الإعلان وافتح</string>
+    <string name="premium_dialog_cancel">ليس الآن</string>
+    <string name="premium_unlocked">تم فتح الساعات المميزة</string>
+    <string name="premium_not_unlocked">الساعات المميزة ما زالت مقفلة</string>
+    <string name="ad_loading">جارٍ التحميل…</string>
+
+    <!-- بوصلة القبلة -->
+    <string name="title_qibla">بوصلة القبلة</string>
+    <string name="cd_qibla">افتح بوصلة القبلة</string>
+    <string name="qibla_city">اختر مدينتك</string>
+    <string name="qibla_bearing">اتجاه القبلة: %1$d° من الشمال</string>
+    <string name="qibla_distance">المسافة إلى مكة: %1$d كم</string>
+    <string name="qibla_sensor_unavailable">مستشعر البوصلة غير متوفر على هذا الجهاز</string>
+    <string name="qibla_calibrate">حرّك هاتفك على شكل رقم ثمانية لمعايرة البوصلة</string>
+
+    <!-- خيارات الخلفية -->
+    <string name="options_title">خيارات الخلفية</string>
+    <string name="cd_options">خيارات الخلفية</string>
+    <string name="option_hijri">إظهار التاريخ الهجري</string>
+    <string name="option_dhikr">إظهار الأذكار المتغيرة</string>
+    <string name="option_power">توفير الطاقة: عقرب الثواني يقفز كل ثانية</string>
+    <string name="options_hint">يظهر التاريخ الهجري أعلى الخلفية الحية ويتبدل ذكر قصير أسفلها كل بضع ساعات. وضع توفير الطاقة يبقي إعادة الرسم عند إطار واحد في الثانية؛ أطفئه لعقرب ثوانٍ انسيابي الشكل لكنه يستهلك بطارية أكثر بوضوح.</string>
+    <string name="hijri_format">%1$d %2$s %3$d هـ</string>
+
+    <!-- السبحة العائمة -->
+    <string name="cd_tasbeeh">تشغيل أو إيقاف السبحة العائمة</string>
+    <string name="tasbeeh_started">السبحة العائمة تعمل — انقر عليها للعدّ</string>
+    <string name="tasbeeh_stopped">تم إيقاف السبحة العائمة</string>
+    <string name="tasbeeh_permission_needed">اسمح بـ«العرض فوق التطبيقات الأخرى» حتى تطفو السبحة فوق التطبيقات</string>
+    <string name="tasbeeh_locked">تم قفل العدّاد</string>
+    <string name="tasbeeh_unlocked">تم فك قفل العدّاد</string>
+    <string name="tasbeeh_reset_done">تم تصفير العدّاد</string>
+    <string name="tasbeeh_lock_glyph">🔒</string>
+    <string name="tasbeeh_count_content_description">عدّاد الذكر</string>
+    <string name="tasbeeh_reset_content_description">تصفير العدّاد، ضغط مطوّل</string>
+
+    <!-- الودجات -->
+    <string name="widget_name_square">ساعة الله 2×2</string>
+    <string name="widget_name_wide">ساعة الله 4×2</string>
+    <string name="widget_desc">تصميم ساعتك المختار مع التاريخ الهجري وذكر متبدل. يُحدَّث مرة في الدقيقة، أخف بكثير على البطارية من الخلفية الحية.</string>
+
+    <!-- أذكار الصباح والمساء -->
+    <string name="athkar_morning_title">أذكار الصباح</string>
+    <string name="athkar_evening_title">أذكار المساء</string>
+    <string name="athkar_settings">إعدادات توقيت الأذكار</string>
+    <string name="athkar_mode_auto">أوقات فلكية (الفجر والعصر والمغرب تُحسب دون إنترنت)</string>
+    <string name="athkar_mode_fixed">أوقات ثابتة أختارها بنفسي</string>
+    <string name="athkar_angle_15">زاوية الفجر 15°</string>
+    <string name="athkar_angle_18">زاوية الفجر 18°</string>
+    <string name="athkar_morning_slot">نافذة الصباح (بداية / نهاية)</string>
+    <string name="athkar_evening_slot">نافذة المساء (بداية / نهاية)</string>
+    <string name="athkar_repeat_total">× %1$d</string>
+    <string name="athkar_completed">تم ✓</string>
+    <string name="option_athkar_badge">إظهار شارة الأذكار على الخلفية</string>
+    <string name="cd_athkar_badge">افتح قارئ الأذكار</string>
+    <string name="cd_athkar_close">إغلاق قارئ الأذكار</string>
+    <string name="cd_athkar_counter">عدّاد الذكر، انقر للعدّ</string>
+
+    <!-- اللغة -->
+    <string name="choose_language">اللغة</string>
+    <string name="language_english">English</string>
+    <string name="language_arabic">العربية</string>
+    <string name="cd_language">تغيير لغة التطبيق</string>
+
+    <!-- الخصوصية -->
+    <string name="privacy_settings">إعدادات الخصوصية</string>
+    <string name="privacy_settings_content_description">تغيير خياراتك الإعلانية والخصوصية</string>
+
+</resources>

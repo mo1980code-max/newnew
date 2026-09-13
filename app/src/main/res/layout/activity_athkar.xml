@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/athkarRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Tapping above the sheet dismisses it, like a real bottom sheet. -->
+        <View
+            android:id="@+id/athkarOutside"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="22"
+            android:contentDescription="@string/cd_athkar_close" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="78"
+            android:background="@drawable/bg_athkar_sheet"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="16dp">
+
+            <View
+                android:layout_width="44dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/bg_athkar_card" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/athkarTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/myfont"
+                    android:text="@string/athkar_morning_title"
+                    android:textColor="@color/textColor"
+                    android:textSize="20sp" />
+
+                <ImageView
+                    android:id="@+id/athkarSettings"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:contentDescription="@string/athkar_settings"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_options" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/athkarList"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="10dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingBottom="8dp" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

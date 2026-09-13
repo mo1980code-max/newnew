@@ -10,3 +10,6 @@
 /app/build
 /.kotlin
 *.hprof
+
+# agent sandbox helpers (static verifier)
+.arena/

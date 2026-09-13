@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -17,6 +18,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.ads.AdManager;
 import org.Allah_Clock_Live_Wallpaper.service.FloatingTasbeehService;
+import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
+import org.Allah_Clock_Live_Wallpaper.utils.PrayerWindow;
+import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
 /**
@@ -37,6 +41,9 @@ public class MainActivity extends AppCompatActivity {
     private ImageView privacy;
     private ImageView qibla;
     private ImageView tasbeeh;
+    private ImageView language;
+    private TextView athkarBadge;
+    private TinyDB tinyDB;
 
     /** Returns from the “display over other apps” settings screen. */
     private final ActivityResultLauncher<Intent> overlayLauncher =
@@ -61,6 +68,41 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         refreshPrivacyEntry();
+        refreshAthkarBadge();
+    }
+
+    /**
+     * The badge appears only inside the morning / evening athkar window and hides completely
+     * outside it; the window is evaluated right here, lazily, with no scheduler involved.
+     */
+    private void refreshAthkarBadge() {
+        if (this.athkarBadge == null) {
+            return;
+        }
+        int window = PrayerWindow.currentWindow(this, this.tinyDB, System.currentTimeMillis());
+        boolean visible = window != PrayerWindow.NONE
+                && this.tinyDB.getBoolean("showAthkarBadge", true);
+        this.athkarBadge.setVisibility(visible ? View.VISIBLE : View.GONE);
+        if (visible) {
+            this.athkarBadge.setText(window == PrayerWindow.MORNING
+                    ? R.string.athkar_morning_title
+                    : R.string.athkar_evening_title);
+        }
+    }
+
+    private void showLanguageDialog() {
+        String[] tags = {LocaleHelper.TAG_EN, LocaleHelper.TAG_AR};
+        String[] labels = {getString(R.string.language_english),
+                getString(R.string.language_arabic)};
+        int checked = LocaleHelper.isArabic(this) ? 1 : 0;
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(R.string.choose_language)
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    LocaleHelper.apply(tags[which]);
+                    dialog.dismiss();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     /**
@@ -82,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
         this.privacy = findViewById(R.id.privacy);
         this.qibla = findViewById(R.id.qibla);
         this.tasbeeh = findViewById(R.id.tasbeeh);
+        this.language = findViewById(R.id.language);
+        this.athkarBadge = findViewById(R.id.athkarBadge);
+        this.tinyDB = new TinyDB(this);
 
         this.privacy.setOnClickListener(v -> AdManager.showPrivacyOptions(MainActivity.this));
 
@@ -89,6 +134,11 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, QiblaActivity.class)));
 
         this.tasbeeh.setOnClickListener(v -> toggleTasbeeh());
+
+        this.language.setOnClickListener(v -> showLanguageDialog());
+
+        this.athkarBadge.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, AthkarActivity.class)));
 
         this.rate.setOnClickListener(v -> {
             String packageName = getPackageName();

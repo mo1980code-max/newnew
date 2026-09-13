@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.utils.HijriDate;
+import org.Allah_Clock_Live_Wallpaper.utils.PrayerWindow;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 
 /**
@@ -33,11 +34,13 @@ public class WallpaperOverlayView extends View {
     private static final long REBUILD_INTERVAL_MS = 60L * 1000L;
 
     private final TextPaint paint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
+    private final TextPaint badgePaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
     private final TinyDB tinyDB;
 
     private boolean showHijri;
     private boolean showDhikr;
     private String hijriText = "";
+    private String badgeText = "";
     @Nullable
     private StaticLayout dhikrLayout;
 
@@ -55,6 +58,11 @@ public class WallpaperOverlayView extends View {
         this.paint.setShadowLayer(8f, 0f, 2f, 0xB3000000);
         // System typeface: guaranteed to shape Arabic on every device.
         this.paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
+
+        // Athkar badge: gold, bold, same soft shadow so it stays readable over any photo.
+        this.badgePaint.setColor(0xFFD4AF37);
+        this.badgePaint.setShadowLayer(8f, 0f, 2f, 0xB3000000);
+        this.badgePaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
         setClickable(false);
         setFocusable(false);
     }
@@ -80,11 +88,20 @@ public class WallpaperOverlayView extends View {
             this.cacheWidth = width;
         }
 
+        float badgeBaseline = height * 0.075f + clamp(height * 0.021f, 26f, 46f);
         if (this.showHijri && this.hijriText.length() > 0) {
             this.paint.setTextSize(clamp(height * 0.026f, 30f, 54f));
             float textWidth = this.paint.measureText(this.hijriText);
-            canvas.drawText(this.hijriText, (width - textWidth) / 2f,
-                    height * 0.075f + this.paint.getTextSize(), this.paint);
+            float hijriBaseline = height * 0.075f + this.paint.getTextSize();
+            canvas.drawText(this.hijriText, (width - textWidth) / 2f, hijriBaseline, this.paint);
+            badgeBaseline = hijriBaseline + clamp(height * 0.021f, 26f, 46f) * 1.45f;
+        }
+
+        if (this.badgeText.length() > 0) {
+            this.badgePaint.setTextSize(clamp(height * 0.021f, 26f, 46f));
+            float badgeWidth = this.badgePaint.measureText(this.badgeText);
+            canvas.drawText(this.badgeText, (width - badgeWidth) / 2f, badgeBaseline,
+                    this.badgePaint);
         }
 
         if (this.showDhikr && this.dhikrLayout != null) {
@@ -105,6 +122,17 @@ public class WallpaperOverlayView extends View {
             this.hijriText = HijriDate.format(getContext(), now);
         } else {
             this.hijriText = "";
+        }
+
+        // Athkar badge: only inside the morning / evening window, evaluated lazily here.
+        this.badgeText = "";
+        if (this.tinyDB.getBoolean("showAthkarBadge", true)) {
+            int window = PrayerWindow.currentWindow(getContext(), this.tinyDB, now);
+            if (window == PrayerWindow.MORNING) {
+                this.badgeText = getContext().getString(R.string.athkar_morning_title);
+            } else if (window == PrayerWindow.EVENING) {
+                this.badgeText = getContext().getString(R.string.athkar_evening_title);
+            }
         }
 
         if (this.showDhikr) {

@@ -37,9 +37,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:layout_marginLeft="10dp"
                 android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -70,10 +68,8 @@
                 android:background="@drawable/bg_ad_badge"
                 android:contentDescription="@string/ad_badge_content_description"
                 android:paddingStart="6dp"
-                android:paddingLeft="6dp"
                 android:paddingTop="2dp"
                 android:paddingEnd="6dp"
-                android:paddingRight="6dp"
                 android:paddingBottom="2dp"
                 android:text="@string/ad_badge"
                 android:textColor="@color/adBadgeText"
@@ -119,7 +115,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
                 android:textColor="@color/nativeAdTextSecondary"
                 android:textSize="12sp" />
 
@@ -128,7 +123,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="@color/nativeAdTextSecondary"
@@ -146,9 +140,7 @@
                 android:background="@drawable/bg_cta_button"
                 android:minWidth="110dp"
                 android:paddingStart="16dp"
-                android:paddingLeft="16dp"
                 android:paddingEnd="16dp"
-                android:paddingRight="16dp"
                 android:textAllCaps="false"
                 android:textColor="@color/colorWhite"
                 android:textSize="13sp" />

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/athkarCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="4dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginEnd="4dp"
+    android:layout_marginBottom="6dp"
+    android:background="@drawable/bg_athkar_card"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <TextView
+        android:id="@+id/athkarArabic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="serif"
+        android:lineSpacingExtra="7dp"
+        android:textColor="@color/textColor"
+        android:textDirection="rtl"
+        android:textSize="19sp" />
+
+    <TextView
+        android:id="@+id/athkarTransliteration"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="#99FFFFFF"
+        android:textDirection="ltr"
+        android:textSize="12sp"
+        android:textStyle="italic" />
+
+    <TextView
+        android:id="@+id/athkarEnglish"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:lineSpacingExtra="3dp"
+        android:textColor="#CCFFFFFF"
+        android:textDirection="ltr"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/athkarReference"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/adBg"
+        android:textSize="11sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/athkarCounter"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="@drawable/bg_athkar_counter"
+            android:contentDescription="@string/cd_athkar_counter"
+            android:gravity="center"
+            android:textColor="#FF101820"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/athkarRepeatInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:textColor="#B3FFFFFF"
+            android:textSize="13sp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/athkarDone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/athkar_completed"
+            android:textColor="#80CBC4"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>

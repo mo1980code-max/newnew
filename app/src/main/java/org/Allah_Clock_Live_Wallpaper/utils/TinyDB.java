@@ -56,6 +56,14 @@ public class TinyDB {
         return this.preferences.getBoolean(str, false);
     }
 
+    /**
+     * Boolean preference with an explicit fallback. Needed for settings that must default to
+     * "on" (power saver, the athkar badge) because {@link #getBoolean(String)} defaults to false.
+     */
+    public boolean getBoolean(String str, boolean z) {
+        return this.preferences.getBoolean(str, z);
+    }
+
 
     public Object getObject(String str, Class<?> cls) {
         return getObject(str, cls, new Gson());
