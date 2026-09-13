@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Holy Quran & Islamic Suite — Live Preview</title>
+<title>تطبيق ساعة الخلفية الحية والقرآن والمسبحة — Live Preview</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #0A0C10; color: #fff; min-height: 100vh; padding: 18px 14px 60px; }
@@ -21,7 +21,8 @@
   /* Navigation Tabs */
   .nav-tabs { display: flex; gap: 8px; margin-bottom: 22px; background: #161E2E; padding: 6px; border-radius: 14px; overflow-x: auto; border: 1px solid #212B3E; }
   .tab-btn { flex: 1; min-width: 130px; padding: 10px 14px; background: transparent; border: none; color: #8F9BB3; font-weight: 700; font-size: 13.5px; border-radius: 10px; cursor: pointer; transition: 0.2s; text-align: center; white-space: nowrap; }
-  .tab-btn.active { background: #F59E0B; color: #161E2E; box-shadow: 0 4px 12px rgba(245,158,11,.3); font-weight: 800; }
+  .tab-btn.active { background: #4d52de; color: #fff; box-shadow: 0 4px 12px rgba(77,82,222,.4); font-weight: 800; }
+  .tab-btn.quran-active { background: #F59E0B; color: #161E2E; }
 
   /* Main Grid */
   .grid { display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; }
@@ -29,7 +30,7 @@
 
   /* Phone Mockup */
   .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 360px; }
-  .phone { width: 100%; height: 710px; border-radius: 40px; border: 12px solid #05070A; overflow: hidden; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,.7); background: #0D1117; display: flex; flex-direction: column; }
+  .phone { width: 100%; height: 720px; border-radius: 40px; border: 12px solid #05070A; overflow: hidden; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,.7); background: #14142b; display: flex; flex-direction: column; }
   .phone-screen { flex: 1; overflow-y: auto; position: relative; scrollbar-width: none; }
   .phone-screen::-webkit-scrollbar { display: none; }
 
@@ -38,38 +39,68 @@
   .app-header .title { font-size: 15px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
   .icon-btn { background: transparent; border: none; color: #F59E0B; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; }
 
-  /* Quran Index Inside Phone */
-  .quran-index-content { padding: 14px; }
+  /* 1. Main Home Screen (activity_select_function) */
+  .home-screen { padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .home-title-box { text-align: center; padding: 10px 0 16px; }
+  .home-app-name { font-size: 21px; font-weight: 800; color: #4d52de; }
+  .home-app-sub { font-size: 12px; color: #8F9BB3; margin-top: 4px; }
+
+  .menu-card { background: #1e1e3f; border: 2px solid #333366; border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s; }
+  .menu-card:hover { transform: translateY(-2px); border-color: #4d52de; box-shadow: 0 8px 20px rgba(77,82,222,.3); }
+  .menu-card.gold-card:hover { border-color: #F59E0B; box-shadow: 0 8px 20px rgba(245,158,11,.3); }
+  .menu-icon-wrap { width: 56px; height: 56px; border-radius: 16px; background: #2a2a55; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .gold-card .menu-icon-wrap { background: #262038; }
+  .menu-info { flex: 1; }
+  .menu-title { font-size: 16px; font-weight: 800; color: #fff; }
+  .menu-desc { font-size: 11.5px; color: #a9abe0; margin-top: 3px; }
+  .menu-arrow { font-size: 18px; color: #8F9BB3; }
+
+  /* 2. Clock Types Screen (activity_clock_funtion) */
+  .clock-types-screen { padding: 16px; }
+  .clock-type-card { background: #1e1e3f; border: 2px solid #2e2e58; border-radius: 18px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: 0.2s; }
+  .clock-type-card:hover { border-color: #4d52de; background: #262650; }
+  .clock-thumb { width: 64px; height: 64px; border-radius: 14px; background: #101026; display: flex; align-items: center; justify-content: center; font-size: 32px; border: 1px solid #3d3d7a; }
+
+  /* 3. Clock Editor Screen (activity_editor) */
+  .clock-editor-view { height: 100%; display: flex; flex-direction: column; background: #14142b; position: relative; }
+  .clock-stage { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.8s; overflow: hidden; }
   
-  /* Bookmark Card */
-  .card-bookmark { background: #161E2E; border: 1px solid #212B3E; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; }
-  .card-bookmark:hover { border-color: #F59E0B; }
+  /* Analog Clock Graphics */
+  .analog-clock-container { width: 190px; height: 190px; border-radius: 50%; border: 6px solid #ffd479; background: radial-gradient(circle, #202042 0%, #101024 100%); position: relative; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+  .analog-dial-num { position: absolute; font-size: 12px; font-weight: 800; color: #ffd479; }
+  .analog-center-dot { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #ffd479; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; }
+  .analog-hand { position: absolute; bottom: 50%; left: 50%; transform-origin: 50% 100%; border-radius: 4px; }
+  .hand-hour { width: 5px; height: 48px; background: #ffffff; margin-left: -2.5px; z-index: 2; }
+  .hand-minute { width: 3.5px; height: 68px; background: #c9ccff; margin-left: -1.75px; z-index: 3; }
+  .hand-second { width: 2px; height: 78px; background: #ff5252; margin-left: -1px; z-index: 4; }
+
+  /* Digital/Smart Clock Display */
+  .smart-clock-card { border-radius: 18px; padding: 14px 26px; text-align: center; background: rgba(0,0,0,0); }
+  .smart-time { font-weight: 900; letter-spacing: 2px; line-height: 1.1; font-size: 42px; color: #fff; }
+  .smart-date { margin-top: 6px; display: flex; gap: 16px; justify-content: center; font-weight: 700; font-size: 14px; color: #ffd479; }
+
+  /* 4. Quran Module Screens */
+  .quran-index-content { padding: 14px; background: #0D1117; min-height: 100%; }
+  .card-bookmark { background: #161E2E; border: 1px solid #212B3E; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 12px; cursor: pointer; }
   .bm-icon { font-size: 26px; color: #F59E0B; }
   .bm-info { flex: 1; }
   .bm-title { font-size: 13.5px; font-weight: 800; color: #F59E0B; }
   .bm-sub { font-size: 12px; color: #E6EDF3; margin-top: 2px; }
   .bm-tag { background: #F59E0B; color: #161E2E; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; }
 
-  /* Sub Tabs (Surahs / Juz) */
   .quran-subtabs { display: flex; gap: 6px; background: #161E2E; padding: 4px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #212B3E; }
   .qtab-btn { flex: 1; padding: 7px; background: transparent; border: none; color: #8F9BB3; font-weight: 700; font-size: 12.5px; border-radius: 7px; cursor: pointer; }
   .qtab-btn.active { background: #F59E0B; color: #161E2E; font-weight: 800; }
 
-  /* Search Input */
   .qsearch-box { width: 100%; background: #161E2E; border: 1px solid #212B3E; border-radius: 10px; padding: 9px 12px; color: #fff; font-size: 12.5px; margin-bottom: 12px; outline: none; }
-  .qsearch-box:focus { border-color: #F59E0B; }
-
-  /* Surahs & Juz List Items */
-  .surah-item, .juz-item { background: #161E2E; border: 1px solid #212B3E; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.15s; }
-  .surah-item:hover, .juz-item:hover { border-color: #F59E0B; background: #1c273c; }
+  .surah-item, .juz-item { background: #161E2E; border: 1px solid #212B3E; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; cursor: pointer; }
   .s-badge { width: 36px; height: 36px; border-radius: 50%; background: #212B3E; color: #F59E0B; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; }
   .s-body { flex: 1; }
-  .s-title { font-size: 14.5px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 6px; }
-  .s-en { font-size: 11px; color: #8F9BB3; font-weight: normal; }
+  .s-title { font-size: 14.5px; font-weight: 800; color: #fff; }
   .s-meta { font-size: 11px; color: #ffd479; margin-top: 2px; }
   .s-page { background: #212B3E; color: #a9abe0; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; }
 
-  /* Quran Reader View inside Phone */
+  /* Quran Reader View */
   .reader-view { position: absolute; inset: 0; background: #0D1117; display: flex; flex-direction: column; overflow: hidden; }
   .reader-top-overlay, .reader-bottom-overlay { position: absolute; left: 0; right: 0; background: rgba(22,30,46,0.95); backdrop-filter: blur(8px); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; z-index: 10; transition: transform 0.25s, opacity 0.25s; }
   .reader-top-overlay { top: 0; border-bottom: 1px solid #212B3E; }
@@ -86,13 +117,9 @@
   .page-quran-text { flex: 1; font-size: 17.5px; line-height: 2; text-align: center; color: #E6EDF3; padding: 6px 0; overflow-y: auto; }
   .page-inner-footer { text-align: center; font-size: 12px; font-weight: 800; color: #a9abe0; padding-top: 8px; border-top: 1px solid #1F293D; }
 
-  /* Toast Simulator */
-  .toast-box { position: absolute; bottom: 65px; left: 20px; right: 20px; background: #F59E0B; color: #161E2E; padding: 9px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; text-align: center; z-index: 20; box-shadow: 0 4px 20px rgba(0,0,0,0.5); opacity: 0; transform: translateY(10px); transition: 0.3s; pointer-events: none; }
-  .toast-box.show { opacity: 1; transform: translateY(0); }
-
-  /* Tasbih Section Inside Phone */
-  .tasbih-screen { padding: 14px; }
-  .occasion-banner { background: linear-gradient(135deg, #2b1b54, #1b1b3a); border: 1px solid #e1b12c55; border-radius: 16px; padding: 14px; margin-bottom: 14px; position: relative; overflow: hidden; }
+  /* 5. Tasbih Screen */
+  .tasbih-screen { padding: 14px; background: #14142b; }
+  .occasion-banner { background: linear-gradient(135deg, #2b1b54, #1b1b3a); border: 1px solid #e1b12c55; border-radius: 16px; padding: 14px; margin-bottom: 14px; }
   .occ-badge { display: inline-block; background: #e1b12c; color: #14142b; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; margin-bottom: 6px; }
   .occ-title { font-size: 13.5px; font-weight: 800; color: #fff; margin-bottom: 4px; }
   .occ-virtue { font-size: 11.5px; color: #7bed9f; background: rgba(123,237,159,0.1); padding: 6px 8px; border-radius: 8px; line-height: 1.4; margin-bottom: 10px; }
@@ -104,46 +131,45 @@
   .dpill.active { background: #4d52de; border-color: #4d52de; color: #fff; }
 
   .current-dhikr-title { text-align: center; font-size: 15px; font-weight: 800; min-height: 40px; display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 12px; }
-
-  .tasbih-btn { width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, #5b60f5 0%, #3e43cb 70%, #2f33a8 100%); border: 6px solid #6f74ff33; box-shadow: 0 10px 30px rgba(77,82,222,.4); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto 14px; transition: transform 0.08s; user-select: none; }
+  .tasbih-btn { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, #5b60f5 0%, #3e43cb 70%, #2f33a8 100%); border: 6px solid #6f74ff33; box-shadow: 0 10px 30px rgba(77,82,222,.4); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto 14px; transition: transform 0.08s; user-select: none; }
   .tasbih-btn:active { transform: scale(0.93); }
-  .tasbih-big-num { font-size: 48px; font-weight: 900; line-height: 1; color: #fff; }
-  .tasbih-target-sub { font-size: 11.5px; color: #c9ccff; margin-top: 4px; font-weight: 600; }
-
+  .tasbih-big-num { font-size: 46px; font-weight: 900; line-height: 1; color: #fff; }
+  .tasbih-target-sub { font-size: 11px; color: #c9ccff; margin-top: 4px; font-weight: 600; }
   .tasbih-controls { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
   .tctrl-btn { background: #24244d; border: 1px solid #3d3d7a; color: #fff; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer; }
   .tctrl-btn.active { background: #4d52de; border-color: #4d52de; }
 
-  .stats-card { background: #161E2E; border-radius: 14px; padding: 12px; margin-bottom: 12px; border: 1px solid #212B3E; }
-  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-  .stat-tile { background: #1f2a40; border-radius: 8px; padding: 8px 4px; text-align: center; }
-  .stat-val { font-size: 15px; font-weight: 800; color: #F59E0B; }
-  .stat-lbl { font-size: 9.5px; color: #8F9BB3; margin-top: 2px; }
-
-  .bar-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 80px; padding: 8px 4px 0; border-bottom: 1px solid #212B3E; margin-bottom: 10px; }
-  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; gap: 4px; }
-  .bar-fill { width: 12px; background: #F59E0B; border-radius: 4px 4px 0 0; min-height: 4px; }
-  .bar-day { font-size: 9px; color: #8F9BB3; }
+  /* Toast Simulator */
+  .toast-box { position: absolute; bottom: 65px; left: 20px; right: 20px; background: #F59E0B; color: #161E2E; padding: 9px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; text-align: center; z-index: 20; box-shadow: 0 4px 20px rgba(0,0,0,0.5); opacity: 0; transform: translateY(10px); transition: 0.3s; pointer-events: none; }
+  .toast-box.show { opacity: 1; transform: translateY(0); }
 
   /* Panels (Right Column) */
   .panel { background: #161E2E; border-radius: 18px; padding: 20px; margin-bottom: 18px; border: 1px solid #212B3E; }
   .panel h2 { font-size: 16px; margin-bottom: 14px; color: #F59E0B; display: flex; align-items: center; gap: 8px; }
+  .panel h2.clock-h2 { color: #8f94ff; }
   .row { margin-bottom: 14px; }
   .lbl { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 6px; }
-  .lbl b { color: #F59E0B; }
-  input[type=range] { width: 100%; accent-color: #F59E0B; cursor: pointer; }
+  .lbl b { color: #8f94ff; }
+  input[type=range] { width: 100%; accent-color: #4d52de; cursor: pointer; }
+  .bgs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .bg-thumb { width: 48px; height: 64px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+  .bg-thumb.sel { border-color: #fff; }
+  .autobtn { width: 48px; height: 64px; border-radius: 8px; cursor: pointer; border: 2px dashed #8f94ff; background: #26264d; color: #fff; font-size: 20px; }
+  .autobtn.on { border-style: solid; background: #4d52de; }
+  .modes { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .mode { background: #2a2a55; border: 1px solid #3d3d7a; color: #fff; padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer; }
+  .mode.sel { background: #4d52de; border-color: #4d52de; }
   .hint { font-size: 12.5px; color: #8F9BB3; line-height: 1.7; margin-top: 8px; }
   .page-nav-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
   .btn-nav { flex: 1; background: #212B3E; border: 1px solid #36445D; color: #fff; padding: 9px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; }
   .btn-nav:hover { background: #F59E0B; color: #161E2E; }
   .btn-nav.primary { background: #F59E0B; color: #161E2E; font-weight: 800; border-color: #F59E0B; }
-  .report-box { background: #0A0C10; border: 1px solid #212B3E; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 11.5px; line-height: 1.6; color: #c9ccff; white-space: pre-wrap; max-height: 140px; overflow-y: auto; margin-top: 8px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1><span>📖 📿 🕒</span> <t data-ar="القرآن الكريم كاملاً، المسبحة، وساعة الخلفية الحية" data-en="Holy Quran, Tasbih &amp; Live Wallpaper">القرآن الكريم كاملاً، المسبحة، وساعة الخلفية الحية</t></h1>
+    <h1><span>📖 📿 🕒</span> <t data-ar="تطبيق ساعة الخلفية الحية، القرآن الكريم، والمسبحة" data-en="Clock Live Wallpaper, Holy Quran &amp; Tasbih Suite">تطبيق ساعة الخلفية الحية، القرآن الكريم، والمسبحة</t></h1>
     <div class="header-actions">
       <button class="langbtn" id="langBtn">EN</button>
     </div>
@@ -151,9 +177,11 @@
 
   <!-- Section Tabs -->
   <div class="nav-tabs">
-    <button class="tab-btn active" data-tab="quran_index"><t data-ar="📖 فهرس القرآن الكريم" data-en="📖 Quran Index">📖 فهرس القرآن الكريم</t></button>
-    <button class="tab-btn" data-tab="quran_reader"><t data-ar="📜 قارئ المصحف (604 صفحة)" data-en="📜 Quran Reader (604 Pages)">📜 قارئ المصحف (604 صفحة)</t></button>
-    <button class="tab-btn" data-tab="tasbih"><t data-ar="📿 المسبحة والأذكار" data-en="📿 Tasbih &amp; Athkar">📿 المسبحة والأذكار</t></button>
+    <button class="tab-btn active" data-tab="home">🏠 <t data-ar="القائمة الرئيسية" data-en="Main Menu">القائمة الرئيسية</t></button>
+    <button class="tab-btn" data-tab="clock">🕒 <t data-ar="الساعة والمحرر" data-en="Clock &amp; Editor">الساعة والمحرر</t></button>
+    <button class="tab-btn quran-active" data-tab="quran_index">📖 <t data-ar="فهرس القرآن" data-en="Quran Index">فهرس القرآن</t></button>
+    <button class="tab-btn quran-active" data-tab="quran_reader">📜 <t data-ar="قارئ المصحف (604)" data-en="Quran Reader (604)">قارئ المصحف (604)</t></button>
+    <button class="tab-btn" data-tab="tasbih">📿 <t data-ar="المسبحة والأذكار" data-en="Tasbih &amp; Athkar">المسبحة والأذكار</t></button>
   </div>
 
   <div class="grid">
@@ -161,15 +189,105 @@
     <div class="phone-wrap">
       <div class="phone" id="phone">
 
-        <!-- 1. Quran Index View -->
-        <div class="phone-screen" id="viewIndex">
+        <!-- 1. MAIN MENU SCREEN (activity_select_function) -->
+        <div class="phone-screen" id="viewHome">
           <div class="app-header">
+            <span class="title">📱 <t data-ar="القائمة الرئيسية" data-en="Main Menu">القائمة الرئيسية</t></span>
+            <span style="color:#F59E0B; font-size:12px; font-weight:800;">V 2.0</span>
+          </div>
+
+          <div class="home-screen">
+            <div class="home-title-box">
+              <div class="home-app-name"><t data-ar="ساعة الخلفية الحية والقرآن" data-en="Clock Live Wallpaper &amp; Quran">ساعة الخلفية الحية والقرآن</t></div>
+              <div class="home-app-sub"><t data-ar="المصحف الشريف • المسبحة • خلفيات الساعة الحية" data-en="Holy Quran • Digital Tasbih • Clock Wallpapers">المصحف الشريف • المسبحة • خلفيات الساعة الحية</t></div>
+            </div>
+
+            <!-- Card 1: Clock Live Wallpaper -->
+            <div class="menu-card" id="cardMenuClock">
+              <div class="menu-icon-wrap" style="color: #8f94ff;">🕒</div>
+              <div class="menu-info">
+                <div class="menu-title"><t data-ar="الساعة والخلفيات الحية" data-en="Clock Live Wallpaper">الساعة والخلفيات الحية</t></div>
+                <div class="menu-desc"><t data-ar="تناظرية • رقمية • ذكية • تعديل الحجم والشفافية" data-en="Analog, Digital, Smart &amp; Sliders">تناظرية • رقمية • ذكية • تعديل الحجم والشفافية</t></div>
+              </div>
+              <div class="menu-arrow">◀</div>
+            </div>
+
+            <!-- Card 2: Holy Quran -->
+            <div class="menu-card gold-card" id="cardMenuQuran">
+              <div class="menu-icon-wrap" style="color: #F59E0B;">📖</div>
+              <div class="menu-info">
+                <div class="menu-title" style="color:#F59E0B;"><t data-ar="القرآن الكريم كاملاً" data-en="Holy Quran (Full)">القرآن الكريم كاملاً</t></div>
+                <div class="menu-desc"><t data-ar="فهرس السور والأجزاء • 604 صفحة • علامة مرجعية" data-en="114 Surahs, 30 Juz, 604 Pages, Bookmark">فهرس السور والأجزاء • 604 صفحة • علامة مرجعية</t></div>
+              </div>
+              <div class="menu-arrow" style="color:#F59E0B;">◀</div>
+            </div>
+
+            <!-- Card 3: Tasbih & Occasions -->
+            <div class="menu-card" id="cardMenuTasbih">
+              <div class="menu-icon-wrap" style="color: #5fe08f;">📿</div>
+              <div class="menu-info">
+                <div class="menu-title"><t data-ar="المسبحة وأذكار المناسبات" data-en="Tasbih &amp; Occasions">المسبحة وأذكار المناسبات</t></div>
+                <div class="menu-desc"><t data-ar="عداد ذكي • أذكار الجمعة والصيام • إحصائيات وتصدير" data-en="Counter, Weekly Stats, Occasions &amp; Export">عداد ذكي • أذكار الجمعة والصيام • إحصائيات وتصدير</t></div>
+              </div>
+              <div class="menu-arrow">◀</div>
+            </div>
+
+            <!-- Card 4: Wallpapers -->
+            <div class="menu-card" id="cardMenuWallpapers">
+              <div class="menu-icon-wrap" style="color: #ff7675;">🖼️</div>
+              <div class="menu-info">
+                <div class="menu-title"><t data-ar="الخلفيات والتصنيفات" data-en="Wallpapers &amp; Categories">الخلفيات والتصنيفات</t></div>
+                <div class="menu-desc"><t data-ar="خلفيات بجودة عالية متوافقة مع الساعة" data-en="High Quality HD Wallpapers">خلفيات بجودة عالية متوافقة مع الساعة</t></div>
+              </div>
+              <div class="menu-arrow">◀</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. CLOCK TYPES & EDITOR SCREEN -->
+        <div class="phone-screen" id="viewClock" style="display: none;">
+          <div class="app-header">
+            <button class="icon-btn" id="btnClockBack" style="color:#fff;">⬅️</button>
+            <span class="title">🕒 <t data-ar="محرر ساعة الخلفية الحية" data-en="Clock Live Wallpaper Editor">محرر ساعة الخلفية الحية</t></span>
+            <button class="icon-btn" id="btnClockToggleType" style="font-size:12px; width:auto; padding:0 8px; border-radius:8px; background:#4d52de; color:#fff;">تبديل النوع</button>
+          </div>
+
+          <div class="clock-editor-view">
+            <div class="clock-stage" id="clockStage">
+              <!-- Analog Clock -->
+              <div class="analog-clock-container" id="analogContainer" style="display: none;">
+                <div class="analog-dial-num" style="top:6px; left:50%; transform:translateX(-50%);">12</div>
+                <div class="analog-dial-num" style="right:8px; top:50%; transform:translateY(-50%);">3</div>
+                <div class="analog-dial-num" style="bottom:6px; left:50%; transform:translateX(-50%);">6</div>
+                <div class="analog-dial-num" style="left:8px; top:50%; transform:translateY(-50%);">9</div>
+                <div class="analog-hand hand-hour" id="hHour"></div>
+                <div class="analog-hand hand-minute" id="hMinute"></div>
+                <div class="analog-hand hand-second" id="hSecond"></div>
+                <div class="analog-center-dot"></div>
+              </div>
+
+              <!-- Smart / Digital Clock -->
+              <div class="smart-clock-card" id="smartContainer">
+                <div class="smart-time" id="smartTime">10:09 <small style="font-size:.45em">ص</small></div>
+                <div class="smart-date" id="smartDate">
+                  <span>الأحد</span>
+                  <span>13</span>
+                  <span>سبتمبر</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. QURAN INDEX SCREEN -->
+        <div class="phone-screen" id="viewIndex" style="display: none;">
+          <div class="app-header">
+            <button class="icon-btn" id="btnIndexBack" style="color:#fff;">⬅️</button>
             <span class="title">📖 <t data-ar="فهرس القرآن الكريم" data-en="Holy Quran Index">فهرس القرآن الكريم</t></span>
             <button class="icon-btn" id="btnToggleSearch" title="Search">🔍</button>
           </div>
 
           <div class="quran-index-content">
-            <!-- Search Box -->
             <input type="text" class="qsearch-box" id="etSearch" placeholder="ابحث عن سورة بالاسم أو الرقم..." style="display: none;">
 
             <!-- Jump to Saved Bookmark Card -->
@@ -196,16 +314,14 @@
           </div>
         </div>
 
-        <!-- 2. Quran Reader View -->
+        <!-- 4. QURAN READER SCREEN (604 pages) -->
         <div class="phone-screen reader-view" id="viewReader" style="display: none;">
-          <!-- Top Overlay Bar -->
           <div class="reader-top-overlay" id="topOverlay">
             <button class="icon-btn" id="btnReaderBack" style="color:#fff;" title="Back">⬅️</button>
             <div style="font-size: 14px; font-weight: 800; color: #fff;" id="tvTopSurahJuz">سورة الفاتحة • الجزء الأول</div>
             <button class="icon-btn" id="btnReaderBookmark" title="Save Bookmark">🔖</button>
           </div>
 
-          <!-- Page Content Card -->
           <div class="page-card" id="pageCard" style="margin-top: 54px; margin-bottom: 46px;">
             <div class="page-inner-header">
               <span id="pPageJuz">الجزء الأول</span>
@@ -219,34 +335,25 @@
 
             <div class="page-bismillah" id="pBismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
 
-            <div class="page-quran-text" id="pQuranText">
-              بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ﴿١﴾<br>
-              الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ ﴿٢﴾<br>
-              الرَّحْمَٰنِ الرَّحِيمِ ﴿٣﴾<br>
-              مَالِكِ يَوْمِ الدِّينِ ﴿٤﴾<br>
-              إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ﴿٥﴾<br>
-              اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ﴿٦﴾<br>
-              صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ ﴿٧﴾
-            </div>
+            <div class="page-quran-text" id="pQuranText"></div>
 
             <div class="page-inner-footer">
               <span id="pPageNum">1</span>
             </div>
           </div>
 
-          <!-- Bottom Overlay Bar -->
           <div class="reader-bottom-overlay" id="bottomOverlay">
             <span style="font-size: 12.5px; font-weight: 800; color: #F59E0B;" id="tvBottomPageOf">صفحة 1 من 604</span>
           </div>
 
-          <!-- Toast Notification -->
           <div class="toast-box" id="toastBox">تم حفظ العلامة بنجاح</div>
         </div>
 
-        <!-- 3. Tasbih Screen -->
+        <!-- 5. TASBIH SCREEN -->
         <div class="phone-screen tasbih-screen" id="viewTasbih" style="display: none;">
           <div class="app-header" style="margin: -14px -14px 14px -14px;">
-            <span class="title">📿 <t data-ar="المسبحة الإلكترونية" data-en="Digital Tasbih">المسبحة الإلكترونية</t></span>
+            <button class="icon-btn" id="btnTasbihBack" style="color:#fff;">⬅️</button>
+            <span class="title">📿 <t data-ar="المسبحة والأذكار" data-en="Digital Tasbih">المسبحة والأذكار</t></span>
             <span style="color:#ffd479; font-size:11px;">13 ربيع الأول</span>
           </div>
 
@@ -271,40 +378,52 @@
             <button class="tctrl-btn" data-tt="0">∞</button>
             <button class="tctrl-btn" id="tResetBtn" style="color:#ff7675;">↺</button>
           </div>
-
-          <div class="stats-card">
-            <div class="stat-grid">
-              <div class="stat-tile"><div class="stat-val" id="stToday">0</div><div class="stat-lbl">اليوم</div></div>
-              <div class="stat-tile"><div class="stat-val" id="stWeek">0</div><div class="stat-lbl">7 أيام</div></div>
-              <div class="stat-tile"><div class="stat-val" id="stMonth">0</div><div class="stat-lbl">30 يوماً</div></div>
-              <div class="stat-tile"><div class="stat-val" id="stStreak">0 🔥</div><div class="stat-lbl">الالتزام</div></div>
-            </div>
-            <div class="bar-chart" id="tBarChart"></div>
-          </div>
         </div>
 
       </div>
     </div>
 
-    <!-- Right: Controls & Interactive Navigation -->
+    <!-- Right: Context-Aware Controls -->
     <div>
-      <div class="panel">
-        <h2><t data-ar="📜 التنقل السريع في المصحف الشريف" data-en="📜 Quick Quran Navigation">📜 التنقل السريع في المصحف الشريف</t></h2>
-        <div class="hint"><t data-ar="تقليب سلس عبر 604 صفحة مع وضع ملء الشاشة والنقر لإظهار/إخفاء أشرطة التحكم:" data-en="Smooth flipping through 604 pages with full-screen reading mode and tap-to-toggle overlay controls:">تقليب سلس عبر 604 صفحة مع وضع ملء الشاشة والنقر لإظهار/إخفاء أشرطة التحكم:</t></div>
-        
-        <div class="page-nav-row" style="margin-top: 14px;">
+      <!-- Clock Editor Controls Panel -->
+      <div class="panel" id="panelClockControls">
+        <h2 class="clock-h2">🕒 <t data-ar="سلايدرات محرر الساعة والخلفيات التلقائية" data-en="Clock Sliders &amp; Auto Background">سلايدرات محرر الساعة والخلفيات التلقائية</t></h2>
+        <div class="row">
+          <div class="lbl"><span><t data-ar="حجم الساعة (200 - 1000)" data-en="Clock Size (200 - 1000)">حجم الساعة (200 - 1000)</t></span><b id="vSize">500</b></div>
+          <input type="range" id="sSize" min="200" max="1000" value="500">
+        </div>
+        <div class="row">
+          <div class="lbl"><span><t data-ar="شفافية بطاقة الساعة (0% - 100%)" data-en="Card Transparency (0% - 100%)">شفافية بطاقة الساعة (0% - 100%)</t></span><b id="vAlpha">0%</b></div>
+          <input type="range" id="sAlpha" min="0" max="100" value="0">
+        </div>
+        <div class="row">
+          <div class="lbl"><span><t data-ar="حجم خط الساعة والتاريخ (50% - 150%)" data-en="Font Size Scale (50% - 150%)">حجم خط الساعة والتاريخ (50% - 150%)</t></span><b id="vFont">100%</b></div>
+          <input type="range" id="sFont" min="0" max="100" value="50">
+        </div>
+
+        <div class="row" style="margin-top: 18px;">
+          <div class="lbl"><span><t data-ar="تبديل الخلفيات التلقائي" data-en="Auto Background Rotation">تبديل الخلفيات التلقائي</t></span></div>
+          <div class="bgs" id="bgsList"></div>
+          <div class="modes">
+            <button class="mode sel" data-m="0"><t data-ar="إيقاف" data-en="Off">إيقاف</t></button>
+            <button class="mode" data-m="1"><t data-ar="تغيير يومي" data-en="Change daily">تغيير يومي</t></button>
+            <button class="mode" data-m="2"><t data-ar="نهار / ليل" data-en="Day / Night">نهار / ليل</t></button>
+          </div>
+          <div class="hint" id="autoHint"><t data-ar="الوضع اليدوي: اختر أي خلفية بالضغط عليها." data-en="Manual mode: select any background.">الوضع اليدوي: اختر أي خلفية بالضغط عليها.</t></div>
+        </div>
+      </div>
+
+      <!-- Quran Navigation Panel -->
+      <div class="panel" id="panelQuranControls">
+        <h2>📖 <t data-ar="القرآن الكريم — التنقل السريع (1 - 604)" data-en="Quran Navigation (1 - 604)">القرآن الكريم — التنقل السريع (1 - 604)</t></h2>
+        <div class="page-nav-row">
           <button class="btn-nav" id="btnPrevPage">◀ <t data-ar="الصفحة السابقة" data-en="Previous Page">الصفحة السابقة</t></button>
           <button class="btn-nav primary" id="btnNextPage"><t data-ar="الصفحة التالية" data-en="Next Page">الصفحة التالية</t> ▶</button>
         </div>
-
-        <div class="row" style="margin-top: 16px;">
-          <div class="lbl">
-            <span><t data-ar="الانتقال إلى صفحة محددة (1 - 604)" data-en="Jump to Page (1 - 604)">الانتقال إلى صفحة محددة (1 - 604)</t></span>
-            <b id="vCurrentPage">1</b>
-          </div>
+        <div class="row" style="margin-top: 14px;">
+          <div class="lbl"><span><t data-ar="الانتقال إلى صفحة" data-en="Jump to Page">الانتقال إلى صفحة</t></span><b id="vCurrentPage">1</b></div>
           <input type="range" id="sPagePicker" min="1" max="604" value="1">
         </div>
-
         <div class="page-nav-row">
           <button class="btn-nav" id="btnQuickKahf">📖 <t data-ar="سورة الكهف (ص 293)" data-en="Surah Al-Kahf (p 293)">سورة الكهف (ص 293)</t></button>
           <button class="btn-nav" id="btnQuickMulk">✨ <t data-ar="سورة الملك (ص 562)" data-en="Surah Al-Mulk (p 562)">سورة الملك (ص 562)</t></button>
@@ -312,19 +431,15 @@
         </div>
       </div>
 
+      <!-- Integration Overview -->
       <div class="panel">
-        <h2><t data-ar="🔖 العلامة المرجعية وإبقاء الشاشة مضاءة" data-en="🔖 Bookmark &amp; Keep Screen On">🔖 العلامة المرجعية وإبقاء الشاشة مضاءة</t></h2>
+        <h2 style="color:#5fe08f;">✅ <t data-ar="التكامل الشامل في تطبيق أندرويد واحد" data-en="Comprehensive Unified Android App">التكامل الشامل في تطبيق أندرويد واحد</t></h2>
         <ul style="list-style: none; font-size: 13px; line-height: 1.8; color: #E6EDF3;">
-          <li>✓ <t data-ar="حفظ واسترجاع العلامة المرجعية تلقائياً (SharedPreferences)" data-en="Automatic Bookmark Persistence via SharedPreferences">حفظ واسترجاع العلامة المرجعية تلقائياً (SharedPreferences)</t></li>
-          <li>✓ <t data-ar="إبقاء الشاشة مضاءة أثناء القراءة (FLAG_KEEP_SCREEN_ON)" data-en="Keep Screen On while reading (FLAG_KEEP_SCREEN_ON)">إبقاء الشاشة مضاءة أثناء القراءة (FLAG_KEEP_SCREEN_ON)</t></li>
-          <li>✓ <t data-ar="إشعار Toast فوري أنيق يوضح السورة ورقم الصفحة المحفوظة" data-en="Elegant Toast notification showing saved Surah &amp; Page">إشعار Toast فوري أنيق يوضح السورة ورقم الصفحة المحفوظة</t></li>
-          <li>✓ <t data-ar="تصميم داكن عالي التباين ومريح للعينين (#0D1117 / #161E2E)" data-en="Comfortable High-Contrast Dark Mode (#0D1117 / #161E2E)">تصميم داكن عالي التباين ومريح للعينين (#0D1117 / #161E2E)</t></li>
+          <li>✓ 🕒 <b>محرك الساعة والخلفيات الحية:</b> ساعات تناظرية ورقمية وذكية مع السلايدرات والتبديل التلقائي.</li>
+          <li>✓ 📖 <b>وحدة القرآن الكريم كاملاً:</b> فهرس 114 سورة و30 جزءاً، قارئ 604 صفحة، وحفظ العلامة المرجعية.</li>
+          <li>✓ 📿 <b>المسبحة الإلكترونية:</b> عداد ذكي، تذكير سنن وأذكار الأيام، سجل أسبوعي وإحصائيات وتصدير.</li>
+          <li>✓ 🌍 <b>ثنائية اللغة:</b> عربية افتراضياً مع تبديل كامل للإنجليزية.</li>
         </ul>
-      </div>
-
-      <div class="panel">
-        <h2><t data-ar="📊 تقرير إحصائيات التسبيح والورد" data-en="📊 Tasbih Report Export">📊 تقرير إحصائيات التسبيح والورد</t></h2>
-        <div class="report-box" id="tReportBox"></div>
       </div>
     </div>
   </div>
@@ -336,10 +451,25 @@ let lang = 'ar';
 let currentPage = 1;
 let savedBookmarkPage = 1;
 let savedBookmarkSurah = 'الفاتحة';
+let isAnalogClock = false;
 let overlaysVisible = true;
 let tCount = 0;
 let tTarget = 33;
 let tDhikrIdx = 0;
+let autoMode = 0;
+let autoTimer = null;
+let bgIdx = 0;
+
+const GRADIENTS = [
+  'linear-gradient(160deg,#1a0533,#6d28d9 55%,#c026d3)',
+  'linear-gradient(160deg,#02131f,#0c4a6e 60%,#22d3ee)',
+  'linear-gradient(160deg,#2b1055,#7597de)',
+  'linear-gradient(160deg,#134e5e,#71b280)',
+  'linear-gradient(160deg,#232526,#414345)',
+  'linear-gradient(160deg,#f857a6,#ff5858)'
+];
+const DAY_BG = 'linear-gradient(160deg,#7dd3fc,#e0f2fe 55%,#fef9c3)';
+const NIGHT_BG = 'linear-gradient(160deg,#020617,#1e1b4b 60%,#4c1d95)';
 
 const SURAHS = [
   { n: 1, ar: "الفاتحة", en: "Al-Fatihah", m: true, a: 7, p: 1 },
@@ -522,10 +652,133 @@ function init() {
   renderJuzList();
   updateBookmarkCard();
   updateReaderPage();
+  setupClock();
   setupTasbih();
   setupEvents();
+  paintBg(GRADIENTS[0]);
 }
 
+// 1. Navigation & Screens Switcher
+function showScreen(name) {
+  $('viewHome').style.display = 'none';
+  $('viewClock').style.display = 'none';
+  $('viewIndex').style.display = 'none';
+  $('viewReader').style.display = 'none';
+  $('viewTasbih').style.display = 'none';
+
+  if (name === 'home') {
+    $('viewHome').style.display = 'block';
+    highlightTab('home');
+  } else if (name === 'clock') {
+    $('viewClock').style.display = 'block';
+    highlightTab('clock');
+  } else if (name === 'quran_index') {
+    $('viewIndex').style.display = 'block';
+    highlightTab('quran_index');
+    updateBookmarkCard();
+  } else if (name === 'quran_reader') {
+    $('viewReader').style.display = 'flex';
+    highlightTab('quran_reader');
+    updateReaderPage();
+  } else if (name === 'tasbih') {
+    $('viewTasbih').style.display = 'block';
+    highlightTab('tasbih');
+  }
+}
+
+function highlightTab(tabKey) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabKey);
+  });
+}
+
+// 2. Clock Live Logic
+function setupClock() {
+  // Build BG Thumbnails
+  const bgsEl = $('bgsList');
+  bgsEl.innerHTML = '';
+  const autoB = document.createElement('button');
+  autoB.className = 'autobtn'; autoB.id = 'autoB'; autoB.textContent = '⟳';
+  autoB.onclick = () => setAutoMode((autoMode + 1) % 3);
+  bgsEl.appendChild(autoB);
+
+  GRADIENTS.forEach((g, i) => {
+    const d = document.createElement('div');
+    d.className = 'bg-thumb' + (i === 0 ? ' sel' : '');
+    d.style.background = g;
+    d.onclick = () => { setAutoMode(0); bgIdx = i; paintBg(g); markSel(i); };
+    bgsEl.appendChild(d);
+  });
+
+  function markSel(i) {
+    [...bgsEl.querySelectorAll('.bg-thumb')].forEach((el, k) => el.classList.toggle('sel', k === i));
+  }
+
+  function applyClockSliders() {
+    const size = +$('sSize').value, alpha = +$('sAlpha').value, font = +$('sFont').value + 50;
+    $('vSize').textContent = size;
+    $('vAlpha').textContent = alpha + '%';
+    $('vFont').textContent = font + '%';
+    const base = size / 500;
+    $('smartTime').style.fontSize = (42 * base * font / 100) + 'px';
+    $('smartDate').style.fontSize = (14 * base * font / 100) + 'px';
+    $('smartContainer').style.background = `rgba(0,0,0,${alpha / 100})`;
+    
+    // Scale analog clock
+    const aSize = Math.round(190 * base);
+    $('analogContainer').style.width = aSize + 'px';
+    $('analogContainer').style.height = aSize + 'px';
+  }
+  ['sSize', 'sAlpha', 'sFont'].forEach(id => $(id).addEventListener('input', applyClockSliders));
+  applyClockSliders();
+
+  function tickClock() {
+    const n = new Date();
+    // Analog Clock Hands
+    const s = n.getSeconds(), m = n.getMinutes(), h = n.getHours() % 12;
+    const sDeg = s * 6;
+    const mDeg = m * 6 + s * 0.1;
+    const hDeg = h * 30 + m * 0.5;
+    $('hSecond').style.transform = `rotate(${sDeg}deg)`;
+    $('hMinute').style.transform = `rotate(${mDeg}deg)`;
+    $('hHour').style.transform = `rotate(${hDeg}deg)`;
+
+    // Digital/Smart Clock
+    let hh = h === 0 ? 12 : h;
+    const hhStr = String(hh).padStart(2, '0'), mmStr = String(m).padStart(2, '0');
+    const ampm = lang === 'ar' ? (n.getHours() < 12 ? 'ص' : 'م') : (n.getHours() < 12 ? 'AM' : 'PM');
+    $('smartTime').innerHTML = `${hhStr}<span style="margin:0 2px">:</span>${mmStr} <small style="font-size:.45em">${ampm}</small>`;
+    
+    const DAYS_AR = ['أحد','إثنين','ثلا','أرب','خمي','جمع','سبت'];
+    const DAYS_EN = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const MONTHS_EN = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const spans = $('smartDate').querySelectorAll('span');
+    spans[0].textContent = lang === 'ar' ? DAYS_AR[n.getDay()] : DAYS_EN[n.getDay()];
+    spans[1].textContent = String(n.getDate()).padStart(2, '0');
+    spans[2].textContent = lang === 'ar' ? MONTHS_AR[n.getMonth()] : MONTHS_EN[n.getMonth()];
+  }
+  setInterval(tickClock, 1000); tickClock();
+}
+
+function paintBg(g) { $('clockStage').style.background = g; }
+
+function setAutoMode(m) {
+  autoMode = m;
+  document.querySelectorAll('.mode[data-m]').forEach(b => b.classList.toggle('sel', +b.dataset.m === m));
+  $('autoB').classList.toggle('on', m !== 0);
+  clearInterval(autoTimer); autoTimer = null;
+  const hints = {
+    0: { ar: 'الوضع اليدوي: اختر أي خلفية بالضغط عليها.', en: 'Manual mode: select any background.' },
+    1: { ar: 'تجربة التغيير اليومي: تتبدل الخلفية دورياً (في التطبيق: مرة يومياً).', en: 'Daily-change demo: rotates background periodically.' },
+    2: { ar: 'تجربة نهار/ليل: تتبدل بين خلفية فاتحة وداكنة (حسب ساعة اليوم).', en: 'Day/night demo: alternates bright and dark backgrounds.' }
+  };
+  $('autoHint').textContent = hints[m][lang];
+  if (m === 1) autoTimer = setInterval(() => { bgIdx = (bgIdx + 1) % GRADIENTS.length; paintBg(GRADIENTS[bgIdx]); }, 3000);
+  if (m === 2) { let day = true; paintBg(DAY_BG); autoTimer = setInterval(() => { day = !day; paintBg(day ? DAY_BG : NIGHT_BG); }, 3000); }
+}
+
+// 3. Quran Logic
 function renderSurahsList(filterQuery = '') {
   const c = $('listSurahs');
   c.innerHTML = '';
@@ -543,12 +796,12 @@ function renderSurahsList(filterQuery = '') {
     d.innerHTML = `
       <div class="s-badge">${s.n}</div>
       <div class="s-body">
-        <div class="s-title">${s.ar} <span class="s-en">${s.en}</span></div>
+        <div class="s-title">${s.ar} <span class="s-en" style="font-size:11px; color:#8F9BB3;">${s.en}</span></div>
         <div class="s-meta">${typeTxt} • ${ayahTxt}</div>
       </div>
       <div class="s-page">${pageTxt}</div>
     `;
-    d.onclick = () => openReader(s.p);
+    d.onclick = () => { currentPage = s.p; showScreen('quran_reader'); };
     c.appendChild(d);
   });
 }
@@ -571,40 +824,13 @@ function renderJuzList() {
       </div>
       <div class="s-page">${pageTxt}</div>
     `;
-    d.onclick = () => openReader(j.p);
+    d.onclick = () => { currentPage = j.p; showScreen('quran_reader'); };
     c.appendChild(d);
   });
 }
 
 function updateBookmarkCard() {
   $('tvSavedBookmarkText').textContent = lang === 'ar' ? `سورة ${savedBookmarkSurah} • صفحة ${savedBookmarkPage}` : `Surah ${savedBookmarkSurah} • Page ${savedBookmarkPage}`;
-}
-
-function openReader(page) {
-  currentPage = page;
-  $('viewIndex').style.display = 'none';
-  $('viewTasbih').style.display = 'none';
-  $('viewReader').style.display = 'flex';
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.tab-btn[data-tab="quran_reader"]').classList.add('active');
-  updateReaderPage();
-}
-
-function openIndex() {
-  $('viewReader').style.display = 'none';
-  $('viewTasbih').style.display = 'none';
-  $('viewIndex').style.display = 'block';
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.tab-btn[data-tab="quran_index"]').classList.add('active');
-  updateBookmarkCard();
-}
-
-function openTasbih() {
-  $('viewReader').style.display = 'none';
-  $('viewIndex').style.display = 'none';
-  $('viewTasbih').style.display = 'block';
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.tab-btn[data-tab="tasbih"]').classList.add('active');
 }
 
 function updateReaderPage() {
@@ -628,7 +854,6 @@ function updateReaderPage() {
   $('pBannerSub').textContent = `${typeTxt} • ${ayahTxt}`;
 
   $('pBismillah').style.display = (isStart && surah.n !== 9 && surah.n !== 1) ? 'block' : 'none';
-
   $('pQuranText').innerHTML = getSampleQuranPageText(currentPage, surah);
 
   const isBm = (savedBookmarkPage === currentPage);
@@ -688,6 +913,7 @@ function toggleOverlays() {
   $('bottomOverlay').classList.toggle('hidden', !overlaysVisible);
 }
 
+// 4. Tasbih Logic
 function setupTasbih() {
   const pills = $('tDhikrPills');
   pills.innerHTML = '';
@@ -710,39 +936,11 @@ function updateTasbihUI() {
   $('tCurrentDhikr').textContent = DHIKRS[tDhikrIdx];
   $('tBigNum').textContent = tCount;
   $('tTargetSub').textContent = tTarget > 0 ? `الهدف: ${tTarget}` : 'مفتوح ∞';
-  $('stToday').textContent = tCount;
-  $('stWeek').textContent = tCount + 420;
-  $('stMonth').textContent = tCount + 1850;
-  $('stStreak').textContent = '5 🔥';
-
-  // Bar chart
-  const bc = $('tBarChart');
-  bc.innerHTML = '';
-  const days = ['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
-  days.forEach((day, i) => {
-    const col = document.createElement('div');
-    col.className = 'bar-col';
-    const h = (i === 6) ? Math.min(65, 15 + tCount * 1.5) : (i * 8 + 20);
-    col.innerHTML = `
-      <div class="bar-fill" style="height: ${h}px;"></div>
-      <span class="bar-day">${day}</span>
-    `;
-    bc.appendChild(col);
-  });
-
-  // Report box
-  $('tReportBox').textContent = `📊 تقرير وِرد التسبيح:
-• تسبيحات اليوم: ${tCount}
-• مجموع الأسبوع: ${tCount + 420}
-• أيام الالتزام: 5 أيام 🔥
-• الذكر الحالي: ${DHIKRS[tDhikrIdx]}`;
 }
 
 $('tTapBtn').onclick = () => {
   tCount++;
-  if (tTarget > 0 && tCount >= tTarget) {
-    tCount = 0;
-  }
+  if (tTarget > 0 && tCount >= tTarget) tCount = 0;
   updateTasbihUI();
 };
 
@@ -757,19 +955,37 @@ document.querySelectorAll('.tctrl-btn[data-tt]').forEach(b => {
 $('tResetBtn').onclick = () => { tCount = 0; updateTasbihUI(); };
 $('btnApplyDhikrToday').onclick = () => { tDhikrIdx = 1; tCount = 0; setupTasbih(); updateTasbihUI(); };
 
+// 5. Setup Events & Navigation
 function setupEvents() {
-  // Navigation Tabs
+  // Top Tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.onclick = () => {
-      const tab = btn.dataset.tab;
-      if (tab === 'quran_index') openIndex();
-      else if (tab === 'quran_reader') openReader(currentPage);
-      else if (tab === 'tasbih') openTasbih();
-    };
+    btn.onclick = () => showScreen(btn.dataset.tab);
   });
 
-  $('cardSavedBookmark').onclick = () => openReader(savedBookmarkPage);
+  // Home Screen Cards
+  $('cardMenuClock').onclick = () => showScreen('clock');
+  $('cardMenuQuran').onclick = () => showScreen('quran_index');
+  $('cardMenuTasbih').onclick = () => showScreen('tasbih');
+  $('cardMenuWallpapers').onclick = () => showScreen('clock');
 
+  // Back Buttons
+  $('btnClockBack').onclick = () => showScreen('home');
+  $('btnIndexBack').onclick = () => showScreen('home');
+  $('btnTasbihBack').onclick = () => showScreen('home');
+  $('btnReaderBack').onclick = () => showScreen('quran_index');
+
+  // Clock Type Switcher (Analog / Smart Digital)
+  $('btnClockToggleType').onclick = () => {
+    isAnalogClock = !isAnalogClock;
+    $('analogContainer').style.display = isAnalogClock ? 'block' : 'none';
+    $('smartContainer').style.display = isAnalogClock ? 'none' : 'block';
+    $('btnClockToggleType').textContent = isAnalogClock ? (lang === 'ar' ? 'ساعة ذكية' : 'Digital') : (lang === 'ar' ? 'ساعة تناظرية' : 'Analog');
+  };
+
+  // Quran Bookmark Card
+  $('cardSavedBookmark').onclick = () => { currentPage = savedBookmarkPage; showScreen('quran_reader'); };
+
+  // Quran Subtabs
   $('btnTabSurahs').onclick = () => {
     $('btnTabSurahs').classList.add('active');
     $('btnTabJuz').classList.remove('active');
@@ -783,6 +999,7 @@ function setupEvents() {
     $('listSurahs').style.display = 'none';
   };
 
+  // Quran Search
   $('btnToggleSearch').onclick = () => {
     const s = $('etSearch');
     const isVis = s.style.display !== 'none';
@@ -791,9 +1008,10 @@ function setupEvents() {
   };
   $('etSearch').oninput = (e) => renderSurahsList(e.target.value);
 
-  $('btnReaderBack').onclick = () => openIndex();
+  // Quran Reader Tap
   $('pageCard').onclick = () => toggleOverlays();
 
+  // Quran Bookmark Action
   $('btnReaderBookmark').onclick = (e) => {
     e.stopPropagation();
     savedBookmarkPage = currentPage;
@@ -804,6 +1022,7 @@ function setupEvents() {
     showToast(msg);
   };
 
+  // Quran Page Navigation
   $('btnNextPage').onclick = () => {
     if (currentPage < 604) { currentPage++; updateReaderPage(); }
   };
@@ -815,10 +1034,11 @@ function setupEvents() {
     updateReaderPage();
   };
 
-  $('btnQuickKahf').onclick = () => openReader(293);
-  $('btnQuickMulk').onclick = () => openReader(562);
-  $('btnQuickLast').onclick = () => openReader(604);
+  $('btnQuickKahf').onclick = () => { currentPage = 293; showScreen('quran_reader'); };
+  $('btnQuickMulk').onclick = () => { currentPage = 562; showScreen('quran_reader'); };
+  $('btnQuickLast').onclick = () => { currentPage = 604; showScreen('quran_reader'); };
 
+  // Language Switcher
   $('langBtn').onclick = () => {
     lang = lang === 'ar' ? 'en' : 'ar';
     document.documentElement.lang = lang;
