@@ -120,7 +120,7 @@
     <string name="option_athkar_badge">إظهار شارة الأذكار على الخلفية</string>
     <string name="cd_athkar_badge">افتح قارئ الأذكار</string>
     <string name="cd_athkar_close">إغلاق قارئ الأذكار</string>
-    <string name="cd_athkar_counter">عدّاد الذكر، انقر للعدّ</string>
+    <string name="cd_athkar_counter">التكرارات المتبقية، انقر على الذكر للعدّ</string>
 
     <!-- اللغة -->
     <string name="choose_language">اللغة</string>

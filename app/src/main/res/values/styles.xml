@@ -9,13 +9,16 @@
         <item name="android:windowBackground">@color/textColor</item>
     </style>
 
-    <!-- Translucent bottom-sheet look for the athkar reader, without the material lib. -->
-    <style name="AppTheme.AthkarSheet" parent="AppTheme">
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowIsTranslucent">true</item>
+    <!--
+      Athkar reader: an opaque paper page, not a translucent sheet. The live wallpaper
+      (mosque photographs) no longer shows through it, the dialog animation is gone and
+      the window background is the same paper as the page, so the system-bar area that
+      edge-to-edge exposes does not show a different colour. Light status-bar icons are
+      set by UiCompat.applyEdgeToEdge(), which the activity calls for the insets.
+    -->
+    <style name="AppTheme.AthkarReader" parent="AppTheme">
+        <item name="android:windowBackground">@color/athkarPaper</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:backgroundDimEnabled">true</item>
-        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
     </style>
 
 </resources>

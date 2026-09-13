@@ -20,19 +20,21 @@ import org.Allah_Clock_Live_Wallpaper.utils.AthkarRepository;
 import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.utils.PrayerWindow;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
+import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
 import java.util.List;
 
 /**
- * Bottom-sheet styled reader for the morning / evening athkar.
+ * Reader for the morning / evening athkar, as a classic paper page.
  *
  * <p>It can only be opened while the matching window is active (the badge that leads here is
  * hidden otherwise), and it recomputes the window on entry so a stale badge can never show
  * the wrong list.</p>
  *
- * <p>Implemented as a translucent Activity instead of a material BottomSheetDialogFragment:
- * the material library was removed from this project on purpose, and a translucent activity
- * with a weighted sheet panel gives the identical look with zero extra dependencies.</p>
+ * <p>An opaque page rather than a sheet floating over the live wallpaper: the wallpaper is a
+ * mosque photograph, and behind 31 athkar of dense vowel-marked text it competed with the
+ * reading instead of framing it. The page is ink on paper with no accent colours, closed by
+ * an explicit button (there is no "tap outside" area left to tap).</p>
  */
 public class AthkarActivity extends AppCompatActivity {
 
@@ -55,6 +57,10 @@ public class AthkarActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_athkar);
+        UiCompat.applyEdgeToEdge(this);
+        // applyEdgeToEdge paints the window white for the list screens; the paper page needs
+        // its own tone behind the status bar, or the strip above the top bar changes colour.
+        getWindow().setBackgroundDrawableResource(R.color.athkarPaper);
 
         TextView title = findViewById(R.id.athkarTitle);
         title.setText(window == PrayerWindow.MORNING
@@ -64,7 +70,7 @@ public class AthkarActivity extends AppCompatActivity {
         TextView count = findViewById(R.id.athkarCount);
         count.setText(getString(R.string.athkar_count, items.size()));
 
-        findViewById(R.id.athkarOutside).setOnClickListener(view -> finish());
+        findViewById(R.id.athkarClose).setOnClickListener(view -> finish());
         ImageView settings = findViewById(R.id.athkarSettings);
         settings.setOnClickListener(view -> showSettingsDialog());
 

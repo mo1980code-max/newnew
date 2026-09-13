@@ -123,7 +123,7 @@
     <string name="option_athkar_badge">Show the athkar badge on the wallpaper</string>
     <string name="cd_athkar_badge">Open the athkar reader</string>
     <string name="cd_athkar_close">Close the athkar reader</string>
-    <string name="cd_athkar_counter">Dhikr counter, tap to count</string>
+    <string name="cd_athkar_counter">Repeats left, tap the dhikr to count</string>
 
     <!-- Language -->
     <string name="choose_language">Language</string>

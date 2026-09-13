@@ -137,7 +137,7 @@
             android:name=".activity.AthkarActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.AthkarSheet"
+            android:theme="@style/AppTheme.AthkarReader"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
         <activity
