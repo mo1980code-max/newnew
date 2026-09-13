@@ -11,6 +11,9 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
+import org.Allah_Clock_Live_Wallpaper.R;
+import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
+
 /**
  * Qibla compass dial.
  *
@@ -28,6 +31,9 @@ public class CompassView extends View {
     private final Paint markerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint kaabaPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint bandPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    private String[] cardinals;
+    private String cardinalsLanguage = "";
     private final RectF dialRect = new RectF();
     private final Path needlePath = new Path();
 
@@ -111,7 +117,7 @@ public class CompassView extends View {
                     this.tickPaint);
         }
 
-        String[] letters = {"N", "E", "S", "W"};
+        String[] letters = cardinals();
         for (int i = 0; i < 4; i++) {
             double rad = Math.toRadians(i * 90);
             float letterRadius = radius - size * 0.13f;
@@ -157,6 +163,20 @@ public class CompassView extends View {
 
         // Centre dot.
         canvas.drawCircle(cx, cy, size * 0.015f, this.markerPaint);
+    }
+
+    /**
+     * North / east / south / west in the language the user chose. Cached and only re-read when
+     * that language changes, because the compass redraws on every sensor event.
+     */
+    private String[] cardinals() {
+        String language = LocaleHelper.uiLocale(getContext()).getLanguage();
+        if (this.cardinals == null || !language.equals(this.cardinalsLanguage)) {
+            String[] names = getResources().getStringArray(R.array.compass_cardinals);
+            this.cardinals = names.length == 4 ? names : new String[]{"N", "E", "S", "W"};
+            this.cardinalsLanguage = language;
+        }
+        return this.cardinals;
     }
 
     private float dp(float value) {
