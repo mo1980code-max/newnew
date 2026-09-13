@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Holy Quran & Islamic Suite — Live Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #0A0C10; color: #fff; min-height: 100vh; padding: 18px 14px 60px; }
+  body.en { direction: ltr; }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  
+  /* Top Bar */
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; background: #161E2E; padding: 14px 20px; border-radius: 16px; border: 1px solid #212B3E; }
+  header h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  header h1 span { color: #F59E0B; }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+  .langbtn { background: #F59E0B; color: #161E2E; border: none; font-weight: 800; font-size: 14px; padding: 8px 22px; border-radius: 999px; cursor: pointer; transition: 0.2s; }
+  .langbtn:hover { background: #d97706; }
+
+  /* Navigation Tabs */
+  .nav-tabs { display: flex; gap: 8px; margin-bottom: 22px; background: #161E2E; padding: 6px; border-radius: 14px; overflow-x: auto; border: 1px solid #212B3E; }
+  .tab-btn { flex: 1; min-width: 130px; padding: 10px 14px; background: transparent; border: none; color: #8F9BB3; font-weight: 700; font-size: 13.5px; border-radius: 10px; cursor: pointer; transition: 0.2s; text-align: center; white-space: nowrap; }
+  .tab-btn.active { background: #F59E0B; color: #161E2E; box-shadow: 0 4px 12px rgba(245,158,11,.3); font-weight: 800; }
+
+  /* Main Grid */
+  .grid { display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; justify-items: center; } }
+
+  /* Phone Mockup */
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 360px; }
+  .phone { width: 100%; height: 710px; border-radius: 40px; border: 12px solid #05070A; overflow: hidden; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,.7); background: #0D1117; display: flex; flex-direction: column; }
+  .phone-screen { flex: 1; overflow-y: auto; position: relative; scrollbar-width: none; }
+  .phone-screen::-webkit-scrollbar { display: none; }
+
+  /* App Headers inside Phone */
+  .app-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #161E2E; border-bottom: 1px solid #212B3E; }
+  .app-header .title { font-size: 15px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .icon-btn { background: transparent; border: none; color: #F59E0B; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; }
+
+  /* Quran Index Inside Phone */
+  .quran-index-content { padding: 14px; }
+  
+  /* Bookmark Card */
+  .card-bookmark { background: #161E2E; border: 1px solid #212B3E; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; }
+  .card-bookmark:hover { border-color: #F59E0B; }
+  .bm-icon { font-size: 26px; color: #F59E0B; }
+  .bm-info { flex: 1; }
+  .bm-title { font-size: 13.5px; font-weight: 800; color: #F59E0B; }
+  .bm-sub { font-size: 12px; color: #E6EDF3; margin-top: 2px; }
+  .bm-tag { background: #F59E0B; color: #161E2E; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; }
+
+  /* Sub Tabs (Surahs / Juz) */
+  .quran-subtabs { display: flex; gap: 6px; background: #161E2E; padding: 4px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #212B3E; }
+  .qtab-btn { flex: 1; padding: 7px; background: transparent; border: none; color: #8F9BB3; font-weight: 700; font-size: 12.5px; border-radius: 7px; cursor: pointer; }
+  .qtab-btn.active { background: #F59E0B; color: #161E2E; font-weight: 800; }
+
+  /* Search Input */
+  .qsearch-box { width: 100%; background: #161E2E; border: 1px solid #212B3E; border-radius: 10px; padding: 9px 12px; color: #fff; font-size: 12.5px; margin-bottom: 12px; outline: none; }
+  .qsearch-box:focus { border-color: #F59E0B; }
+
+  /* Surahs & Juz List Items */
+  .surah-item, .juz-item { background: #161E2E; border: 1px solid #212B3E; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.15s; }
+  .surah-item:hover, .juz-item:hover { border-color: #F59E0B; background: #1c273c; }
+  .s-badge { width: 36px; height: 36px; border-radius: 50%; background: #212B3E; color: #F59E0B; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; }
+  .s-body { flex: 1; }
+  .s-title { font-size: 14.5px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 6px; }
+  .s-en { font-size: 11px; color: #8F9BB3; font-weight: normal; }
+  .s-meta { font-size: 11px; color: #ffd479; margin-top: 2px; }
+  .s-page { background: #212B3E; color: #a9abe0; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; }
+
+  /* Quran Reader View inside Phone */
+  .reader-view { position: absolute; inset: 0; background: #0D1117; display: flex; flex-direction: column; overflow: hidden; }
+  .reader-top-overlay, .reader-bottom-overlay { position: absolute; left: 0; right: 0; background: rgba(22,30,46,0.95); backdrop-filter: blur(8px); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; z-index: 10; transition: transform 0.25s, opacity 0.25s; }
+  .reader-top-overlay { top: 0; border-bottom: 1px solid #212B3E; }
+  .reader-bottom-overlay { bottom: 0; border-top: 1px solid #212B3E; justify-content: center; }
+  .reader-top-overlay.hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+  .reader-bottom-overlay.hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
+
+  .page-card { flex: 1; margin: 10px; background: #0D1117; border: 1px solid #1F293D; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; cursor: pointer; user-select: none; }
+  .page-inner-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: #F59E0B; padding-bottom: 8px; border-bottom: 1px solid #1F293D; margin-bottom: 10px; }
+  .page-surah-banner { background: #161E2E; border: 1px solid #212B3E; border-radius: 10px; padding: 8px; text-align: center; margin-bottom: 10px; }
+  .page-surah-banner-title { font-size: 15px; font-weight: 800; color: #F59E0B; }
+  .page-surah-banner-sub { font-size: 11px; color: #8F9BB3; margin-top: 2px; }
+  .page-bismillah { text-align: center; font-size: 16px; font-weight: 800; color: #ffd479; margin-bottom: 12px; }
+  .page-quran-text { flex: 1; font-size: 17.5px; line-height: 2; text-align: center; color: #E6EDF3; padding: 6px 0; overflow-y: auto; }
+  .page-inner-footer { text-align: center; font-size: 12px; font-weight: 800; color: #a9abe0; padding-top: 8px; border-top: 1px solid #1F293D; }
+
+  /* Toast Simulator */
+  .toast-box { position: absolute; bottom: 65px; left: 20px; right: 20px; background: #F59E0B; color: #161E2E; padding: 9px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; text-align: center; z-index: 20; box-shadow: 0 4px 20px rgba(0,0,0,0.5); opacity: 0; transform: translateY(10px); transition: 0.3s; pointer-events: none; }
+  .toast-box.show { opacity: 1; transform: translateY(0); }
+
+  /* Tasbih Section Inside Phone */
+  .tasbih-screen { padding: 14px; }
+  .occasion-banner { background: linear-gradient(135deg, #2b1b54, #1b1b3a); border: 1px solid #e1b12c55; border-radius: 16px; padding: 14px; margin-bottom: 14px; position: relative; overflow: hidden; }
+  .occ-badge { display: inline-block; background: #e1b12c; color: #14142b; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; margin-bottom: 6px; }
+  .occ-title { font-size: 13.5px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .occ-virtue { font-size: 11.5px; color: #7bed9f; background: rgba(123,237,159,0.1); padding: 6px 8px; border-radius: 8px; line-height: 1.4; margin-bottom: 10px; }
+  .btn-occ-apply { width: 100%; background: #4d52de; color: #fff; border: none; padding: 7px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
+
+  .dhikr-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+  .dhikr-pills::-webkit-scrollbar { display: none; }
+  .dpill { padding: 6px 14px; background: #26264d; border: 1px solid #3d3d7a; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; color: #d0d2ff; }
+  .dpill.active { background: #4d52de; border-color: #4d52de; color: #fff; }
+
+  .current-dhikr-title { text-align: center; font-size: 15px; font-weight: 800; min-height: 40px; display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 12px; }
+
+  .tasbih-btn { width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, #5b60f5 0%, #3e43cb 70%, #2f33a8 100%); border: 6px solid #6f74ff33; box-shadow: 0 10px 30px rgba(77,82,222,.4); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto 14px; transition: transform 0.08s; user-select: none; }
+  .tasbih-btn:active { transform: scale(0.93); }
+  .tasbih-big-num { font-size: 48px; font-weight: 900; line-height: 1; color: #fff; }
+  .tasbih-target-sub { font-size: 11.5px; color: #c9ccff; margin-top: 4px; font-weight: 600; }
+
+  .tasbih-controls { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
+  .tctrl-btn { background: #24244d; border: 1px solid #3d3d7a; color: #fff; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .tctrl-btn.active { background: #4d52de; border-color: #4d52de; }
+
+  .stats-card { background: #161E2E; border-radius: 14px; padding: 12px; margin-bottom: 12px; border: 1px solid #212B3E; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+  .stat-tile { background: #1f2a40; border-radius: 8px; padding: 8px 4px; text-align: center; }
+  .stat-val { font-size: 15px; font-weight: 800; color: #F59E0B; }
+  .stat-lbl { font-size: 9.5px; color: #8F9BB3; margin-top: 2px; }
+
+  .bar-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 80px; padding: 8px 4px 0; border-bottom: 1px solid #212B3E; margin-bottom: 10px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; gap: 4px; }
+  .bar-fill { width: 12px; background: #F59E0B; border-radius: 4px 4px 0 0; min-height: 4px; }
+  .bar-day { font-size: 9px; color: #8F9BB3; }
+
+  /* Panels (Right Column) */
+  .panel { background: #161E2E; border-radius: 18px; padding: 20px; margin-bottom: 18px; border: 1px solid #212B3E; }
+  .panel h2 { font-size: 16px; margin-bottom: 14px; color: #F59E0B; display: flex; align-items: center; gap: 8px; }
+  .row { margin-bottom: 14px; }
+  .lbl { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 6px; }
+  .lbl b { color: #F59E0B; }
+  input[type=range] { width: 100%; accent-color: #F59E0B; cursor: pointer; }
+  .hint { font-size: 12.5px; color: #8F9BB3; line-height: 1.7; margin-top: 8px; }
+  .page-nav-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  .btn-nav { flex: 1; background: #212B3E; border: 1px solid #36445D; color: #fff; padding: 9px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .btn-nav:hover { background: #F59E0B; color: #161E2E; }
+  .btn-nav.primary { background: #F59E0B; color: #161E2E; font-weight: 800; border-color: #F59E0B; }
+  .report-box { background: #0A0C10; border: 1px solid #212B3E; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 11.5px; line-height: 1.6; color: #c9ccff; white-space: pre-wrap; max-height: 140px; overflow-y: auto; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span>📖 📿 🕒</span> <t data-ar="القرآن الكريم كاملاً، المسبحة، وساعة الخلفية الحية" data-en="Holy Quran, Tasbih &amp; Live Wallpaper">القرآن الكريم كاملاً، المسبحة، وساعة الخلفية الحية</t></h1>
+    <div class="header-actions">
+      <button class="langbtn" id="langBtn">EN</button>
+    </div>
+  </header>
+
+  <!-- Section Tabs -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" data-tab="quran_index"><t data-ar="📖 فهرس القرآن الكريم" data-en="📖 Quran Index">📖 فهرس القرآن الكريم</t></button>
+    <button class="tab-btn" data-tab="quran_reader"><t data-ar="📜 قارئ المصحف (604 صفحة)" data-en="📜 Quran Reader (604 Pages)">📜 قارئ المصحف (604 صفحة)</t></button>
+    <button class="tab-btn" data-tab="tasbih"><t data-ar="📿 المسبحة والأذكار" data-en="📿 Tasbih &amp; Athkar">📿 المسبحة والأذكار</t></button>
+  </div>
+
+  <div class="grid">
+    <!-- Left: Mobile Phone Simulation -->
+    <div class="phone-wrap">
+      <div class="phone" id="phone">
+
+        <!-- 1. Quran Index View -->
+        <div class="phone-screen" id="viewIndex">
+          <div class="app-header">
+            <span class="title">📖 <t data-ar="فهرس القرآن الكريم" data-en="Holy Quran Index">فهرس القرآن الكريم</t></span>
+            <button class="icon-btn" id="btnToggleSearch" title="Search">🔍</button>
+          </div>
+
+          <div class="quran-index-content">
+            <!-- Search Box -->
+            <input type="text" class="qsearch-box" id="etSearch" placeholder="ابحث عن سورة بالاسم أو الرقم..." style="display: none;">
+
+            <!-- Jump to Saved Bookmark Card -->
+            <div class="card-bookmark" id="cardSavedBookmark">
+              <span class="bm-icon">🔖</span>
+              <div class="bm-info">
+                <div class="bm-title"><t data-ar="الانتقال إلى العلامة المحفوظة" data-en="Saved Bookmark">الانتقال إلى العلامة المحفوظة</t></div>
+                <div class="bm-sub" id="tvSavedBookmarkText">سورة الفاتحة • صفحة 1</div>
+              </div>
+              <span class="bm-tag"><t data-ar="متابعة" data-en="Resume">متابعة</t></span>
+            </div>
+
+            <!-- Sub Tabs: Surahs / Juz -->
+            <div class="quran-subtabs">
+              <button class="qtab-btn active" id="btnTabSurahs"><t data-ar="السور (114)" data-en="Surahs (114)">السور (114)</t></button>
+              <button class="qtab-btn" id="btnTabJuz"><t data-ar="الأجزاء (30)" data-en="Juz (30)">الأجزاء (30)</t></button>
+            </div>
+
+            <!-- Surahs List -->
+            <div id="listSurahs"></div>
+
+            <!-- Juz List -->
+            <div id="listJuz" style="display: none;"></div>
+          </div>
+        </div>
+
+        <!-- 2. Quran Reader View -->
+        <div class="phone-screen reader-view" id="viewReader" style="display: none;">
+          <!-- Top Overlay Bar -->
+          <div class="reader-top-overlay" id="topOverlay">
+            <button class="icon-btn" id="btnReaderBack" style="color:#fff;" title="Back">⬅️</button>
+            <div style="font-size: 14px; font-weight: 800; color: #fff;" id="tvTopSurahJuz">سورة الفاتحة • الجزء الأول</div>
+            <button class="icon-btn" id="btnReaderBookmark" title="Save Bookmark">🔖</button>
+          </div>
+
+          <!-- Page Content Card -->
+          <div class="page-card" id="pageCard" style="margin-top: 54px; margin-bottom: 46px;">
+            <div class="page-inner-header">
+              <span id="pPageJuz">الجزء الأول</span>
+              <span id="pPageSurah">سورة الفاتحة</span>
+            </div>
+
+            <div class="page-surah-banner" id="pSurahBanner">
+              <div class="page-surah-banner-title" id="pBannerTitle">سورة الفاتحة</div>
+              <div class="page-surah-banner-sub" id="pBannerSub">مكية • 7 آيات</div>
+            </div>
+
+            <div class="page-bismillah" id="pBismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+
+            <div class="page-quran-text" id="pQuranText">
+              بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ﴿١﴾<br>
+              الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ ﴿٢﴾<br>
+              الرَّحْمَٰنِ الرَّحِيمِ ﴿٣﴾<br>
+              مَالِكِ يَوْمِ الدِّينِ ﴿٤﴾<br>
+              إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ﴿٥﴾<br>
+              اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ﴿٦﴾<br>
+              صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ ﴿٧﴾
+            </div>
+
+            <div class="page-inner-footer">
+              <span id="pPageNum">1</span>
+            </div>
+          </div>
+
+          <!-- Bottom Overlay Bar -->
+          <div class="reader-bottom-overlay" id="bottomOverlay">
+            <span style="font-size: 12.5px; font-weight: 800; color: #F59E0B;" id="tvBottomPageOf">صفحة 1 من 604</span>
+          </div>
+
+          <!-- Toast Notification -->
+          <div class="toast-box" id="toastBox">تم حفظ العلامة بنجاح</div>
+        </div>
+
+        <!-- 3. Tasbih Screen -->
+        <div class="phone-screen tasbih-screen" id="viewTasbih" style="display: none;">
+          <div class="app-header" style="margin: -14px -14px 14px -14px;">
+            <span class="title">📿 <t data-ar="المسبحة الإلكترونية" data-en="Digital Tasbih">المسبحة الإلكترونية</t></span>
+            <span style="color:#ffd479; font-size:11px;">13 ربيع الأول</span>
+          </div>
+
+          <div class="occasion-banner">
+            <span class="occ-badge">يوم الجمعة</span>
+            <div class="occ-title">سورة الكهف والصلاة على النبي ﷺ</div>
+            <div class="occ-virtue">«من قرأ سورة الكهف في يوم الجمعة أضاء له من النور ما بين الجمعتين»</div>
+            <button class="btn-occ-apply" id="btnApplyDhikrToday">📿 <t data-ar="تسبيح ذكر اليوم" data-en="Apply Today's Dhikr">تسبيح ذكر اليوم</t></button>
+          </div>
+
+          <div class="dhikr-pills" id="tDhikrPills"></div>
+          <div class="current-dhikr-title" id="tCurrentDhikr">سبحان الله وبحمده، سبحان الله العظيم</div>
+
+          <div class="tasbih-btn" id="tTapBtn">
+            <div class="tasbih-big-num" id="tBigNum">0</div>
+            <div class="tasbih-target-sub" id="tTargetSub">الهدف: 33</div>
+          </div>
+
+          <div class="tasbih-controls">
+            <button class="tctrl-btn active" data-tt="33">33</button>
+            <button class="tctrl-btn" data-tt="100">100</button>
+            <button class="tctrl-btn" data-tt="0">∞</button>
+            <button class="tctrl-btn" id="tResetBtn" style="color:#ff7675;">↺</button>
+          </div>
+
+          <div class="stats-card">
+            <div class="stat-grid">
+              <div class="stat-tile"><div class="stat-val" id="stToday">0</div><div class="stat-lbl">اليوم</div></div>
+              <div class="stat-tile"><div class="stat-val" id="stWeek">0</div><div class="stat-lbl">7 أيام</div></div>
+              <div class="stat-tile"><div class="stat-val" id="stMonth">0</div><div class="stat-lbl">30 يوماً</div></div>
+              <div class="stat-tile"><div class="stat-val" id="stStreak">0 🔥</div><div class="stat-lbl">الالتزام</div></div>
+            </div>
+            <div class="bar-chart" id="tBarChart"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right: Controls & Interactive Navigation -->
+    <div>
+      <div class="panel">
+        <h2><t data-ar="📜 التنقل السريع في المصحف الشريف" data-en="📜 Quick Quran Navigation">📜 التنقل السريع في المصحف الشريف</t></h2>
+        <div class="hint"><t data-ar="تقليب سلس عبر 604 صفحة مع وضع ملء الشاشة والنقر لإظهار/إخفاء أشرطة التحكم:" data-en="Smooth flipping through 604 pages with full-screen reading mode and tap-to-toggle overlay controls:">تقليب سلس عبر 604 صفحة مع وضع ملء الشاشة والنقر لإظهار/إخفاء أشرطة التحكم:</t></div>
+        
+        <div class="page-nav-row" style="margin-top: 14px;">
+          <button class="btn-nav" id="btnPrevPage">◀ <t data-ar="الصفحة السابقة" data-en="Previous Page">الصفحة السابقة</t></button>
+          <button class="btn-nav primary" id="btnNextPage"><t data-ar="الصفحة التالية" data-en="Next Page">الصفحة التالية</t> ▶</button>
+        </div>
+
+        <div class="row" style="margin-top: 16px;">
+          <div class="lbl">
+            <span><t data-ar="الانتقال إلى صفحة محددة (1 - 604)" data-en="Jump to Page (1 - 604)">الانتقال إلى صفحة محددة (1 - 604)</t></span>
+            <b id="vCurrentPage">1</b>
+          </div>
+          <input type="range" id="sPagePicker" min="1" max="604" value="1">
+        </div>
+
+        <div class="page-nav-row">
+          <button class="btn-nav" id="btnQuickKahf">📖 <t data-ar="سورة الكهف (ص 293)" data-en="Surah Al-Kahf (p 293)">سورة الكهف (ص 293)</t></button>
+          <button class="btn-nav" id="btnQuickMulk">✨ <t data-ar="سورة الملك (ص 562)" data-en="Surah Al-Mulk (p 562)">سورة الملك (ص 562)</t></button>
+          <button class="btn-nav" id="btnQuickLast">🌟 <t data-ar="قصار السور (ص 604)" data-en="Short Surahs (p 604)">قصار السور (ص 604)</t></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><t data-ar="🔖 العلامة المرجعية وإبقاء الشاشة مضاءة" data-en="🔖 Bookmark &amp; Keep Screen On">🔖 العلامة المرجعية وإبقاء الشاشة مضاءة</t></h2>
+        <ul style="list-style: none; font-size: 13px; line-height: 1.8; color: #E6EDF3;">
+          <li>✓ <t data-ar="حفظ واسترجاع العلامة المرجعية تلقائياً (SharedPreferences)" data-en="Automatic Bookmark Persistence via SharedPreferences">حفظ واسترجاع العلامة المرجعية تلقائياً (SharedPreferences)</t></li>
+          <li>✓ <t data-ar="إبقاء الشاشة مضاءة أثناء القراءة (FLAG_KEEP_SCREEN_ON)" data-en="Keep Screen On while reading (FLAG_KEEP_SCREEN_ON)">إبقاء الشاشة مضاءة أثناء القراءة (FLAG_KEEP_SCREEN_ON)</t></li>
+          <li>✓ <t data-ar="إشعار Toast فوري أنيق يوضح السورة ورقم الصفحة المحفوظة" data-en="Elegant Toast notification showing saved Surah &amp; Page">إشعار Toast فوري أنيق يوضح السورة ورقم الصفحة المحفوظة</t></li>
+          <li>✓ <t data-ar="تصميم داكن عالي التباين ومريح للعينين (#0D1117 / #161E2E)" data-en="Comfortable High-Contrast Dark Mode (#0D1117 / #161E2E)">تصميم داكن عالي التباين ومريح للعينين (#0D1117 / #161E2E)</t></li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2><t data-ar="📊 تقرير إحصائيات التسبيح والورد" data-en="📊 Tasbih Report Export">📊 تقرير إحصائيات التسبيح والورد</t></h2>
+        <div class="report-box" id="tReportBox"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// State
+let lang = 'ar';
+let currentPage = 1;
+let savedBookmarkPage = 1;
+let savedBookmarkSurah = 'الفاتحة';
+let overlaysVisible = true;
+let tCount = 0;
+let tTarget = 33;
+let tDhikrIdx = 0;
+
+const SURAHS = [
+  { n: 1, ar: "الفاتحة", en: "Al-Fatihah", m: true, a: 7, p: 1 },
+  { n: 2, ar: "البقرة", en: "Al-Baqarah", m: false, a: 286, p: 2 },
+  { n: 3, ar: "آل عمران", en: "Ali 'Imran", m: false, a: 200, p: 50 },
+  { n: 4, ar: "النساء", en: "An-Nisa", m: false, a: 176, p: 77 },
+  { n: 5, ar: "المائدة", en: "Al-Ma'idah", m: false, a: 120, p: 106 },
+  { n: 6, ar: "الأنعام", en: "Al-An'am", m: true, a: 165, p: 128 },
+  { n: 7, ar: "الأعراف", en: "Al-A'raf", m: true, a: 206, p: 151 },
+  { n: 8, ar: "الأنفال", en: "Al-Anfal", m: false, a: 75, p: 177 },
+  { n: 9, ar: "التوبة", en: "At-Tawbah", m: false, a: 129, p: 187 },
+  { n: 10, ar: "يونس", en: "Yunus", m: true, a: 109, p: 208 },
+  { n: 11, ar: "هود", en: "Hud", m: true, a: 123, p: 221 },
+  { n: 12, ar: "يوسف", en: "Yusuf", m: true, a: 111, p: 235 },
+  { n: 13, ar: "الرعد", en: "Ar-Ra'd", m: false, a: 43, p: 249 },
+  { n: 14, ar: "إبراهيم", en: "Ibrahim", m: true, a: 52, p: 255 },
+  { n: 15, ar: "الحجر", en: "Al-Hijr", m: true, a: 99, p: 262 },
+  { n: 16, ar: "النحل", en: "An-Nahl", m: true, a: 128, p: 267 },
+  { n: 17, ar: "الإسراء", en: "Al-Isra", m: true, a: 111, p: 282 },
+  { n: 18, ar: "الكهف", en: "Al-Kahf", m: true, a: 110, p: 293 },
+  { n: 19, ar: "مريم", en: "Maryam", m: true, a: 98, p: 305 },
+  { n: 20, ar: "طه", en: "Ta-Ha", m: true, a: 135, p: 312 },
+  { n: 21, ar: "الأنبياء", en: "Al-Anbiya", m: true, a: 112, p: 322 },
+  { n: 22, ar: "الحج", en: "Al-Hajj", m: false, a: 78, p: 332 },
+  { n: 23, ar: "المؤمنون", en: "Al-Mu'minun", m: true, a: 118, p: 342 },
+  { n: 24, ar: "النور", en: "An-Nur", m: false, a: 64, p: 350 },
+  { n: 25, ar: "الفرقان", en: "Al-Furqan", m: true, a: 77, p: 359 },
+  { n: 26, ar: "الشعراء", en: "Ash-Shu'ara", m: true, a: 227, p: 367 },
+  { n: 27, ar: "النمل", en: "An-Naml", m: true, a: 93, p: 377 },
+  { n: 28, ar: "القصص", en: "Al-Qasas", m: true, a: 88, p: 385 },
+  { n: 29, ar: "العنكبوت", en: "Al-'Ankabut", m: true, a: 69, p: 396 },
+  { n: 30, ar: "الروم", en: "Ar-Rum", m: true, a: 60, p: 404 },
+  { n: 31, ar: "لقمان", en: "Luqman", m: true, a: 34, p: 411 },
+  { n: 32, ar: "السجدة", en: "As-Sajdah", m: true, a: 30, p: 415 },
+  { n: 33, ar: "الأحزاب", en: "Al-Ahzab", m: false, a: 73, p: 418 },
+  { n: 34, ar: "سبأ", en: "Saba", m: true, a: 54, p: 428 },
+  { n: 35, ar: "فاطر", en: "Fatir", m: true, a: 45, p: 434 },
+  { n: 36, ar: "يس", en: "Ya-Sin", m: true, a: 83, p: 440 },
+  { n: 37, ar: "الصافات", en: "As-Saffat", m: true, a: 182, p: 446 },
+  { n: 38, ar: "ص", en: "Sad", m: true, a: 88, p: 453 },
+  { n: 39, ar: "الزمر", en: "Az-Zumar", m: true, a: 75, p: 458 },
+  { n: 40, ar: "غافر", en: "Ghafir", m: true, a: 85, p: 467 },
+  { n: 41, ar: "فصلت", en: "Fussilat", m: true, a: 54, p: 477 },
+  { n: 42, ar: "الشورى", en: "Ash-Shura", m: true, a: 53, p: 483 },
+  { n: 43, ar: "الزخرف", en: "Az-Zukhruf", m: true, a: 89, p: 489 },
+  { n: 44, ar: "الدخان", en: "Ad-Dukhan", m: true, a: 59, p: 496 },
+  { n: 45, ar: "الجاثية", en: "Al-Jathiyah", m: true, a: 37, p: 499 },
+  { n: 46, ar: "الأحقاف", en: "Al-Ahqaf", m: true, a: 35, p: 502 },
+  { n: 47, ar: "محمد", en: "Muhammad", m: false, a: 38, p: 507 },
+  { n: 48, ar: "الفتح", en: "Al-Fath", m: false, a: 29, p: 511 },
+  { n: 49, ar: "الحجرات", en: "Al-Hujurat", m: false, a: 18, p: 515 },
+  { n: 50, ar: "ق", en: "Qaf", m: true, a: 45, p: 518 },
+  { n: 51, ar: "الذاريات", en: "Adh-Dhariyat", m: true, a: 60, p: 520 },
+  { n: 52, ar: "الطور", en: "At-Tur", m: true, a: 49, p: 523 },
+  { n: 53, ar: "النجم", en: "An-Najm", m: true, a: 62, p: 526 },
+  { n: 54, ar: "القمر", en: "Al-Qamar", m: true, a: 55, p: 528 },
+  { n: 55, ar: "الرحمن", en: "Ar-Rahman", m: false, a: 78, p: 531 },
+  { n: 56, ar: "الواقعة", en: "Al-Waqi'ah", m: true, a: 96, p: 534 },
+  { n: 57, ar: "الحديد", en: "Al-Hadid", m: false, a: 29, p: 537 },
+  { n: 58, ar: "المجادلة", en: "Al-Mujadila", m: false, a: 22, p: 542 },
+  { n: 59, ar: "الحشر", en: "Al-Hashr", m: false, a: 24, p: 545 },
+  { n: 60, ar: "الممتحنة", en: "Al-Mumtahanah", m: false, a: 13, p: 549 },
+  { n: 61, ar: "الصف", en: "As-Saff", m: false, a: 14, p: 551 },
+  { n: 62, ar: "الجمعة", en: "Al-Jumu'ah", m: false, a: 11, p: 553 },
+  { n: 63, ar: "المنافقون", en: "Al-Munafiqun", m: false, a: 11, p: 554 },
+  { n: 64, ar: "التغابن", en: "At-Taghabun", m: false, a: 18, p: 556 },
+  { n: 65, ar: "الطلاق", en: "At-Talaq", m: false, a: 12, p: 558 },
+  { n: 66, ar: "التحريم", en: "At-Tahrim", m: false, a: 12, p: 560 },
+  { n: 67, ar: "الملك", en: "Al-Mulk", m: true, a: 30, p: 562 },
+  { n: 68, ar: "القلم", en: "Al-Qalam", m: true, a: 52, p: 564 },
+  { n: 69, ar: "الحاقة", en: "Al-Haqqah", m: true, a: 52, p: 566 },
+  { n: 70, ar: "المعارج", en: "Al-Ma'arij", m: true, a: 44, p: 568 },
+  { n: 71, ar: "نوح", en: "Nuh", m: true, a: 28, p: 570 },
+  { n: 72, ar: "الجن", en: "Al-Jinn", m: true, a: 28, p: 572 },
+  { n: 73, ar: "المزمل", en: "Al-Muzzammil", m: true, a: 20, p: 574 },
+  { n: 74, ar: "المدثر", en: "Al-Muddaththir", m: true, a: 56, p: 575 },
+  { n: 75, ar: "القيامة", en: "Al-Qiyamah", m: true, a: 40, p: 577 },
+  { n: 76, ar: "الإنسان", en: "Al-Insan", m: false, a: 31, p: 578 },
+  { n: 77, ar: "المرسلات", en: "Al-Mursalat", m: true, a: 50, p: 580 },
+  { n: 78, ar: "النبأ", en: "An-Naba", m: true, a: 40, p: 582 },
+  { n: 79, ar: "النازعات", en: "An-Nazi'at", m: true, a: 46, p: 583 },
+  { n: 80, ar: "عبس", "'Abasa", m: true, a: 42, p: 585 },
+  { n: 81, ar: "التكوير", "At-Takwir", m: true, a: 29, p: 586 },
+  { n: 82, ar: "الانفطار", "Al-Infitar", m: true, a: 19, p: 587 },
+  { n: 83, ar: "المطففين", "Al-Mutaffifin", m: true, a: 36, p: 587 },
+  { n: 84, ar: "الانشقاق", "Al-Inshiqaq", m: true, a: 25, p: 589 },
+  { n: 85, ar: "البروج", "Al-Buruj", m: true, a: 22, p: 590 },
+  { n: 86, ar: "الطارق", "At-Tariq", m: true, a: 17, p: 591 },
+  { n: 87, ar: "الأعلى", "Al-A'la", m: true, a: 19, p: 591 },
+  { n: 88, ar: "الغاشية", "Al-Ghashiyah", m: true, a: 26, p: 592 },
+  { n: 89, ar: "الفجر", "Al-Fajr", m: true, a: 30, p: 593 },
+  { n: 90, ar: "البلد", "Al-Balad", m: true, a: 20, p: 594 },
+  { n: 91, ar: "الشمس", "Ash-Shams", m: true, a: 15, p: 595 },
+  { n: 92, ar: "الليل", "Al-Layl", m: true, a: 21, p: 595 },
+  { n: 93, ar: "الضحى", "Ad-Duha", m: true, a: 11, p: 596 },
+  { n: 94, ar: "الشرح", "Ash-Sharh", m: true, a: 8, p: 596 },
+  { n: 95, ar: "التين", "At-Tin", m: true, a: 8, p: 597 },
+  { n: 96, ar: "العلق", "Al-'Alaq", m: true, a: 19, p: 597 },
+  { n: 97, ar: "القدر", "Al-Qadr", m: true, a: 5, p: 598 },
+  { n: 98, ar: "البينة", "Al-Bayyinah", m: false, a: 8, p: 598 },
+  { n: 99, ar: "الزلزلة", "Az-Zalzalah", m: false, a: 8, p: 599 },
+  { n: 100, ar: "العاديات", "Al-'Adiyat", m: true, a: 11, p: 599 },
+  { n: 101, ar: "القارعة", "Al-Qari'ah", m: true, a: 11, p: 600 },
+  { n: 102, ar: "التكاثر", "At-Takathur", m: true, a: 8, p: 600 },
+  { n: 103, ar: "العصر", "Al-'Asr", m: true, a: 3, p: 601 },
+  { n: 104, ar: "الهمزة", "Al-Humazah", m: true, a: 9, p: 601 },
+  { n: 105, ar: "الفيل", "Al-Fil", m: true, a: 5, p: 601 },
+  { n: 106, ar: "قريش", "Quraysh", m: true, a: 4, p: 602 },
+  { n: 107, ar: "الماعون", "Al-Ma'un", m: true, a: 7, p: 602 },
+  { n: 108, ar: "الكوثر", "Al-Kawthar", m: true, a: 3, p: 602 },
+  { n: 109, ar: "الكافرون", "Al-Kafirun", m: true, a: 6, p: 603 },
+  { n: 110, ar: "النصر", "An-Nasr", m: false, a: 3, p: 603 },
+  { n: 111, ar: "المسد", "Al-Masad", m: true, a: 5, p: 603 },
+  { n: 112, ar: "الإخلاص", "Al-Ikhlas", m: true, a: 4, p: 604 },
+  { n: 113, ar: "الفلق", "Al-Falaq", m: true, a: 5, p: 604 },
+  { n: 114, ar: "الناس", "An-Nas", m: true, a: 6, p: 604 }
+];
+
+const JUZ_LIST = [
+  { n: 1, ar: "الجزء الأول", en: "Juz 1", s: "الفاتحة", se: "Al-Fatihah", q: "الم", p: 1 },
+  { n: 2, ar: "الجزء الثاني", en: "Juz 2", s: "البقرة", se: "Al-Baqarah", q: "سَيَقُولُ السُّفَهَاءُ", p: 22 },
+  { n: 3, ar: "الجزء الثالث", en: "Juz 3", s: "البقرة", se: "Al-Baqarah", q: "تِلْكَ الرُّسُلُ", p: 42 },
+  { n: 4, ar: "الجزء الرابع", en: "Juz 4", s: "آل عمران", se: "Ali 'Imran", q: "لَنْ تَنَالُوا الْبِرَّ", p: 62 },
+  { n: 5, ar: "الجزء الخامس", en: "Juz 5", s: "النساء", se: "An-Nisa", q: "وَالْمُحْصَنَاتُ", p: 82 },
+  { n: 6, ar: "الجزء السادس", en: "Juz 6", s: "النساء", se: "An-Nisa", q: "لَا يُحِبُّ اللَّهُ", p: 102 },
+  { n: 7, ar: "الجزء السابع", en: "Juz 7", s: "المائدة", se: "Al-Ma'idah", q: "وَإِذَا سَمِعُوا", p: 122 },
+  { n: 8, ar: "الجزء الثامن", en: "Juz 8", s: "الأنعام", se: "Al-An'am", q: "وَلَوْ أَنَّنَا نَزَّلْنَا", p: 142 },
+  { n: 9, ar: "الجزء التاسع", en: "Juz 9", s: "الأعراف", se: "Al-A'raf", q: "قَالَ الْمَلَأُ", p: 162 },
+  { n: 10, ar: "الجزء العاشر", en: "Juz 10", s: "الأنفال", se: "Al-Anfal", q: "وَاعْلَمُوا أَنَّمَا غَنِمْتُمْ", p: 182 },
+  { n: 11, ar: "الجزء الحادي عشر", en: "Juz 11", s: "التوبة", se: "At-Tawbah", q: "يَعْتَذِرُونَ إِلَيْكُمْ", p: 202 },
+  { n: 12, ar: "الجزء الثاني عشر", en: "Juz 12", s: "هود", se: "Hud", q: "وَمَا مِنْ دَابَّةٍ", p: 222 },
+  { n: 13, ar: "الجزء الثالث عشر", en: "Juz 13", s: "يوسف", se: "Yusuf", q: "وَمَا أُبَرِّئُ نَفْسِي", p: 242 },
+  { n: 14, ar: "الجزء الرابع عشر", en: "Juz 14", s: "الحجر", se: "Al-Hijr", q: "الر تِلْكَ آيَاتُ", p: 262 },
+  { n: 15, ar: "الجزء الخامس عشر", en: "Juz 15", s: "الإسراء", se: "Al-Isra", q: "سُبْحَانَ الَّذِي أَسْرَىٰ", p: 282 },
+  { n: 16, ar: "الجزء السادس عشر", en: "Juz 16", s: "الكهف", se: "Al-Kahf", q: "قَالَ أَلَمْ أَقُلْ لَكَ", p: 302 },
+  { n: 17, ar: "الجزء السابع عشر", en: "Juz 17", s: "الأنبياء", se: "Al-Anbiya", q: "اقْتَرَبَ لِلنَّاسِ", p: 322 },
+  { n: 18, ar: "الجزء الثامن عشر", en: "Juz 18", s: "المؤمنون", se: "Al-Mu'minun", q: "قَدْ أَفْلَحَ الْمُؤْمِنُونَ", p: 342 },
+  { n: 19, ar: "الجزء التاسع عشر", en: "Juz 19", s: "الفرقان", se: "Al-Furqan", q: "وَقَالَ الَّذِينَ لَا يَرْجُونَ", p: 362 },
+  { n: 20, ar: "الجزء العشرون", en: "Juz 20", s: "النمل", se: "An-Naml", q: "فَمَا كَانَ جَوَابَ قَوْمِهِ", p: 382 },
+  { n: 21, ar: "الجزء الحادي والعشرون", en: "Juz 21", s: "العنكبوت", se: "Al-'Ankabut", q: "وَلَا تُجَادِلُوا", p: 402 },
+  { n: 22, ar: "الجزء الثاني والعشرون", en: "Juz 22", s: "الأحزاب", se: "Al-Ahzab", q: "وَمَنْ يَقْنُتْ مِنْكُنَّ", p: 422 },
+  { n: 23, ar: "الجزء الثالث والعشرون", en: "Juz 23", s: "يس", se: "Ya-Sin", q: "وَمَا أَنْزَلْنَا عَلَىٰ قَوْمِهِ", p: 442 },
+  { n: 24, ar: "الجزء الرابع والعشرون", en: "Juz 24", s: "الزمر", se: "Az-Zumar", q: "فَمَنْ أَظْلَمُ", p: 462 },
+  { n: 25, ar: "الجزء الخامس والعشرون", en: "Juz 25", s: "فصلت", se: "Fussilat", q: "إِلَيْهِ يُرَدُّ عِلْمُ السَّاعَةِ", p: 482 },
+  { n: 26, ar: "الجزء السادس والعشرون", en: "Juz 26", s: "الأحقاف", se: "Al-Ahqaf", q: "حم تَنْزِيلُ الْكِتَابِ", p: 502 },
+  { n: 27, ar: "الجزء السابع والعشرون", en: "Juz 27", s: "الذاريات", se: "Adh-Dhariyat", q: "قَالَ فَمَا خَطْبُكُمْ", p: 522 },
+  { n: 28, ar: "الجزء الثامن والعشرون", en: "Juz 28", s: "المجادلة", se: "Al-Mujadila", q: "قَدْ سَمِعَ اللَّهُ", p: 542 },
+  { n: 29, ar: "الجزء التاسع والعشرون", en: "Juz 29", s: "الملك", se: "Al-Mulk", q: "تَبَارَكَ الَّذِي بِيَدِهِ الْمُلْكُ", p: 562 },
+  { n: 30, ar: "الجزء الثلاثون", en: "Juz 30", s: "النبأ", se: "An-Naba", q: "عَمَّ يَتَسَاءَلُونَ", p: 582 }
+];
+
+const DHIKRS = [
+  "سبحان الله وبحمده، سبحان الله العظيم",
+  "اللهم صلّ وسلّم على نبينا محمد",
+  "أستغفر الله وأتوب إليه",
+  "لا إله إلا الله وحده لا شريك له",
+  "لا حول ولا قوة إلا بالله"
+];
+
+const $ = id => document.getElementById(id);
+
+function getSurahForPage(p) {
+  let match = SURAHS[0];
+  for (let s of SURAHS) {
+    if (s.p <= p) match = s; else break;
+  }
+  return match;
+}
+
+function getJuzNumberForPage(p) {
+  let j = 1;
+  for (let item of JUZ_LIST) {
+    if (item.p <= p) j = item.n; else break;
+  }
+  return j;
+}
+
+function init() {
+  renderSurahsList();
+  renderJuzList();
+  updateBookmarkCard();
+  updateReaderPage();
+  setupTasbih();
+  setupEvents();
+}
+
+function renderSurahsList(filterQuery = '') {
+  const c = $('listSurahs');
+  c.innerHTML = '';
+  const q = filterQuery.trim().toLowerCase();
+  
+  SURAHS.forEach(s => {
+    if (q && !s.ar.toLowerCase().includes(q) && !s.en.toLowerCase().includes(q) && String(s.n) !== q) {
+      return;
+    }
+    const d = document.createElement('div');
+    d.className = 'surah-item';
+    const typeTxt = s.m ? (lang === 'ar' ? 'مكية' : 'Meccan') : (lang === 'ar' ? 'مدنية' : 'Medinan');
+    const ayahTxt = lang === 'ar' ? `${s.a} آيات` : `${s.a} Verses`;
+    const pageTxt = lang === 'ar' ? `ص ${s.p}` : `p ${s.p}`;
+    d.innerHTML = `
+      <div class="s-badge">${s.n}</div>
+      <div class="s-body">
+        <div class="s-title">${s.ar} <span class="s-en">${s.en}</span></div>
+        <div class="s-meta">${typeTxt} • ${ayahTxt}</div>
+      </div>
+      <div class="s-page">${pageTxt}</div>
+    `;
+    d.onclick = () => openReader(s.p);
+    c.appendChild(d);
+  });
+}
+
+function renderJuzList() {
+  const c = $('listJuz');
+  c.innerHTML = '';
+  JUZ_LIST.forEach(j => {
+    const d = document.createElement('div');
+    d.className = 'juz-item';
+    const titleTxt = lang === 'ar' ? j.ar : j.en;
+    const surahTxt = lang === 'ar' ? `سورة ${j.s}` : `Surah ${j.se}`;
+    const quoteTxt = `«${j.q}»`;
+    const pageTxt = lang === 'ar' ? `ص ${j.p}` : `p ${j.p}`;
+    d.innerHTML = `
+      <div class="s-badge">${j.n}</div>
+      <div class="s-body">
+        <div class="s-title">${titleTxt}</div>
+        <div class="s-meta" style="color:#ffd479">${quoteTxt} • <span style="color:#8F9BB3">${surahTxt}</span></div>
+      </div>
+      <div class="s-page">${pageTxt}</div>
+    `;
+    d.onclick = () => openReader(j.p);
+    c.appendChild(d);
+  });
+}
+
+function updateBookmarkCard() {
+  $('tvSavedBookmarkText').textContent = lang === 'ar' ? `سورة ${savedBookmarkSurah} • صفحة ${savedBookmarkPage}` : `Surah ${savedBookmarkSurah} • Page ${savedBookmarkPage}`;
+}
+
+function openReader(page) {
+  currentPage = page;
+  $('viewIndex').style.display = 'none';
+  $('viewTasbih').style.display = 'none';
+  $('viewReader').style.display = 'flex';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.tab-btn[data-tab="quran_reader"]').classList.add('active');
+  updateReaderPage();
+}
+
+function openIndex() {
+  $('viewReader').style.display = 'none';
+  $('viewTasbih').style.display = 'none';
+  $('viewIndex').style.display = 'block';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.tab-btn[data-tab="quran_index"]').classList.add('active');
+  updateBookmarkCard();
+}
+
+function openTasbih() {
+  $('viewReader').style.display = 'none';
+  $('viewIndex').style.display = 'none';
+  $('viewTasbih').style.display = 'block';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.tab-btn[data-tab="tasbih"]').classList.add('active');
+}
+
+function updateReaderPage() {
+  const surah = getSurahForPage(currentPage);
+  const juz = getJuzNumberForPage(currentPage);
+
+  $('tvTopSurahJuz').textContent = lang === 'ar' ? `سورة ${surah.ar} • الجزء ${juz}` : `Surah ${surah.en} • Juz ${juz}`;
+  $('tvBottomPageOf').textContent = lang === 'ar' ? `صفحة ${currentPage} من 604` : `Page ${currentPage} of 604`;
+  $('vCurrentPage').textContent = currentPage;
+  $('sPagePicker').value = currentPage;
+
+  $('pPageJuz').textContent = lang === 'ar' ? `الجزء ${juz}` : `Juz ${juz}`;
+  $('pPageSurah').textContent = lang === 'ar' ? `سورة ${surah.ar}` : `Surah ${surah.en}`;
+  $('pPageNum').textContent = currentPage;
+
+  const isStart = (surah.p === currentPage);
+  $('pSurahBanner').style.display = isStart ? 'block' : 'none';
+  $('pBannerTitle').textContent = lang === 'ar' ? `سورة ${surah.ar}` : `Surah ${surah.en}`;
+  const typeTxt = surah.m ? (lang === 'ar' ? 'مكية' : 'Meccan') : (lang === 'ar' ? 'مدنية' : 'Medinan');
+  const ayahTxt = lang === 'ar' ? `${surah.a} آيات` : `${surah.a} Verses`;
+  $('pBannerSub').textContent = `${typeTxt} • ${ayahTxt}`;
+
+  $('pBismillah').style.display = (isStart && surah.n !== 9 && surah.n !== 1) ? 'block' : 'none';
+
+  $('pQuranText').innerHTML = getSampleQuranPageText(currentPage, surah);
+
+  const isBm = (savedBookmarkPage === currentPage);
+  $('btnReaderBookmark').textContent = isBm ? '🔖' : '📑';
+  $('btnReaderBookmark').style.color = isBm ? '#F59E0B' : '#8F9BB3';
+}
+
+function getSampleQuranPageText(p, s) {
+  if (p === 1) {
+    return `بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ﴿١﴾<br>
+    الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ ﴿٢﴾<br>
+    الرَّحْمَٰنِ الرَّحِيمِ ﴿٣﴾<br>
+    مَالِكِ يَوْمِ الدِّينِ ﴿٤﴾<br>
+    إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ﴿٥﴾<br>
+    اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ﴿٦﴾<br>
+    صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ ﴿٧﴾`;
+  } else if (p === 2) {
+    return `الم ﴿١﴾<br>
+    ذَٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِلْمُتَّقِينَ ﴿٢﴾<br>
+    الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ وَيُقِيمُونَ الصَّلَاةَ وَمِمَّا رَزَقْنَاهُمْ يُنْفِقُونَ ﴿٣﴾<br>
+    وَالَّذِينَ يُؤْمِنُونَ بِمَا أُنْزِلَ إِلَيْكَ وَمَا أُنْزِلَ مِنْ قَبْلِكَ وَبِالْآخِرَةِ هُمْ يُوقِنُونَ ﴿٤﴾<br>
+    أُولَٰئِكَ عَلَىٰ هُدًى مِنْ رَبِّهِمْ ۖ وَأُولَٰئِكَ هُمُ الْمُفْلِحُونَ ﴿٥﴾`;
+  } else if (p === 293) {
+    return `الْحَمْدُ لِلَّهِ الَّذِي أَنْزَلَ عَلَىٰ عَبْدِهِ الْكِتَابَ وَلَمْ يَجْعَلْ لَهُ عِوَجًا ۜ ﴿١﴾<br>
+    قَيِّمًا لِيُنْذِرَ بَأْسًا شَدِيدًا مِنْ لَدُنْهُ وَيُبَشِّرَ الْمُؤْمِنِينَ الَّذِينَ يَعْمَلُونَ الصَّالِحَاتِ أَنَّ لَهُمْ أَجْرًا حَسَنًا ﴿٢﴾<br>
+    مَاكِثِينَ فِيهِ أَبَدًا ﴿٣﴾<br>
+    وَيُنْذِرَ الَّذِينَ قَالُوا اتَّخَذَ اللَّهُ وَلَدًا ﴿٤﴾`;
+  } else if (p === 562) {
+    return `تَبَارَكَ الَّذِي بِيَدِهِ الْمُلْكُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ ﴿١﴾<br>
+    الَّذِي خَلَقَ الْمَوْتَ وَالْحَيَاةَ لِيَبْلُوَكُمْ أَيُّكُمْ أَحْسَنُ عَمَلًا ۚ وَهُوَ الْعَزِيزُ الْغَفُورُ ﴿٢﴾<br>
+    الَّذِي خَلَقَ سَبْعَ سَمَاوَاتٍ طِبَاقًا ۖ مَا تَرَىٰ فِي خَلْقِ الرَّحْمَٰنِ مِنْ تَفَاوُتٍ ۖ فَارْجِعِ الْبَصَرَ هَلْ تَرَىٰ مِنْ فُطُورٍ ﴿٣﴾`;
+  } else if (p === 604) {
+    return `بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ<br>
+    قُلْ هُوَ اللَّهُ أَحَدٌ ﴿١﴾ اللَّهُ الصَّمَدُ ﴿٢﴾ لَمْ يَلِدْ وَلَمْ يُولَدْ ﴿٣﴾ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ ﴿٤﴾<br><br>
+    بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ<br>
+    قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ﴿١﴾ مِنْ شَرِّ مَا خَلَقَ ﴿٢﴾ وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ ﴿٣﴾ وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ﴿٤﴾ وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ ﴿٥﴾<br><br>
+    بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ<br>
+    قُلْ أَعُوذُ بِرَبِّ النَّاسِ ﴿١﴾ مَلِكِ النَّاسِ ﴿٢﴾ إِلَٰهِ النَّاسِ ﴿٣﴾ مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ﴿٤﴾`;
+  }
+
+  return `﴿ سورة ${s.ar} — الصفحة ${p} ﴾<br><br>
+  ﴿ وَإِذَا قُرِئَ الْقُرْآنُ فَاسْتَمِعُوا لَهُ وَأَنْصِتُوا لَعَلَّكُمْ تُرْحَمُونَ ﴾<br><br>
+  ﴿ كِتَابٌ أَنْزَلْنَاهُ إِلَيْكَ مُبَارَكٌ لِيَدَّبَّرُوا آيَاتِهِ وَلِيَتَذَكَّرَ أُولُو الْأَلْبَابِ ﴾<br><br>
+  ﴿ إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ وَيُبَشِّرُ الْمُؤْمِنِينَ الَّذِينَ يَعْمَلُونَ الصَّالِحَاتِ أَنَّ لَهُمْ أَجْرًا كَبِيرًا ﴾`;
+}
+
+function showToast(text) {
+  const t = $('toastBox');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(() => { t.classList.remove('show'); }, 2200);
+}
+
+function toggleOverlays() {
+  overlaysVisible = !overlaysVisible;
+  $('topOverlay').classList.toggle('hidden', !overlaysVisible);
+  $('bottomOverlay').classList.toggle('hidden', !overlaysVisible);
+}
+
+function setupTasbih() {
+  const pills = $('tDhikrPills');
+  pills.innerHTML = '';
+  DHIKRS.forEach((d, idx) => {
+    const pill = document.createElement('div');
+    pill.className = 'dpill' + (idx === tDhikrIdx ? ' active' : '');
+    pill.textContent = d;
+    pill.onclick = () => {
+      tDhikrIdx = idx;
+      tCount = 0;
+      setupTasbih();
+      updateTasbihUI();
+    };
+    pills.appendChild(pill);
+  });
+  updateTasbihUI();
+}
+
+function updateTasbihUI() {
+  $('tCurrentDhikr').textContent = DHIKRS[tDhikrIdx];
+  $('tBigNum').textContent = tCount;
+  $('tTargetSub').textContent = tTarget > 0 ? `الهدف: ${tTarget}` : 'مفتوح ∞';
+  $('stToday').textContent = tCount;
+  $('stWeek').textContent = tCount + 420;
+  $('stMonth').textContent = tCount + 1850;
+  $('stStreak').textContent = '5 🔥';
+
+  // Bar chart
+  const bc = $('tBarChart');
+  bc.innerHTML = '';
+  const days = ['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+  days.forEach((day, i) => {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    const h = (i === 6) ? Math.min(65, 15 + tCount * 1.5) : (i * 8 + 20);
+    col.innerHTML = `
+      <div class="bar-fill" style="height: ${h}px;"></div>
+      <span class="bar-day">${day}</span>
+    `;
+    bc.appendChild(col);
+  });
+
+  // Report box
+  $('tReportBox').textContent = `📊 تقرير وِرد التسبيح:
+• تسبيحات اليوم: ${tCount}
+• مجموع الأسبوع: ${tCount + 420}
+• أيام الالتزام: 5 أيام 🔥
+• الذكر الحالي: ${DHIKRS[tDhikrIdx]}`;
+}
+
+$('tTapBtn').onclick = () => {
+  tCount++;
+  if (tTarget > 0 && tCount >= tTarget) {
+    tCount = 0;
+  }
+  updateTasbihUI();
+};
+
+document.querySelectorAll('.tctrl-btn[data-tt]').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.tctrl-btn[data-tt]').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    tTarget = +b.dataset.tt;
+    updateTasbihUI();
+  };
+});
+$('tResetBtn').onclick = () => { tCount = 0; updateTasbihUI(); };
+$('btnApplyDhikrToday').onclick = () => { tDhikrIdx = 1; tCount = 0; setupTasbih(); updateTasbihUI(); };
+
+function setupEvents() {
+  // Navigation Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      const tab = btn.dataset.tab;
+      if (tab === 'quran_index') openIndex();
+      else if (tab === 'quran_reader') openReader(currentPage);
+      else if (tab === 'tasbih') openTasbih();
+    };
+  });
+
+  $('cardSavedBookmark').onclick = () => openReader(savedBookmarkPage);
+
+  $('btnTabSurahs').onclick = () => {
+    $('btnTabSurahs').classList.add('active');
+    $('btnTabJuz').classList.remove('active');
+    $('listSurahs').style.display = 'block';
+    $('listJuz').style.display = 'none';
+  };
+  $('btnTabJuz').onclick = () => {
+    $('btnTabJuz').classList.add('active');
+    $('btnTabSurahs').classList.remove('active');
+    $('listJuz').style.display = 'block';
+    $('listSurahs').style.display = 'none';
+  };
+
+  $('btnToggleSearch').onclick = () => {
+    const s = $('etSearch');
+    const isVis = s.style.display !== 'none';
+    s.style.display = isVis ? 'none' : 'block';
+    if (!isVis) { s.focus(); } else { s.value = ''; renderSurahsList(''); }
+  };
+  $('etSearch').oninput = (e) => renderSurahsList(e.target.value);
+
+  $('btnReaderBack').onclick = () => openIndex();
+  $('pageCard').onclick = () => toggleOverlays();
+
+  $('btnReaderBookmark').onclick = (e) => {
+    e.stopPropagation();
+    savedBookmarkPage = currentPage;
+    savedBookmarkSurah = getSurahForPage(currentPage).ar;
+    updateReaderPage();
+    updateBookmarkCard();
+    const msg = lang === 'ar' ? `تم حفظ العلامة: سورة ${savedBookmarkSurah} • صفحة ${savedBookmarkPage}` : `Bookmark saved: Surah ${getSurahForPage(currentPage).en} • Page ${savedBookmarkPage}`;
+    showToast(msg);
+  };
+
+  $('btnNextPage').onclick = () => {
+    if (currentPage < 604) { currentPage++; updateReaderPage(); }
+  };
+  $('btnPrevPage').onclick = () => {
+    if (currentPage > 1) { currentPage--; updateReaderPage(); }
+  };
+  $('sPagePicker').oninput = (e) => {
+    currentPage = +e.target.value;
+    updateReaderPage();
+  };
+
+  $('btnQuickKahf').onclick = () => openReader(293);
+  $('btnQuickMulk').onclick = () => openReader(562);
+  $('btnQuickLast').onclick = () => openReader(604);
+
+  $('langBtn').onclick = () => {
+    lang = lang === 'ar' ? 'en' : 'ar';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.body.classList.toggle('en', lang === 'en');
+    document.querySelectorAll('t').forEach(t => t.textContent = t.dataset[lang]);
+    $('langBtn').textContent = lang === 'ar' ? 'EN' : 'عربي';
+    $('etSearch').placeholder = lang === 'ar' ? 'ابحث عن سورة بالاسم أو الرقم...' : 'Search Surah by name or number...';
+    renderSurahsList($('etSearch').value);
+    renderJuzList();
+    updateBookmarkCard();
+    updateReaderPage();
+  };
+}
+
+init();
+</script>
+</body>
+</html>
