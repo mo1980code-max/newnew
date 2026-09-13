@@ -22,7 +22,6 @@ import org.Allah_Clock_Live_Wallpaper.utils.PrayerWindow;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Bottom-sheet styled reader for the morning / evening athkar.
@@ -123,7 +122,9 @@ public class AthkarActivity extends AppCompatActivity {
         }, current / 60, current % 60, true).show();
     }
 
-    private static String minutesLabel(int totalMinutes) {
-        return String.format(Locale.US, "%02d:%02d", totalMinutes / 60, totalMinutes % 60);
+    /** Follows the UI locale, so an Arabic UI reads the slots exactly like the time picker. */
+    private String minutesLabel(int totalMinutes) {
+        return String.format(LocaleHelper.uiLocale(this), "%02d:%02d",
+                totalMinutes / 60, totalMinutes % 60);
     }
 }

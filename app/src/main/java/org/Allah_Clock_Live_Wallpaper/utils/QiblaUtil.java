@@ -1,5 +1,9 @@
 package org.Allah_Clock_Live_Wallpaper.utils;
 
+import android.content.Context;
+
+import org.Allah_Clock_Live_Wallpaper.R;
+
 /**
  * Qibla maths plus the bundled city table.
  *
@@ -43,24 +47,28 @@ public final class QiblaUtil {
         return (int) Math.round(EARTH_RADIUS_KM * c);
     }
 
-    /** Proper nouns on purpose: they read the same in every language. */
-    public static final String[] CITY_NAMES = {
-            "Amman", "Jerusalem", "Gaza", "Makkah", "Madinah", "Riyadh", "Jeddah",
-            "Cairo", "Alexandria", "Khartoum", "Tripoli", "Tunis", "Algiers",
-            "Casablanca", "Rabat", "Nouakchott", "Dakar", "Lagos", "Kano",
-            "Mogadishu", "Djibouti", "Sana'a", "Aden", "Muscat", "Dubai",
-            "Abu Dhabi", "Doha", "Manama", "Kuwait City", "Baghdad", "Basra",
-            "Erbil", "Aleppo", "Damascus", "Beirut", "Tehran", "Mashhad",
-            "Kabul", "Karachi", "Lahore", "Islamabad", "Peshawar", "Dhaka",
-            "Chittagong", "Malé", "Colombo", "Kuala Lumpur", "Jakarta",
-            "Surabaya", "Bandar Seri Begawan", "Manila", "Istanbul", "Ankara",
-            "Konya", "Baku", "Tashkent", "Almaty", "Bishkek", "Dushanbe",
-            "Ashgabat", "Kazan", "Sarajevo", "Tirana", "Pristina", "London",
-            "Paris", "Berlin", "Madrid", "Rome", "New York", "Toronto",
-            "Sydney", "Johannesburg",
-    };
+    /**
+     * City display names, index-for-index with {@link #CITY_COORDS}, read from resources so the
+     * picker follows the language chosen in the app (English by default, Arabic in values-ar).
+     */
+    public static String[] cityNames(Context context) {
+        return context.getResources().getStringArray(R.array.qibla_cities);
+    }
 
-    /** Parallel to {@link #CITY_NAMES}: {@code {latitude, longitude}}. */
+    public static int cityCount(Context context) {
+        return cityNames(context).length;
+    }
+
+    /** Single name, defensive: an out-of-range index falls back to the first city. */
+    public static String cityName(Context context, int index) {
+        String[] names = cityNames(context);
+        if (names.length == 0) {
+            return "";
+        }
+        return names[index < 0 || index >= names.length ? 0 : index];
+    }
+
+    /** Parallel to {@code R.array.qibla_cities}: {@code {latitude, longitude}}. */
     public static final double[][] CITY_COORDS = {
             {31.9539, 35.9106}, {31.7683, 35.2137}, {31.5017, 34.4668},
             {21.4225, 39.8262}, {24.4672, 39.6111}, {24.7136, 46.6753},

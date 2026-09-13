@@ -60,7 +60,7 @@ public class QiblaActivity extends AppCompatActivity implements SensorEventListe
 
         this.tinyDB = new TinyDB(this);
         this.cityIndex = this.tinyDB.getInt(PREF_CITY_INDEX);
-        if (this.cityIndex < 0 || this.cityIndex >= QiblaUtil.CITY_NAMES.length) {
+        if (this.cityIndex < 0 || this.cityIndex >= QiblaUtil.cityCount(this)) {
             this.cityIndex = 0;
         }
 
@@ -98,7 +98,7 @@ public class QiblaActivity extends AppCompatActivity implements SensorEventListe
         int distance = QiblaUtil.distanceKm(lat, lon);
 
         this.compass.setQiblaBearing(bearing);
-        this.txtCity.setText(QiblaUtil.CITY_NAMES[this.cityIndex]);
+        this.txtCity.setText(QiblaUtil.cityName(this, this.cityIndex));
         this.txtBearing.setText(getString(R.string.qibla_bearing, Math.round(bearing)));
         this.txtDistance.setText(getString(R.string.qibla_distance, distance));
     }
@@ -106,7 +106,7 @@ public class QiblaActivity extends AppCompatActivity implements SensorEventListe
     private void showCityPicker() {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.qibla_city)
-                .setSingleChoiceItems(QiblaUtil.CITY_NAMES, this.cityIndex, (dialog, which) -> {
+                .setSingleChoiceItems(QiblaUtil.cityNames(this), this.cityIndex, (dialog, which) -> {
                     this.cityIndex = which;
                     this.tinyDB.putInt(PREF_CITY_INDEX, which);
                     applyCity();

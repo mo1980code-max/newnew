@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- أسماء مدن بوصلة القبلة، بنفس ترتيب QiblaUtil.CITY_COORDS تمامًا. -->
+    <string-array name="qibla_cities">
+        <item>عمّان</item>
+        <item>القدس</item>
+        <item>غزة</item>
+        <item>مكة المكرمة</item>
+        <item>المدينة المنورة</item>
+        <item>الرياض</item>
+        <item>جدة</item>
+        <item>القاهرة</item>
+        <item>الإسكندرية</item>
+        <item>الخرطوم</item>
+        <item>طرابلس</item>
+        <item>تونس</item>
+        <item>الجزائر</item>
+        <item>الدار البيضاء</item>
+        <item>الرباط</item>
+        <item>نواكشوط</item>
+        <item>داكار</item>
+        <item>لاغوس</item>
+        <item>كانو</item>
+        <item>مقديشو</item>
+        <item>جيبوتي</item>
+        <item>صنعاء</item>
+        <item>عدن</item>
+        <item>مسقط</item>
+        <item>دبي</item>
+        <item>أبو ظبي</item>
+        <item>الدوحة</item>
+        <item>المنامة</item>
+        <item>مدينة الكويت</item>
+        <item>بغداد</item>
+        <item>البصرة</item>
+        <item>أربيل</item>
+        <item>حلب</item>
+        <item>دمشق</item>
+        <item>بيروت</item>
+        <item>طهران</item>
+        <item>مشهد</item>
+        <item>كابول</item>
+        <item>كراتشي</item>
+        <item>لاهور</item>
+        <item>إسلام آباد</item>
+        <item>بيشاور</item>
+        <item>دكا</item>
+        <item>شيتاغونغ</item>
+        <item>ماليه</item>
+        <item>كولومبو</item>
+        <item>كوالالمبور</item>
+        <item>جاكرتا</item>
+        <item>سورابايا</item>
+        <item>بندر سري بكاوان</item>
+        <item>مانيلا</item>
+        <item>إسطنبول</item>
+        <item>أنقرة</item>
+        <item>قونية</item>
+        <item>باكو</item>
+        <item>طشقند</item>
+        <item>ألماتي</item>
+        <item>بيشكيك</item>
+        <item>دوشانبي</item>
+        <item>عشق آباد</item>
+        <item>قازان</item>
+        <item>سراييفو</item>
+        <item>تيرانا</item>
+        <item>بريشتينا</item>
+        <item>لندن</item>
+        <item>باريس</item>
+        <item>برلين</item>
+        <item>مدريد</item>
+        <item>روما</item>
+        <item>نيويورك</item>
+        <item>تورونتو</item>
+        <item>سيدني</item>
+        <item>جوهانسبرغ</item>
+    </string-array>
+
+</resources>

@@ -82,7 +82,10 @@ public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         final AthkarItem item = this.items.get(position);
         holder.arabic.setText(item.getArabicText());
+        // A transliteration only helps a reader who cannot read Arabic script, so an Arabic UI
+        // drops it and keeps the English translation (the reader is bilingual by design).
         holder.transliteration.setText(item.getTransliteration());
+        holder.transliteration.setVisibility(this.arabicUi ? View.GONE : View.VISIBLE);
         holder.english.setText(item.getEnglishText());
         holder.reference.setText(item.getReference(this.arabicUi));
         holder.repeatInfo.setText(holder.repeatInfo.getContext()
