@@ -11,5 +11,9 @@
 /.kotlin
 *.hprof
 
+# python bytecode (tools/athkar generator)
+__pycache__/
+*.py[cod]
+
 # agent sandbox helpers (static verifier)
 .arena/
