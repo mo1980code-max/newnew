@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.clock.livewallpaper.AdAdmob;
 import com.clock.livewallpaper.R;
+import com.clock.livewallpaper.quran.activity.QuranIndexActivity;
 import com.clock.livewallpaper.utils.LocaleHelper;
 
 public class MainActivity extends AppCompatActivity {
@@ -23,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout frameClock;
     private FrameLayout frameWallpaper;
     private FrameLayout frameTasbih;
+    private FrameLayout frameQuran;
 
     ImageView rate, share;
     TextView btnLang;
@@ -46,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         this.frameClock = (FrameLayout) findViewById(R.id.frameClock);
         this.frameWallpaper = (FrameLayout) findViewById(R.id.frameWallpaper);
         this.frameTasbih = (FrameLayout) findViewById(R.id.frameTasbih);
+        this.frameQuran = (FrameLayout) findViewById(R.id.frameQuran);
         this.adContainer = (RelativeLayout) findViewById(R.id.adContainer);
         rate = findViewById(R.id.rateus);
         share = findViewById(R.id.share);
@@ -81,22 +84,31 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        this.frameQuran.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.this.startActivity(new Intent(MainActivity.this, QuranIndexActivity.class));
+            }
+        });
+
+        this.frameTasbih.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.this.startActivity(new Intent(MainActivity.this, TasbihActivity.class));
+            }
+        });
+
         this.frameClock.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 MainActivity.this.startActivity(new Intent(MainActivity.this, ClockFuntionActivity.class));
             }
         });
+
         this.frameWallpaper.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 MainActivity.this.startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class));
-            }
-        });
-        this.frameTasbih.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                MainActivity.this.startActivity(new Intent(MainActivity.this, TasbihActivity.class));
             }
         });
     }

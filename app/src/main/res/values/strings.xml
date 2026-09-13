@@ -3,12 +3,23 @@
     <string name="app_name">Clock Live Wallpaper</string>
 
     <!-- Main menu -->
+    <string name="menu_quran">Holy Quran</string>
+    <string name="menu_tasbih">Tasbih &amp; Athkar</string>
     <string name="menu_clock">Clock</string>
     <string name="menu_wallpaper">Wallpaper</string>
-    <string name="menu_tasbih">Tasbih &amp; Athkar</string>
     <string name="market_error">Unable to find market app</string>
     <string name="share_app">Share Application</string>
     <string name="share_text">Open this Link on Play Store</string>
+
+    <!-- Quran Module -->
+    <string name="quran_index_title">Holy Quran Index</string>
+    <string name="quran_saved_bookmark_title">Saved Bookmark</string>
+    <string name="quran_resume_reading">Resume</string>
+    <string name="quran_tab_surahs">Surahs (114)</string>
+    <string name="quran_tab_juz">Juz (30)</string>
+    <string name="quran_search_hint">Search Surah by name or number...</string>
+    <string name="quran_bookmark_saved">Bookmark saved: %1$s • Page %2$d</string>
+    <string name="quran_page_of">Page %1$d of %2$d</string>
 
     <!-- Clock type screens -->
     <string name="clock_analog">Analog\nClock</string>

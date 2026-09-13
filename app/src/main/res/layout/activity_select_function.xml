@@ -75,14 +75,103 @@
                 android:textColor="@color/appColor"
                 android:textSize="23sp" />
 
+            <!-- 1. Quran Module Menu Button -->
+            <FrameLayout
+                android:id="@+id/frameQuran"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="35dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="35dp"
+                android:layout_marginBottom="5dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/big_" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/myfont"
+                        android:gravity="center"
+                        android:text="@string/menu_quran"
+                        android:textColor="@color/textColor"
+                        android:textSize="20sp" />
+
+                    <ImageView
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:layout_weight="1"
+                        android:padding="18dp"
+                        android:src="@drawable/ic_quran"
+                        app:tint="@color/textColor" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- 2. Tasbih Menu Button -->
+            <FrameLayout
+                android:id="@+id/frameTasbih"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="35dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="35dp"
+                android:layout_marginBottom="5dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/big_" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/myfont"
+                        android:gravity="center"
+                        android:text="@string/menu_tasbih"
+                        android:textColor="@color/textColor"
+                        android:textSize="20sp" />
+
+                    <ImageView
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:layout_weight="1"
+                        android:padding="18dp"
+                        android:src="@drawable/ic_tasbih"
+                        app:tint="@color/textColor" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- 3. Clock Wallpaper Menu Button -->
             <FrameLayout
                 android:id="@+id/frameClock"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="35dp"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="5dp"
                 android:layout_marginRight="35dp"
-                android:layout_marginBottom="6dp">
+                android:layout_marginBottom="5dp">
 
                 <ImageView
                     android:layout_width="wrap_content"
@@ -117,14 +206,15 @@
                 </LinearLayout>
             </FrameLayout>
 
+            <!-- 4. Wallpapers Menu Button -->
             <FrameLayout
                 android:id="@+id/frameWallpaper"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="35dp"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="5dp"
                 android:layout_marginRight="35dp"
-                android:layout_marginBottom="6dp">
+                android:layout_marginBottom="5dp">
 
                 <ImageView
                     android:layout_width="wrap_content"
@@ -162,49 +252,6 @@
                             android:padding="15dp"
                             android:src="@drawable/wallpaper_logo" />
                     </LinearLayout>
-                </LinearLayout>
-            </FrameLayout>
-
-            <FrameLayout
-                android:id="@+id/frameTasbih"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="35dp"
-                android:layout_marginTop="6dp"
-                android:layout_marginRight="35dp"
-                android:layout_marginBottom="6dp">
-
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:adjustViewBounds="true"
-                    android:src="@drawable/big_" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:gravity="center">
-
-                    <TextView
-                        android:layout_width="150dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="15dp"
-                        android:layout_marginRight="15dp"
-                        android:layout_weight="1"
-                        android:fontFamily="@font/myfont"
-                        android:gravity="center"
-                        android:text="@string/menu_tasbih"
-                        android:textColor="@color/textColor"
-                        android:textSize="20sp" />
-
-                    <ImageView
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
-                        android:layout_weight="1"
-                        android:padding="18dp"
-                        android:src="@drawable/ic_tasbih"
-                        app:tint="@color/textColor" />
                 </LinearLayout>
             </FrameLayout>
 
