@@ -1,6 +1,7 @@
 package com.clock.livewallpaper.activity;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
@@ -13,7 +14,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.core.app.ActivityCompat;
@@ -33,6 +37,8 @@ import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 import com.clock.livewallpaper.LiveClockWallpaper;
 import com.clock.livewallpaper.adapter.BgAdapter;
 import com.clock.livewallpaper.model.Clocks;
+import com.clock.livewallpaper.utils.AutoBackground;
+import com.clock.livewallpaper.utils.LocaleHelper;
 import com.clock.livewallpaper.utils.RealPathUtil;
 import com.clock.livewallpaper.utils.TinyDB;
 import com.clock.livewallpaper.viewUtils.AnalogClock;
@@ -63,11 +69,23 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     private ImageView ivZoomOut;
     private LinearLayout layoutBottom;
     private LinearLayout layoutColor;
+    private LinearLayout layoutSliders;
+    private LinearLayout layoutBgPanel;
+    private LinearLayout rowCardAlpha;
+    private LinearLayout rowTextSize;
     private int mClockSize;
+    private int mCardAlphaPct;
+    private int mTextScalePct;
     private int mHeight;
     private ImageView mIvMainScreen;
+    private ImageView ivAutoBg;
     public int mWidth;
     private AppCompatSeekBar seekBar;
+    private AppCompatSeekBar seekBarCardAlpha;
+    private AppCompatSeekBar seekBarTextSize;
+    private TextView tvSizeValue;
+    private TextView tvCardAlphaValue;
+    private TextView tvTextSizeValue;
     private SmartClockPreview smartClockPreview;
     private TextClockPreview textClockPreview;
     TinyDB tinyDB;
@@ -78,6 +96,11 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     private boolean mIsCenterLine = false;
     private int color1 = -1;
     private int color2 = InputDeviceCompat.SOURCE_ANY;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase));
+    }
 
     @Override
 
@@ -140,6 +163,16 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         this.btnColor1 = (Button) findViewById(R.id.btnColor1);
         this.btnColor2 = (Button) findViewById(R.id.btnColor2);
         this.seekBar = (AppCompatSeekBar) findViewById(R.id.seekBar);
+        this.seekBarCardAlpha = (AppCompatSeekBar) findViewById(R.id.seekBarCardAlpha);
+        this.seekBarTextSize = (AppCompatSeekBar) findViewById(R.id.seekBarTextSize);
+        this.layoutSliders = (LinearLayout) findViewById(R.id.layoutSliders);
+        this.layoutBgPanel = (LinearLayout) findViewById(R.id.layoutBgPanel);
+        this.rowCardAlpha = (LinearLayout) findViewById(R.id.rowCardAlpha);
+        this.rowTextSize = (LinearLayout) findViewById(R.id.rowTextSize);
+        this.tvSizeValue = (TextView) findViewById(R.id.tvSizeValue);
+        this.tvCardAlphaValue = (TextView) findViewById(R.id.tvCardAlphaValue);
+        this.tvTextSizeValue = (TextView) findViewById(R.id.tvTextSizeValue);
+        this.ivAutoBg = (ImageView) findViewById(R.id.ivAutoBg);
         this.analogClock.setAutoUpdate(true);
         this.bgRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
         getUserSettings();
@@ -169,7 +202,46 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean z) {
                 EditorActivity.this.mClockSize = i;
+                EditorActivity.this.tvSizeValue.setText(String.valueOf(i));
                 EditorActivity.this.updateClock();
+            }
+        });
+        this.seekBarCardAlpha.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean z) {
+                EditorActivity.this.mCardAlphaPct = i;
+                EditorActivity.this.tvCardAlphaValue.setText(i + "%");
+                EditorActivity.this.updateClock();
+            }
+        });
+        this.seekBarTextSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean z) {
+                EditorActivity.this.mTextScalePct = i + 50;
+                EditorActivity.this.tvTextSizeValue.setText(EditorActivity.this.mTextScalePct + "%");
+                EditorActivity.this.updateClock();
+            }
+        });
+        this.ivAutoBg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditorActivity.this.showAutoBgDialog();
             }
         });
         this.mIvMainScreen.setOnTouchListener(new View.OnTouchListener() {
@@ -203,6 +275,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 EditorActivity.this.tinyDB.putInt("customBg", i);
                 EditorActivity.this.tinyDB.putBoolean("isImage", false);
                 EditorActivity.this.tinyDB.putBoolean("isCustomBg", true);
+                EditorActivity.this.tinyDB.putInt("autoBgMode", AutoBackground.MODE_OFF);
                 EditorActivity.this.updateClock();
             }
         });
@@ -212,18 +285,18 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnColor1:
-                ColorPickerDialogBuilder.with(this).setTitle("Choose color").wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
+                ColorPickerDialogBuilder.with(this).setTitle(getString(R.string.choose_color)).wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
                     @Override
                     public void onColorSelected(int i) {
                     }
-                }).setPositiveButton("ok", new ColorPickerClickListener() {
+                }).setPositiveButton(getString(R.string.ok), new ColorPickerClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i, Integer[] numArr) {
                         EditorActivity.this.hideMenu();
                         EditorActivity.this.color1 = i;
                         EditorActivity.this.updateClock();
                     }
-                }).setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         EditorActivity.this.hideMenu();
@@ -231,18 +304,18 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 }).build().show();
                 return;
             case R.id.btnColor2:
-                ColorPickerDialogBuilder.with(this).setTitle("Choose color").wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
+                ColorPickerDialogBuilder.with(this).setTitle(getString(R.string.choose_color)).wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
                     @Override
                     public void onColorSelected(int i) {
                     }
-                }).setPositiveButton("ok", new ColorPickerClickListener() {
+                }).setPositiveButton(getString(R.string.ok), new ColorPickerClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i, Integer[] numArr) {
                         EditorActivity.this.hideMenu();
                         EditorActivity.this.color2 = i;
                         EditorActivity.this.updateClock();
                     }
-                }).setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         EditorActivity.this.hideMenu();
@@ -252,8 +325,8 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             case R.id.btn_ok:
 
                 EditorActivity editorActivity = EditorActivity.this;
-                EditorActivity.this.bgRecyclerView.setVisibility(View.GONE);
-                EditorActivity.this.seekBar.setVisibility(View.GONE);
+                EditorActivity.this.layoutBgPanel.setVisibility(View.GONE);
+                EditorActivity.this.layoutSliders.setVisibility(View.GONE);
                 EditorActivity.this.layoutColor.setVisibility(View.VISIBLE);
                 EditorActivity.this.saveUserSettings();
                 EditorActivity.isDone = true;
@@ -266,41 +339,42 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             case R.id.icDone:
                 this.tinyDB.putInt("textColor1", this.color1);
                 this.tinyDB.putInt("textColor2", this.color2);
-                this.bgRecyclerView.setVisibility(View.GONE);
-                this.seekBar.setVisibility(View.GONE);
+                this.layoutBgPanel.setVisibility(View.GONE);
+                this.layoutSliders.setVisibility(View.GONE);
                 this.layoutColor.setVisibility(View.GONE);
                 return;
             case R.id.ivBackground:
-                this.bgRecyclerView.setVisibility(View.VISIBLE);
-                this.seekBar.setVisibility(View.GONE);
+                this.layoutBgPanel.setVisibility(View.VISIBLE);
+                this.layoutSliders.setVisibility(View.GONE);
                 this.layoutColor.setVisibility(View.GONE);
                 return;
             case R.id.ivCenter:
-                this.bgRecyclerView.setVisibility(View.GONE);
-                this.seekBar.setVisibility(View.GONE);
+                this.layoutBgPanel.setVisibility(View.GONE);
+                this.layoutSliders.setVisibility(View.GONE);
                 this.layoutColor.setVisibility(View.GONE);
                 this.mIsCenterLine = !this.mIsCenterLine;
                 this.mClockPosX = ((float) this.mWidth) / 2.0f;
                 updateClock();
                 return;
             case R.id.ivColor:
-                this.bgRecyclerView.setVisibility(View.GONE);
-                this.seekBar.setVisibility(View.GONE);
+                this.layoutBgPanel.setVisibility(View.GONE);
+                this.layoutSliders.setVisibility(View.GONE);
                 this.layoutColor.setVisibility(View.GONE);
-                ColorPickerDialogBuilder.with(this).setTitle("Choose color").wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
+                ColorPickerDialogBuilder.with(this).setTitle(getString(R.string.choose_color)).wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setOnColorSelectedListener(new OnColorSelectedListener() {
                     @Override
                     public void onColorSelected(int i) {
                     }
-                }).setPositiveButton("ok", new ColorPickerClickListener() {
+                }).setPositiveButton(getString(R.string.ok), new ColorPickerClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i, Integer[] numArr) {
                         EditorActivity.this.hideMenu();
                         EditorActivity.this.tinyDB.putBoolean("isImage", false);
                         EditorActivity.this.tinyDB.putBoolean("isCustomBg", false);
                         EditorActivity.this.tinyDB.putInt("bgColor", i);
+                        EditorActivity.this.tinyDB.putInt("autoBgMode", AutoBackground.MODE_OFF);
                         EditorActivity.this.updateClock();
                     }
-                }).setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         EditorActivity.this.hideMenu();
@@ -309,24 +383,53 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 return;
             case R.id.ivGallery:
                 galleryIntent();
-                this.bgRecyclerView.setVisibility(View.GONE);
-                this.seekBar.setVisibility(View.GONE);
+                this.layoutBgPanel.setVisibility(View.GONE);
+                this.layoutSliders.setVisibility(View.GONE);
                 this.layoutColor.setVisibility(View.GONE);
                 return;
             case R.id.ivTextColor:
                 this.layoutColor.setVisibility(View.VISIBLE);
-                this.bgRecyclerView.setVisibility(View.GONE);
-                this.seekBar.setVisibility(View.GONE);
+                this.layoutBgPanel.setVisibility(View.GONE);
+                this.layoutSliders.setVisibility(View.GONE);
                 return;
             case R.id.ivZoomIn:
             case R.id.ivZoomOut:
-                this.bgRecyclerView.setVisibility(View.GONE);
+                this.layoutBgPanel.setVisibility(View.GONE);
                 this.layoutColor.setVisibility(View.GONE);
-                this.seekBar.setVisibility(View.VISIBLE);
+                this.layoutSliders.setVisibility(View.VISIBLE);
                 return;
             default:
                 return;
         }
+    }
+
+    private void showAutoBgDialog() {
+        final String[] modes = new String[]{getString(R.string.auto_bg_off),
+                getString(R.string.auto_bg_daily), getString(R.string.auto_bg_day_night)};
+        int current = this.tinyDB.getInt("autoBgMode");
+        if (current < AutoBackground.MODE_OFF || current > AutoBackground.MODE_DAY_NIGHT) {
+            current = AutoBackground.MODE_OFF;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.auto_bg)
+                .setSingleChoiceItems(modes, current, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        EditorActivity.this.tinyDB.putInt("autoBgMode", which);
+                        EditorActivity.this.updateClock();
+                        Toast.makeText(EditorActivity.this,
+                                EditorActivity.this.getString(R.string.auto_bg_current, modes[which]),
+                                Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    }
+                })
+                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        EditorActivity.this.hideMenu();
+                    }
+                })
+                .show();
     }
 
     public void saveUserSettings() {
@@ -335,6 +438,8 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         this.tinyDB.putFloat("prefClockPosX", f);
         this.tinyDB.putFloat("prefClockPosY", this.mClockPosY);
         this.tinyDB.putInt("prefSize", this.mClockSize);
+        this.tinyDB.putInt("prefCardAlpha", this.mCardAlphaPct);
+        this.tinyDB.putInt("prefTextScale", this.mTextScalePct);
         this.tinyDB.putInt("textClockPosition", this.textClockPosition);
         updateClock();
     }
@@ -348,12 +453,35 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             this.mClockSize = 500;
         }
         this.seekBar.setProgress(this.mClockSize);
+        this.tvSizeValue.setText(String.valueOf(this.mClockSize));
+        int cardAlpha = this.tinyDB.getInt("prefCardAlpha");
+        if (cardAlpha < 0) {
+            cardAlpha = 0;
+        }
+        if (cardAlpha > 100) {
+            cardAlpha = 100;
+        }
+        this.mCardAlphaPct = cardAlpha;
+        this.seekBarCardAlpha.setProgress(cardAlpha);
+        this.tvCardAlphaValue.setText(cardAlpha + "%");
+        int textScale = this.tinyDB.getInt("prefTextScale", 100);
+        if (textScale < 50) {
+            textScale = 50;
+        }
+        if (textScale > 150) {
+            textScale = 150;
+        }
+        this.mTextScalePct = textScale;
+        this.seekBarTextSize.setProgress(textScale - 50);
+        this.tvTextSizeValue.setText(textScale + "%");
         this.textClockPosition = this.tinyDB.getInt("textClockPosition");
         if (this.tinyDB.getInt("clockType") == 0) {
             this.analogClock.setVisibility(View.VISIBLE);
             this.textClockPreview.setVisibility(View.GONE);
             this.smartClockPreview.setVisibility(View.GONE);
             this.ivTextColor.setVisibility(View.GONE);
+            this.rowCardAlpha.setVisibility(View.GONE);
+            this.rowTextSize.setVisibility(View.GONE);
         } else if (this.tinyDB.getInt("clockType") == 1) {
             this.analogClock.setVisibility(View.GONE);
             this.textClockPreview.setVisibility(View.GONE);
@@ -375,20 +503,32 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             this.analogClock.setPosition(this.mClockPosX, this.mClockPosY);
         } else if (this.tinyDB.getInt("clockType") == 1) {
             this.smartClockPreview.setTextClockPosition(this.textClockPosition);
+            this.smartClockPreview.setCardAlpha((this.mCardAlphaPct * 255) / 100);
+            this.smartClockPreview.setTextScale(((float) this.mTextScalePct) / 100.0f);
             this.smartClockPreview.config(this.mClockPosX, this.mClockPosY, (int) (((float) this.mClockSize) * 2.0f));
         } else if (this.tinyDB.getInt("clockType") == 2) {
             this.textClockPreview.setTextClockPosition(this.textClockPosition);
             this.textClockPreview.setColors(this.color1, this.color2);
+            this.textClockPreview.setCardAlpha((this.mCardAlphaPct * 255) / 100);
+            this.textClockPreview.setTextScale(((float) this.mTextScalePct) / 100.0f);
             this.textClockPreview.config(this.mClockPosX, this.mClockPosY, (int) (((float) this.mClockSize) * 2.0f));
         }
         this.mIvMainScreen.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        if (this.tinyDB.getBoolean("isImage")) {
+        int autoBgMode = this.tinyDB.getInt("autoBgMode");
+        if (autoBgMode == AutoBackground.MODE_DAILY) {
+            this.mIvMainScreen.setImageResource(AutoBackground.resolveDaily());
+        } else if (autoBgMode == AutoBackground.MODE_DAY_NIGHT) {
+            this.mIvMainScreen.setImageResource(AutoBackground.resolveDayNight());
+        } else if (this.tinyDB.getBoolean("isImage")) {
             Glide.with((FragmentActivity) this).load(new File(this.tinyDB.getString("ImageString"))).into(this.mIvMainScreen);
         } else if (this.tinyDB.getBoolean("isCustomBg")) {
             this.mIvMainScreen.setImageResource(this.tinyDB.getInt("customBg"));
         } else {
             this.mIvMainScreen.setImageResource(0);
             this.mIvMainScreen.setBackgroundColor(this.tinyDB.getInt("bgColor"));
+        }
+        if (this.ivAutoBg != null) {
+            this.ivAutoBg.setAlpha(autoBgMode == AutoBackground.MODE_OFF ? 0.4f : 1.0f);
         }
     }
 
@@ -419,7 +559,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             Intent intent = new Intent();
             intent.setType("image/*");
             intent.setAction("android.intent.action.GET_CONTENT");
-            startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
+            startActivityForResult(Intent.createChooser(intent, getString(R.string.select_picture)), 1);
         }
     }
 
@@ -441,6 +581,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             this.tinyDB.putBoolean("isImage", true);
             this.tinyDB.putBoolean("isCustomBg", false);
             this.tinyDB.putString("ImageString", String.valueOf(realPath));
+            this.tinyDB.putInt("autoBgMode", AutoBackground.MODE_OFF);
             updateClock();
         }
     }

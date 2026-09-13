@@ -1,5 +1,6 @@
 package com.clock.livewallpaper.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -10,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.clock.livewallpaper.AdAdmob;
 import com.clock.livewallpaper.R;
+import com.clock.livewallpaper.utils.LocaleHelper;
 
 
 public class ClockFuntionActivity extends AppCompatActivity {
@@ -17,6 +19,11 @@ public class ClockFuntionActivity extends AppCompatActivity {
     private FrameLayout frameAnalogClock;
     private FrameLayout frameSmartClock;
     private FrameLayout frameTextClock;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase));
+    }
 
     @Override
 

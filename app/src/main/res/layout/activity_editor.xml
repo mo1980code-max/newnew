@@ -29,22 +29,146 @@
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
-    <androidx.appcompat.widget.AppCompatSeekBar
-        android:id="@+id/seekBar"
+    <LinearLayout
+        android:id="@+id/layoutSliders"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/layoutBottom"
-        android:max="1000"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:visibility="gone" />
+        android:background="@color/sliderPanelBg"
+        android:orientation="vertical"
+        android:paddingLeft="16dp"
+        android:paddingTop="8dp"
+        android:paddingRight="16dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/bgRecyclerView"
+        <LinearLayout
+            android:id="@+id/rowSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/slider_size"
+                    android:textColor="@color/textColor"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvSizeValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/textColor"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <androidx.appcompat.widget.AppCompatSeekBar
+                android:id="@+id/seekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="1000" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowCardAlpha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/slider_card_alpha"
+                    android:textColor="@color/textColor"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvCardAlphaValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/textColor"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <androidx.appcompat.widget.AppCompatSeekBar
+                android:id="@+id/seekBarCardAlpha"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowTextSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/slider_text_size"
+                    android:textColor="@color/textColor"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvTextSizeValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/textColor"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <androidx.appcompat.widget.AppCompatSeekBar
+                android:id="@+id/seekBarTextSize"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutBgPanel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/layoutBottom"
-        android:visibility="gone" />
+        android:background="@color/sliderPanelBg"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/ivAutoBg"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@string/auto_bg"
+            android:padding="14dp"
+            android:src="@drawable/ic_auto" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/bgRecyclerView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/layoutColor"
@@ -66,7 +190,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
-                android:text="Color1" />
+                android:text="@string/color1" />
         </LinearLayout>
 
         <LinearLayout
@@ -81,7 +205,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
-                android:text="Color2" />
+                android:text="@string/color2" />
         </LinearLayout>
 
         <LinearLayout

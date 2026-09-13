@@ -19,5 +19,6 @@
     <color name="textWhite">#fff</color>
     <color name="themeColor">#eeeeee</color>
     <color name="themeDarkColor">#dedede</color>
+    <color name="sliderPanelBg">#E61B1B3A</color>
     <color name="transparent">#00000000</color>
 </resources>

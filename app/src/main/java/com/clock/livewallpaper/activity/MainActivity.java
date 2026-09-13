@@ -1,6 +1,7 @@
 package com.clock.livewallpaper.activity;
 
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,12 +9,14 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.clock.livewallpaper.AdAdmob;
 import com.clock.livewallpaper.R;
+import com.clock.livewallpaper.utils.LocaleHelper;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -23,6 +26,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     ImageView rate, share;
+    TextView btnLang;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase));
+    }
 
     @Override
 
@@ -42,13 +51,23 @@ public class MainActivity extends AppCompatActivity {
         this.adContainer = (RelativeLayout) findViewById(R.id.adContainer);
         rate = findViewById(R.id.rateus);
         share = findViewById(R.id.share);
+        btnLang = findViewById(R.id.btnLang);
+        btnLang.setText(LocaleHelper.isArabic(this) ? "EN" : "عربي");
+        btnLang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LocaleHelper.setLanguage(MainActivity.this,
+                        LocaleHelper.isArabic(MainActivity.this) ? LocaleHelper.LANG_EN : LocaleHelper.LANG_AR);
+                MainActivity.this.recreate();
+            }
+        });
         rate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
                     startActivity(new Intent("android.intent.action.VIEW", Uri.parse("market://details?id=" + getPackageName())));
                 } catch (ActivityNotFoundException unused) {
-                    Toast.makeText(MainActivity.this, " unable to find market app", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.market_error, Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -59,8 +78,8 @@ public class MainActivity extends AppCompatActivity {
                 String string = getString(R.string.app_name);
                 Intent intent2 = new Intent("android.intent.action.SEND");
                 intent2.setType("text/plain");
-                intent2.putExtra("android.intent.extra.TEXT", string + "\n\nOpen this Link on Play Store\n\nhttps://play.google.com/store/apps/details?id=" + getPackageName());
-                startActivity(Intent.createChooser(intent2, "Share Application"));
+                intent2.putExtra("android.intent.extra.TEXT", string + "\n\n" + getString(R.string.share_text) + "\n\nhttps://play.google.com/store/apps/details?id=" + getPackageName());
+                startActivity(Intent.createChooser(intent2, getString(R.string.share_app)));
             }
         });
 

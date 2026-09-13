@@ -19,6 +19,17 @@
             android:layout_margin="10dp">
 
 
+            <TextView
+                android:id="@+id/btnLang"
+                android:layout_width="48dp"
+                android:layout_height="40dp"
+                android:fontFamily="@font/myfont"
+                android:gravity="center"
+                android:text="EN"
+                android:textColor="@color/appColor"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
             <ImageView
                 android:id="@+id/rateus"
                 android:layout_width="40dp"
@@ -91,7 +102,7 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/myfont"
                 android:gravity="center"
-                android:text="Android 12 Clock"
+                android:text="@string/menu_clock"
                 android:textColor="@color/textColor"
                 android:textSize="20sp" />
 
@@ -125,13 +136,13 @@
 
             <TextView
                 android:layout_width="150dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
                 android:layout_weight="1"
                 android:fontFamily="@font/myfont"
                 android:gravity="center"
-                android:text="Wallpaper"
+                android:text="@string/menu_wallpaper"
                 android:textColor="@color/textColor"
                 android:textSize="20sp" />
 

@@ -1,6 +1,7 @@
 package com.clock.livewallpaper.activity;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -28,6 +29,7 @@ import com.liulishuo.okdownload.core.listener.DownloadListener1;
 import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
 
 import com.clock.livewallpaper.CustomWallpaper;
+import com.clock.livewallpaper.utils.LocaleHelper;
 import com.clock.livewallpaper.utils.TinyDB;
 
 import java.io.File;
@@ -43,6 +45,11 @@ public class SetWallpaperActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView setWallpaper;
     TinyDB tinyDB;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase));
+    }
 
     @Override
 
@@ -93,12 +100,12 @@ public class SetWallpaperActivity extends AppCompatActivity {
         final File file = new File(getIntent().getStringExtra("imageFile"));
         final File file2 = new File(getExternalCacheDir() + File.separator + file.getName());
         if (file2.exists()) {
-            this.setWallpaper.setText("Set Wallpaper");
+            this.setWallpaper.setText(R.string.set_wallpaper);
             Glide.with((FragmentActivity) this).load(file2).into(this.imageMain);
             this.cardShare.setVisibility(View.VISIBLE);
         } else {
             Glide.with((FragmentActivity) this).load(getIntent().getStringExtra("imageFile")).placeholder((int) R.drawable.placeholder).into(this.imageMain);
-            this.setWallpaper.setText("Download Wallpaper");
+            this.setWallpaper.setText(R.string.download_wallpaper);
             this.cardShare.setVisibility(View.GONE);
         }
         this.setWallpaper.setOnClickListener(new View.OnClickListener() {
@@ -137,13 +144,13 @@ public class SetWallpaperActivity extends AppCompatActivity {
                     public void progress(DownloadTask downloadTask, long j, long j2) {
                         Log.e("TAG", "progress: " + j);
                         TextView textView = SetWallpaperActivity.this.setWallpaper;
-                        textView.setText("Downloading " + ((j * 100) / j2) + "%");
+                        textView.setText(SetWallpaperActivity.this.getString(R.string.downloading, (j * 100) / j2));
                     }
 
                     @Override
 
                     public void taskEnd(DownloadTask downloadTask, EndCause endCause, Exception exc, Listener1Assist.Listener1Model listener1Model) {
-                        SetWallpaperActivity.this.setWallpaper.setText("Set Wallpaper");
+                        SetWallpaperActivity.this.setWallpaper.setText(R.string.set_wallpaper);
                         SetWallpaperActivity.this.progressBar.setVisibility(View.GONE);
                         SetWallpaperActivity.this.cardShare.setVisibility(View.VISIBLE);
                         Glide.with((FragmentActivity) SetWallpaperActivity.this).load(downloadTask.getFile()).into(SetWallpaperActivity.this.imageMain);
@@ -159,7 +166,7 @@ public class SetWallpaperActivity extends AppCompatActivity {
                 Intent intent = new Intent("android.intent.action.SEND");
                 intent.setType("image/jpeg");
                 intent.putExtra("android.intent.extra.STREAM", uriForFile);
-                SetWallpaperActivity.this.startActivity(Intent.createChooser(intent, "Select"));
+                SetWallpaperActivity.this.startActivity(Intent.createChooser(intent, SetWallpaperActivity.this.getString(R.string.select)));
             }
         });
     }

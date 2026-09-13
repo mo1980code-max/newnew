@@ -2,6 +2,9 @@ package com.clock.livewallpaper.viewUtils;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Path;
+import android.graphics.RectF;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.text.TextPaint;
@@ -12,6 +15,7 @@ import com.clock.livewallpaper.utils.TinyDB;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 
 
@@ -51,6 +55,11 @@ public class TextClockPreview extends View {
     private String[] stringsDays = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
     private int color1 = -1;
     private int color2 = InputDeviceCompat.SOURCE_ANY;
+    private float textScale = 1.0f;
+    private int cardAlpha = 0;
+    private Paint cardPaint;
+    private static final String[] DAYS_AR = {"أحد", "إثنين", "ثلا", "أرب", "خمي", "جمع", "سبت"};
+    private static final String[] MONTHS_AR = {"يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"};
 
     public TextClockPreview(Context context) {
         super(context);
@@ -128,11 +137,16 @@ public class TextClockPreview extends View {
         this.mPaint_date.setColor(this.color1);
         this.mPaint_date1.setColor(this.color1);
         this.mPaint_date2.setColor(this.color1);
+        Paint cardPaint = new Paint();
+        cardPaint.setAntiAlias(true);
+        cardPaint.setStyle(Paint.Style.FILL);
+        this.cardPaint = cardPaint;
         setTextFace();
     }
 
     private void drawBg(Canvas canvas) {
         canvas.drawColor(0);
+        drawCard(canvas);
         Calendar instance = Calendar.getInstance();
         this.mCalendar = instance;
         this.t12hours = instance.get(10);
@@ -160,11 +174,11 @@ public class TextClockPreview extends View {
                 Paint paint = this.mPaintDigital_time_Min;
                 double d = (double) this.radius;
                 Double.isNaN(d);
-                paint.setTextSize((float) (d * 0.4d));
+                paint.setTextSize(scaledTextSize((float) (d * 0.4d)));
                 Paint paint2 = this.mPaintDigital_time_Hour;
                 double d2 = (double) this.radius;
                 Double.isNaN(d2);
-                paint2.setTextSize((float) (d2 * 0.4d));
+                paint2.setTextSize(scaledTextSize((float) (d2 * 0.4d)));
                 float f = this.f206x;
                 double d3 = (double) f;
                 int i2 = this.radius;
@@ -203,15 +217,15 @@ public class TextClockPreview extends View {
                 Paint paint3 = this.mPaint_date;
                 double d13 = (double) this.radius;
                 Double.isNaN(d13);
-                paint3.setTextSize((float) (d13 * 0.1d));
+                paint3.setTextSize(scaledTextSize((float) (d13 * 0.1d)));
                 Paint paint4 = this.mPaint_date1;
                 double d14 = (double) this.radius;
                 Double.isNaN(d14);
-                paint4.setTextSize((float) (d14 * 0.1d));
+                paint4.setTextSize(scaledTextSize((float) (d14 * 0.1d)));
                 Paint paint5 = this.mPaint_date2;
                 double d15 = (double) this.radius;
                 Double.isNaN(d15);
-                paint5.setTextSize((float) (d15 * 0.1d));
+                paint5.setTextSize(scaledTextSize((float) (d15 * 0.1d)));
                 String str = this.usedweekday;
                 double d16 = (double) this.f206x;
                 int i3 = this.radius;
@@ -240,21 +254,21 @@ public class TextClockPreview extends View {
                 double d25 = (double) i4;
                 Double.isNaN(d25);
                 Double.isNaN(d24);
-                canvas.drawText(str3, (float) (d22 + (d23 * 0.2d)), (float) (d24 + (d25 * 0.3d)), this.mPaint_date2);
+                canvas.drawText(str3, (float) (d22 + (d23 * 0.21d)), (float) (d24 + (d25 * 0.3d)), this.mPaint_date2);
                 return;
             case 1:
                 Paint paint6 = this.mPaintDigital_time_Min;
                 double d26 = (double) this.radius;
                 Double.isNaN(d26);
-                paint6.setTextSize((float) (d26 * 0.25d));
+                paint6.setTextSize(scaledTextSize((float) (d26 * 0.25d)));
                 Paint paint7 = this.mPaintDigital_time_Hour;
                 double d27 = (double) this.radius;
                 Double.isNaN(d27);
-                paint7.setTextSize((float) (d27 * 0.39d));
+                paint7.setTextSize(scaledTextSize((float) (d27 * 0.39d)));
                 Paint paint8 = this.mPaintDigital_time_Colon;
                 double d28 = (double) this.radius;
                 Double.isNaN(d28);
-                paint8.setTextSize((float) (d28 * 0.07d));
+                paint8.setTextSize(scaledTextSize((float) (d28 * 0.07d)));
                 float f6 = this.f206x;
                 double d29 = (double) f6;
                 int i5 = this.radius;
@@ -289,7 +303,7 @@ public class TextClockPreview extends View {
                 Double.isNaN(d40);
                 Double.isNaN(d39);
                 this.Digital_time_Colon_Y_offset = (float) (d39 + (d40 * 0.05d));
-                String str4 = this.mCalendar.get(9) == 0 ? "AM" : "PM";
+                String str4 = getAmPm();
                 canvas.drawText(this.used12hours, this.Digital_time_Hours_X_offset, this.Digital_time_Hours_Y_offset, this.mPaintDigital_time_Hour);
                 canvas.drawText(str4, this.Digital_time_Colon_X_offset, this.Digital_time_Colon_Y_offset, this.mPaintDigital_time_Colon);
                 canvas.drawText(this.usedtwntymintues, this.Digital_time_Mintues_X_offset, this.Digital_time_Mintues_Y_offset, this.mPaintDigital_time_Min);
@@ -297,15 +311,15 @@ public class TextClockPreview extends View {
                 Paint paint9 = this.mPaint_date;
                 double d41 = (double) this.radius;
                 Double.isNaN(d41);
-                paint9.setTextSize((float) (d41 * 0.05d));
+                paint9.setTextSize(scaledTextSize((float) (d41 * 0.05d)));
                 Paint paint10 = this.mPaint_date1;
                 double d42 = (double) this.radius;
                 Double.isNaN(d42);
-                paint10.setTextSize((float) (d42 * 0.07d));
+                paint10.setTextSize(scaledTextSize((float) (d42 * 0.07d)));
                 Paint paint11 = this.mPaint_date2;
                 double d43 = (double) this.radius;
                 Double.isNaN(d43);
-                paint11.setTextSize((float) (d43 * 0.07d));
+                paint11.setTextSize(scaledTextSize((float) (d43 * 0.07d)));
                 String str5 = this.usedweekday;
                 double d44 = (double) this.Digital_time_Mintues_X_offset;
                 int i6 = this.radius;
@@ -316,7 +330,7 @@ public class TextClockPreview extends View {
                 double d47 = (double) i6;
                 Double.isNaN(d47);
                 Double.isNaN(d46);
-                canvas.drawText(str5, (float) (d44 - (d45 * 0.07d)), (float) (d46 + (d47 * 0.13d)), this.mPaint_date);
+                canvas.drawText(str5, (float) (d44 - (d45 * 0.125d)), (float) (d46 + (d47 * 0.13d)), this.mPaint_date);
                 String str6 = this.useddate;
                 double d48 = (double) this.Digital_time_Mintues_X_offset;
                 int i7 = this.radius;
@@ -327,7 +341,7 @@ public class TextClockPreview extends View {
                 double d51 = (double) i7;
                 Double.isNaN(d51);
                 Double.isNaN(d50);
-                canvas.drawText(str6, (float) (d48 + (d49 * 0.05d)), (float) (d50 + (d51 * 0.13d)), this.mPaint_date1);
+                canvas.drawText(str6, (float) (d48 + (d49 * 0.0d)), (float) (d50 + (d51 * 0.13d)), this.mPaint_date1);
                 String str7 = this.usedmonth;
                 double d52 = (double) this.Digital_time_Mintues_X_offset;
                 int i8 = this.radius;
@@ -338,21 +352,21 @@ public class TextClockPreview extends View {
                 double d55 = (double) i8;
                 Double.isNaN(d55);
                 Double.isNaN(d54);
-                canvas.drawText(str7, (float) (d52 + (d53 * 0.18d)), (float) (d54 + (d55 * 0.13d)), this.mPaint_date2);
+                canvas.drawText(str7, (float) (d52 + (d53 * 0.125d)), (float) (d54 + (d55 * 0.13d)), this.mPaint_date2);
                 return;
             case 2:
                 Paint paint12 = this.mPaintDigital_time_Hour;
                 double d56 = (double) this.radius;
                 Double.isNaN(d56);
-                paint12.setTextSize((float) (d56 * 0.27d));
+                paint12.setTextSize(scaledTextSize((float) (d56 * 0.27d)));
                 Paint paint13 = this.mPaintDigital_time_Min;
                 double d57 = (double) this.radius;
                 Double.isNaN(d57);
-                paint13.setTextSize((float) (d57 * 0.27d));
+                paint13.setTextSize(scaledTextSize((float) (d57 * 0.27d)));
                 Paint paint14 = this.mPaintDigital_time_Colon;
                 double d58 = (double) this.radius;
                 Double.isNaN(d58);
-                paint14.setTextSize((float) (d58 * 0.07d));
+                paint14.setTextSize(scaledTextSize((float) (d58 * 0.07d)));
                 float f9 = this.f206x;
                 this.Digital_time_Hours_X_offset = f9;
                 float f10 = this.f207y;
@@ -385,15 +399,15 @@ public class TextClockPreview extends View {
                 Paint paint15 = this.mPaint_date;
                 double d67 = (double) this.radius;
                 Double.isNaN(d67);
-                paint15.setTextSize((float) (d67 * 0.07d));
+                paint15.setTextSize(scaledTextSize((float) (d67 * 0.07d)));
                 Paint paint16 = this.mPaint_date1;
                 double d68 = (double) this.radius;
                 Double.isNaN(d68);
-                paint16.setTextSize((float) (d68 * 0.07d));
+                paint16.setTextSize(scaledTextSize((float) (d68 * 0.07d)));
                 Paint paint17 = this.mPaint_date2;
                 double d69 = (double) this.radius;
                 Double.isNaN(d69);
-                paint17.setTextSize((float) (d69 * 0.07d));
+                paint17.setTextSize(scaledTextSize((float) (d69 * 0.07d)));
                 String str8 = this.usedweekday;
                 double d70 = (double) this.f206x;
                 int i10 = this.radius;
@@ -432,15 +446,15 @@ public class TextClockPreview extends View {
                 Paint paint18 = this.mPaintDigital_time_Min;
                 double d82 = (double) this.radius;
                 Double.isNaN(d82);
-                paint18.setTextSize((float) (d82 * 0.23d));
+                paint18.setTextSize(scaledTextSize((float) (d82 * 0.23d)));
                 Paint paint19 = this.mPaintDigital_time_Hour;
                 double d83 = (double) this.radius;
                 Double.isNaN(d83);
-                paint19.setTextSize((float) (d83 * 0.38d));
+                paint19.setTextSize(scaledTextSize((float) (d83 * 0.38d)));
                 Paint paint20 = this.mPaintDigital_time_Colon;
                 double d84 = (double) this.radius;
                 Double.isNaN(d84);
-                paint20.setTextSize((float) (d84 * 0.07d));
+                paint20.setTextSize(scaledTextSize((float) (d84 * 0.07d)));
                 float f12 = this.f206x;
                 double d85 = (double) f12;
                 int i13 = this.radius;
@@ -483,15 +497,15 @@ public class TextClockPreview extends View {
                 Paint paint21 = this.mPaint_date;
                 double d97 = (double) this.radius;
                 Double.isNaN(d97);
-                paint21.setTextSize((float) (d97 * 0.12d));
+                paint21.setTextSize(scaledTextSize((float) (d97 * 0.12d)));
                 Paint paint22 = this.mPaint_date1;
                 double d98 = (double) this.radius;
                 Double.isNaN(d98);
-                paint22.setTextSize((float) (d98 * 0.07d));
+                paint22.setTextSize(scaledTextSize((float) (d98 * 0.07d)));
                 Paint paint23 = this.mPaint_date2;
                 double d99 = (double) this.radius;
                 Double.isNaN(d99);
-                paint23.setTextSize((float) (d99 * 0.07d));
+                paint23.setTextSize(scaledTextSize((float) (d99 * 0.07d)));
                 String str11 = this.usedweekday;
                 double d100 = (double) this.Digital_time_Mintues_X_offset;
                 int i14 = this.radius;
@@ -508,11 +522,11 @@ public class TextClockPreview extends View {
                 Paint paint24 = this.mPaintDigital_time_Min;
                 double d104 = (double) this.radius;
                 Double.isNaN(d104);
-                paint24.setTextSize((float) (d104 * 0.25d));
+                paint24.setTextSize(scaledTextSize((float) (d104 * 0.25d)));
                 Paint paint25 = this.mPaintDigital_time_Hour;
                 double d105 = (double) this.radius;
                 Double.isNaN(d105);
-                paint25.setTextSize((float) (d105 * 0.25d));
+                paint25.setTextSize(scaledTextSize((float) (d105 * 0.25d)));
                 float f17 = this.f206x;
                 double d106 = (double) f17;
                 int i15 = this.radius;
@@ -572,15 +586,15 @@ public class TextClockPreview extends View {
                 Paint paint26 = this.mPaint_date;
                 double d124 = (double) this.radius;
                 Double.isNaN(d124);
-                paint26.setTextSize((float) (d124 * 0.1d));
+                paint26.setTextSize(scaledTextSize((float) (d124 * 0.1d)));
                 Paint paint27 = this.mPaint_date1;
                 double d125 = (double) this.radius;
                 Double.isNaN(d125);
-                paint27.setTextSize((float) (d125 * 0.1d));
+                paint27.setTextSize(scaledTextSize((float) (d125 * 0.1d)));
                 Paint paint28 = this.mPaint_date2;
                 double d126 = (double) this.radius;
                 Double.isNaN(d126);
-                paint28.setTextSize((float) (d126 * 0.1d));
+                paint28.setTextSize(scaledTextSize((float) (d126 * 0.1d)));
                 String str12 = this.usedweekday;
                 double d127 = (double) this.f206x;
                 int i17 = this.radius;
@@ -619,15 +633,15 @@ public class TextClockPreview extends View {
                 Paint paint29 = this.mPaintDigital_time_Hour;
                 double d139 = (double) this.radius;
                 Double.isNaN(d139);
-                paint29.setTextSize((float) (d139 * 0.27d));
+                paint29.setTextSize(scaledTextSize((float) (d139 * 0.27d)));
                 Paint paint30 = this.mPaintDigital_time_Min;
                 double d140 = (double) this.radius;
                 Double.isNaN(d140);
-                paint30.setTextSize((float) (d140 * 0.17d));
+                paint30.setTextSize(scaledTextSize((float) (d140 * 0.17d)));
                 Paint paint31 = this.mPaintDigital_time_Colon;
                 double d141 = (double) this.radius;
                 Double.isNaN(d141);
-                paint31.setTextSize((float) (d141 * 0.07d));
+                paint31.setTextSize(scaledTextSize((float) (d141 * 0.07d)));
                 float f24 = this.f206x;
                 this.Digital_time_Hours_X_offset = f24;
                 float f25 = this.f207y;
@@ -660,15 +674,15 @@ public class TextClockPreview extends View {
                 Paint paint32 = this.mPaint_date;
                 double d150 = (double) this.radius;
                 Double.isNaN(d150);
-                paint32.setTextSize((float) (d150 * 0.07d));
+                paint32.setTextSize(scaledTextSize((float) (d150 * 0.07d)));
                 Paint paint33 = this.mPaint_date1;
                 double d151 = (double) this.radius;
                 Double.isNaN(d151);
-                paint33.setTextSize((float) (d151 * 0.07d));
+                paint33.setTextSize(scaledTextSize((float) (d151 * 0.07d)));
                 Paint paint34 = this.mPaint_date2;
                 double d152 = (double) this.radius;
                 Double.isNaN(d152);
-                paint34.setTextSize((float) (d152 * 0.07d));
+                paint34.setTextSize(scaledTextSize((float) (d152 * 0.07d)));
                 String str15 = this.usedweekday;
                 double d153 = (double) this.f206x;
                 int i21 = this.radius;
@@ -696,11 +710,11 @@ public class TextClockPreview extends View {
                 Paint paint35 = this.mPaintDigital_time_Min;
                 double d161 = (double) this.radius;
                 Double.isNaN(d161);
-                paint35.setTextSize((float) (d161 * 0.2d));
+                paint35.setTextSize(scaledTextSize((float) (d161 * 0.2d)));
                 Paint paint36 = this.mPaintDigital_time_Hour;
                 double d162 = (double) this.radius;
                 Double.isNaN(d162);
-                paint36.setTextSize((float) (d162 * 0.2d));
+                paint36.setTextSize(scaledTextSize((float) (d162 * 0.2d)));
                 float f27 = this.f206x;
                 double d163 = (double) f27;
                 int i23 = this.radius;
@@ -739,15 +753,15 @@ public class TextClockPreview extends View {
                 Paint paint37 = this.mPaint_date;
                 double d173 = (double) this.radius;
                 Double.isNaN(d173);
-                paint37.setTextSize((float) (d173 * 0.1d));
+                paint37.setTextSize(scaledTextSize((float) (d173 * 0.1d)));
                 Paint paint38 = this.mPaint_date1;
                 double d174 = (double) this.radius;
                 Double.isNaN(d174);
-                paint38.setTextSize((float) (d174 * 0.1d));
+                paint38.setTextSize(scaledTextSize((float) (d174 * 0.1d)));
                 Paint paint39 = this.mPaint_date2;
                 double d175 = (double) this.radius;
                 Double.isNaN(d175);
-                paint39.setTextSize((float) (d175 * 0.1d));
+                paint39.setTextSize(scaledTextSize((float) (d175 * 0.1d)));
                 String str17 = this.usedweekday;
                 double d176 = (double) this.f206x;
                 int i24 = this.radius;
@@ -786,11 +800,11 @@ public class TextClockPreview extends View {
                 Paint paint40 = this.mPaintDigital_time_Min;
                 double d188 = (double) this.radius;
                 Double.isNaN(d188);
-                paint40.setTextSize((float) (d188 * 0.2d));
+                paint40.setTextSize(scaledTextSize((float) (d188 * 0.2d)));
                 Paint paint41 = this.mPaintDigital_time_Hour;
                 double d189 = (double) this.radius;
                 Double.isNaN(d189);
-                paint41.setTextSize((float) (d189 * 0.2d));
+                paint41.setTextSize(scaledTextSize((float) (d189 * 0.2d)));
                 float f31 = this.f206x;
                 double d190 = (double) f31;
                 int i27 = this.radius;
@@ -829,15 +843,15 @@ public class TextClockPreview extends View {
                 Paint paint42 = this.mPaint_date;
                 double d200 = (double) this.radius;
                 Double.isNaN(d200);
-                paint42.setTextSize((float) (d200 * 0.1d));
+                paint42.setTextSize(scaledTextSize((float) (d200 * 0.1d)));
                 Paint paint43 = this.mPaint_date1;
                 double d201 = (double) this.radius;
                 Double.isNaN(d201);
-                paint43.setTextSize((float) (d201 * 0.1d));
+                paint43.setTextSize(scaledTextSize((float) (d201 * 0.1d)));
                 Paint paint44 = this.mPaint_date2;
                 double d202 = (double) this.radius;
                 Double.isNaN(d202);
-                paint44.setTextSize((float) (d202 * 0.1d));
+                paint44.setTextSize(scaledTextSize((float) (d202 * 0.1d)));
                 String str20 = this.usedweekday;
                 double d203 = (double) this.f206x;
                 int i28 = this.radius;
@@ -848,7 +862,7 @@ public class TextClockPreview extends View {
                 double d206 = (double) i28;
                 Double.isNaN(d206);
                 Double.isNaN(d205);
-                canvas.drawText(str20, (float) (d203 - (d204 * 0.3d)), (float) (d205 - (d206 * 0.1d)), this.mPaint_date);
+                canvas.drawText(str20, (float) (d203 - (d204 * 0.15d)), (float) (d205 - (d206 * 0.1d)), this.mPaint_date);
                 String str21 = this.useddate;
                 double d207 = (double) this.f206x;
                 int i29 = this.radius;
@@ -859,7 +873,7 @@ public class TextClockPreview extends View {
                 double d210 = (double) i29;
                 Double.isNaN(d210);
                 Double.isNaN(d209);
-                canvas.drawText(str21, (float) (d207 - (d208 * 0.14d)), (float) (d209 - (d210 * 0.1d)), this.mPaint_date1);
+                canvas.drawText(str21, (float) (d207 - (d208 * 0.0d)), (float) (d209 - (d210 * 0.1d)), this.mPaint_date1);
                 String str22 = this.usedmonth;
                 double d211 = (double) this.f206x;
                 int i30 = this.radius;
@@ -870,21 +884,21 @@ public class TextClockPreview extends View {
                 double d214 = (double) i30;
                 Double.isNaN(d214);
                 Double.isNaN(d213);
-                canvas.drawText(str22, (float) (d211 + (d212 * 0.0d)), (float) (d213 - (d214 * 0.1d)), this.mPaint_date2);
+                canvas.drawText(str22, (float) (d211 + (d212 * 0.15d)), (float) (d213 - (d214 * 0.1d)), this.mPaint_date2);
                 return;
             case 8:
                 Paint paint45 = this.mPaintDigital_time_Min;
                 double d215 = (double) this.radius;
                 Double.isNaN(d215);
-                paint45.setTextSize((float) (d215 * 0.25d));
+                paint45.setTextSize(scaledTextSize((float) (d215 * 0.25d)));
                 Paint paint46 = this.mPaintDigital_time_Hour;
                 double d216 = (double) this.radius;
                 Double.isNaN(d216);
-                paint46.setTextSize((float) (d216 * 0.28d));
+                paint46.setTextSize(scaledTextSize((float) (d216 * 0.28d)));
                 Paint paint47 = this.mPaintDigital_time_Colon;
                 double d217 = (double) this.radius;
                 Double.isNaN(d217);
-                paint47.setTextSize((float) (d217 * 0.07d));
+                paint47.setTextSize(scaledTextSize((float) (d217 * 0.07d)));
                 float f35 = this.f206x;
                 double d218 = (double) f35;
                 int i31 = this.radius;
@@ -919,22 +933,22 @@ public class TextClockPreview extends View {
                 Double.isNaN(d229);
                 Double.isNaN(d228);
                 this.Digital_time_Colon_Y_offset = (float) (d228 + (d229 * 0.05d));
-                canvas.drawText(this.mCalendar.get(9) == 0 ? "AM" : "PM", this.Digital_time_Colon_X_offset, this.Digital_time_Colon_Y_offset, this.mPaintDigital_time_Colon);
+                canvas.drawText(getAmPm(), this.Digital_time_Colon_X_offset, this.Digital_time_Colon_Y_offset, this.mPaintDigital_time_Colon);
                 canvas.drawText(this.usedtwntymintues, this.Digital_time_Mintues_X_offset, this.Digital_time_Mintues_Y_offset, this.mPaintDigital_time_Min);
                 canvas.drawText(this.used12hours, this.Digital_time_Hours_X_offset, this.Digital_time_Hours_Y_offset, this.mPaintDigital_time_Hour);
                 Calendar_data();
                 Paint paint48 = this.mPaint_date;
                 double d230 = (double) this.radius;
                 Double.isNaN(d230);
-                paint48.setTextSize((float) (d230 * 0.05d));
+                paint48.setTextSize(scaledTextSize((float) (d230 * 0.05d)));
                 Paint paint49 = this.mPaint_date1;
                 double d231 = (double) this.radius;
                 Double.isNaN(d231);
-                paint49.setTextSize((float) (d231 * 0.07d));
+                paint49.setTextSize(scaledTextSize((float) (d231 * 0.07d)));
                 Paint paint50 = this.mPaint_date2;
                 double d232 = (double) this.radius;
                 Double.isNaN(d232);
-                paint50.setTextSize((float) (d232 * 0.07d));
+                paint50.setTextSize(scaledTextSize((float) (d232 * 0.07d)));
                 String str23 = this.usedweekday;
                 double d233 = (double) this.f206x;
                 int i32 = this.radius;
@@ -945,7 +959,7 @@ public class TextClockPreview extends View {
                 double d236 = (double) i32;
                 Double.isNaN(d236);
                 Double.isNaN(d235);
-                canvas.drawText(str23, (float) (d233 - (d234 * 0.07d)), (float) (d235 + (d236 * 0.22d)), this.mPaint_date);
+                canvas.drawText(str23, (float) (d233 - (d234 * 0.125d)), (float) (d235 + (d236 * 0.22d)), this.mPaint_date);
                 String str24 = this.useddate;
                 double d237 = (double) this.f206x;
                 int i33 = this.radius;
@@ -956,7 +970,7 @@ public class TextClockPreview extends View {
                 double d240 = (double) i33;
                 Double.isNaN(d240);
                 Double.isNaN(d239);
-                canvas.drawText(str24, (float) (d237 + (d238 * 0.05d)), (float) (d239 + (d240 * 0.22d)), this.mPaint_date1);
+                canvas.drawText(str24, (float) (d237 + (d238 * 0.0d)), (float) (d239 + (d240 * 0.22d)), this.mPaint_date1);
                 String str25 = this.usedmonth;
                 double d241 = (double) this.f206x;
                 int i34 = this.radius;
@@ -967,21 +981,21 @@ public class TextClockPreview extends View {
                 double d244 = (double) i34;
                 Double.isNaN(d244);
                 Double.isNaN(d243);
-                canvas.drawText(str25, (float) (d241 + (d242 * 0.18d)), (float) (d243 + (d244 * 0.22d)), this.mPaint_date2);
+                canvas.drawText(str25, (float) (d241 + (d242 * 0.125d)), (float) (d243 + (d244 * 0.22d)), this.mPaint_date2);
                 return;
             case 9:
                 Paint paint51 = this.mPaintDigital_time_Hour;
                 double d245 = (double) this.radius;
                 Double.isNaN(d245);
-                paint51.setTextSize((float) (d245 * 0.25d));
+                paint51.setTextSize(scaledTextSize((float) (d245 * 0.25d)));
                 Paint paint52 = this.mPaintDigital_time_Min;
                 double d246 = (double) this.radius;
                 Double.isNaN(d246);
-                paint52.setTextSize((float) (d246 * 0.25d));
+                paint52.setTextSize(scaledTextSize((float) (d246 * 0.25d)));
                 Paint paint53 = this.mPaintDigital_time_Colon;
                 double d247 = (double) this.radius;
                 Double.isNaN(d247);
-                paint53.setTextSize((float) (d247 * 0.07d));
+                paint53.setTextSize(scaledTextSize((float) (d247 * 0.07d)));
                 float f38 = this.f206x;
                 this.Digital_time_Hours_X_offset = f38;
                 float f39 = this.f207y;
@@ -1014,15 +1028,15 @@ public class TextClockPreview extends View {
                 Paint paint54 = this.mPaint_date;
                 double d256 = (double) this.radius;
                 Double.isNaN(d256);
-                paint54.setTextSize((float) (d256 * 0.1d));
+                paint54.setTextSize(scaledTextSize((float) (d256 * 0.1d)));
                 Paint paint55 = this.mPaint_date1;
                 double d257 = (double) this.radius;
                 Double.isNaN(d257);
-                paint55.setTextSize((float) (d257 * 0.1d));
+                paint55.setTextSize(scaledTextSize((float) (d257 * 0.1d)));
                 Paint paint56 = this.mPaint_date2;
                 double d258 = (double) this.radius;
                 Double.isNaN(d258);
-                paint56.setTextSize((float) (d258 * 0.1d));
+                paint56.setTextSize(scaledTextSize((float) (d258 * 0.1d)));
                 String str26 = this.useddate;
                 double d259 = (double) this.f206x;
                 int i36 = this.radius;
@@ -1044,22 +1058,96 @@ public class TextClockPreview extends View {
                 double d266 = (double) i37;
                 Double.isNaN(d266);
                 Double.isNaN(d265);
-                canvas.drawText(str27, (float) (d263 + (d264 * 0.06d)), (float) (d265 + (d266 * 0.4d)), this.mPaint_date2);
+                canvas.drawText(str27, (float) (d263 + (d264 * 0.07d)), (float) (d265 + (d266 * 0.4d)), this.mPaint_date2);
                 return;
             default:
                 return;
         }
     }
 
+    public void setTextScale(float scale) {
+        this.textScale = scale <= 0.0f ? 1.0f : scale;
+        invalidate();
+    }
+
+    public float getTextScale() {
+        return this.textScale;
+    }
+
+    private float scaledTextSize(float px) {
+        return px * this.textScale;
+    }
+
+    public void setCardAlpha(int alpha) {
+        if (alpha < 0) {
+            alpha = 0;
+        }
+        if (alpha > 255) {
+            alpha = 255;
+        }
+        this.cardAlpha = alpha;
+        invalidate();
+    }
+
+    public int getCardAlpha() {
+        return this.cardAlpha;
+    }
+
+    private boolean isArabic() {
+        return !"en".equals(this.tinyDB.getString("appLang"));
+    }
+
+    private String getAmPm() {
+        boolean am = this.mCalendar.get(Calendar.AM_PM) == Calendar.AM;
+        if (isArabic()) {
+            return am ? "ص" : "م";
+        }
+        return am ? "AM" : "PM";
+    }
+
+    private void drawCard(Canvas canvas) {
+        if (this.cardAlpha <= 0 || this.cardPaint == null) {
+            return;
+        }
+        float cx = this.f206x;
+        float cy = this.f207y + (((float) this.radius) * 0.08f);
+        float hw = ((float) this.radius) * 0.62f;
+        float hh = ((float) this.radius) * 0.45f;
+        this.cardPaint.setColor(Color.argb(this.cardAlpha, 0, 0, 0));
+        canvas.drawPath(roundRectPath(cx - hw, cy - hh, cx + hw, cy + hh, ((float) this.radius) * 0.10f), this.cardPaint);
+    }
+
+    private Path roundRectPath(float l, float t, float r, float b, float corner) {
+        Path path = new Path();
+        float d = corner * 2.0f;
+        path.moveTo(l + corner, t);
+        path.lineTo(r - corner, t);
+        path.arcTo(new RectF(r - d, t, r, t + d), -90.0f, 90.0f);
+        path.lineTo(r, b - corner);
+        path.arcTo(new RectF(r - d, b - d, r, b), 0.0f, 90.0f);
+        path.lineTo(l + corner, b);
+        path.arcTo(new RectF(l, b - d, l + d, b), 90.0f, 90.0f);
+        path.lineTo(l, t + corner);
+        path.arcTo(new RectF(l, t, l + d, t + d), 180.0f, 90.0f);
+        path.close();
+        return path;
+    }
+
     private void Calendar_data() {
         Date time = Calendar.getInstance().getTime();
         Calendar instance = Calendar.getInstance();
         instance.setTime(time);
-        String[] split = new SimpleDateFormat("yyyy-MMM-dd").format(time).split("-");
+        String[] split = new SimpleDateFormat("yyyy-MMM-dd", Locale.US).format(time).split("-");
         this.useddate = split[2];
-        this.usedmonth = split[1].toUpperCase();
-        this.usedweekday = this.stringsDays[instance.get(7) - 1];
+        if (isArabic()) {
+            this.usedmonth = MONTHS_AR[instance.get(Calendar.MONTH)];
+            this.usedweekday = DAYS_AR[instance.get(Calendar.DAY_OF_WEEK) - 1];
+        } else {
+            this.usedmonth = split[1].toUpperCase(Locale.US);
+            this.usedweekday = this.stringsDays[instance.get(Calendar.DAY_OF_WEEK) - 1];
+        }
     }
+
 
     public void setTextFace() {
         switch (this.textClockPosition) {

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Path;
+import android.graphics.RectF;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -19,6 +21,7 @@ import com.clock.livewallpaper.utils.TinyDB;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 
 
@@ -59,6 +62,11 @@ public class SmartClockPreview extends View {
     private int radius = 800;
     private String[] stringsDays = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
     private int colorpref = -1;
+    private float textScale = 1.0f;
+    private int cardAlpha = 0;
+    private Paint cardPaint;
+    private static final String[] DAYS_AR = {"أحد", "إثنين", "ثلا", "أرب", "خمي", "جمع", "سبت"};
+    private static final String[] MONTHS_AR = {"يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"};
 
     public int getRadius() {
         return this.radius;
@@ -147,6 +155,10 @@ public class SmartClockPreview extends View {
         textPaint6.setColor(InputDeviceCompat.SOURCE_ANY);
         this.mPaintDigital_time_Colon.setTextAlign(Paint.Align.CENTER);
         this.mPaintDigital_time_Colon.setAntiAlias(true);
+        Paint cardPaint = new Paint();
+        cardPaint.setAntiAlias(true);
+        cardPaint.setStyle(Paint.Style.FILL);
+        this.cardPaint = cardPaint;
         setTextFace();
     }
 
@@ -158,6 +170,7 @@ public class SmartClockPreview extends View {
             int i = this.radius;
             canvas.drawBitmap(bitmap, f - (((float) i) / 2.0f), this.f205y - (((float) i) / 2.0f), (Paint) null);
         }
+        drawCard(canvas);
         Calendar instance = Calendar.getInstance();
         this.mCalendar = instance;
         this.t12hours = instance.get(10);
@@ -185,11 +198,11 @@ public class SmartClockPreview extends View {
                 Paint paint = this.mPaintDigital_time_Min;
                 double d = (double) this.radius;
                 Double.isNaN(d);
-                paint.setTextSize((float) (d * 0.2d));
+                paint.setTextSize(scaledTextSize((float) (d * 0.2d)));
                 Paint paint2 = this.mPaintDigital_time_Hour;
                 double d2 = (double) this.radius;
                 Double.isNaN(d2);
-                paint2.setTextSize((float) (d2 * 0.2d));
+                paint2.setTextSize(scaledTextSize((float) (d2 * 0.2d)));
                 float f2 = this.f204x;
                 double d3 = (double) f2;
                 int i3 = this.radius;
@@ -219,15 +232,15 @@ public class SmartClockPreview extends View {
                 Paint paint3 = this.mPaint_date;
                 double d9 = (double) this.radius;
                 Double.isNaN(d9);
-                paint3.setTextSize((float) (d9 * 0.08d));
+                paint3.setTextSize(scaledTextSize((float) (d9 * 0.08d)));
                 Paint paint4 = this.mPaint_date1;
                 double d10 = (double) this.radius;
                 Double.isNaN(d10);
-                paint4.setTextSize((float) (d10 * 0.08d));
+                paint4.setTextSize(scaledTextSize((float) (d10 * 0.08d)));
                 Paint paint5 = this.mPaint_date2;
                 double d11 = (double) this.radius;
                 Double.isNaN(d11);
-                paint5.setTextSize((float) (d11 * 0.08d));
+                paint5.setTextSize(scaledTextSize((float) (d11 * 0.08d)));
                 String str = this.usedweekday;
                 double d12 = (double) this.f204x;
                 int i4 = this.radius;
@@ -256,21 +269,21 @@ public class SmartClockPreview extends View {
                 double d21 = (double) i5;
                 Double.isNaN(d21);
                 Double.isNaN(d20);
-                canvas.drawText(str3, (float) (d18 + (d19 * 0.17d)), (float) (d20 + (d21 * 0.12d)), this.mPaint_date2);
+                canvas.drawText(str3, (float) (d18 + (d19 * 0.18d)), (float) (d20 + (d21 * 0.12d)), this.mPaint_date2);
                 return;
             case 1:
                 Paint paint6 = this.mPaintDigital_time_Min;
                 double d22 = (double) this.radius;
                 Double.isNaN(d22);
-                paint6.setTextSize((float) (d22 * 0.13d));
+                paint6.setTextSize(scaledTextSize((float) (d22 * 0.13d)));
                 Paint paint7 = this.mPaintDigital_time_Hour;
                 double d23 = (double) this.radius;
                 Double.isNaN(d23);
-                paint7.setTextSize((float) (d23 * 0.22d));
+                paint7.setTextSize(scaledTextSize((float) (d23 * 0.22d)));
                 Paint paint8 = this.mPaintDigital_time_Colon;
                 double d24 = (double) this.radius;
                 Double.isNaN(d24);
-                paint8.setTextSize((float) (d24 * 0.04d));
+                paint8.setTextSize(scaledTextSize((float) (d24 * 0.04d)));
                 float f6 = this.f204x;
                 double d25 = (double) f6;
                 int i6 = this.radius;
@@ -304,7 +317,7 @@ public class SmartClockPreview extends View {
                 Double.isNaN(d36);
                 Double.isNaN(d35);
                 this.Digital_time_Colon_Y_offset = (float) (d35 + (d36 * 0.06d));
-                String str4 = this.mCalendar.get(9) == 0 ? "AM" : "PM";
+                String str4 = getAmPm();
                 canvas.drawText(this.used12hours, this.Digital_time_Hours_X_offset, this.Digital_time_Hours_Y_offset, this.mPaintDigital_time_Hour);
                 canvas.drawText(str4, this.Digital_time_Colon_X_offset, this.Digital_time_Colon_Y_offset, this.mPaintDigital_time_Colon);
                 canvas.drawText(this.usedtwntymintues, this.Digital_time_Mintues_X_offset, this.Digital_time_Mintues_Y_offset, this.mPaintDigital_time_Min);
@@ -312,15 +325,15 @@ public class SmartClockPreview extends View {
                 Paint paint9 = this.mPaint_date;
                 double d37 = (double) this.radius;
                 Double.isNaN(d37);
-                paint9.setTextSize((float) (d37 * 0.05d));
+                paint9.setTextSize(scaledTextSize((float) (d37 * 0.05d)));
                 Paint paint10 = this.mPaint_date1;
                 double d38 = (double) this.radius;
                 Double.isNaN(d38);
-                paint10.setTextSize((float) (d38 * 0.07d));
+                paint10.setTextSize(scaledTextSize((float) (d38 * 0.07d)));
                 Paint paint11 = this.mPaint_date2;
                 double d39 = (double) this.radius;
                 Double.isNaN(d39);
-                paint11.setTextSize((float) (d39 * 0.05d));
+                paint11.setTextSize(scaledTextSize((float) (d39 * 0.05d)));
                 String str5 = this.usedweekday;
                 double d40 = (double) this.Digital_time_Mintues_X_offset;
                 int i7 = this.radius;
@@ -331,7 +344,7 @@ public class SmartClockPreview extends View {
                 double d43 = (double) i7;
                 Double.isNaN(d43);
                 Double.isNaN(d42);
-                canvas.drawText(str5, (float) (d40 - (d41 * 0.07d)), (float) (d42 + (d43 * 0.13d)), this.mPaint_date);
+                canvas.drawText(str5, (float) (d40 - (d41 * 0.06d)), (float) (d42 + (d43 * 0.13d)), this.mPaint_date);
                 String str6 = this.useddate;
                 double d44 = (double) this.Digital_time_Mintues_X_offset;
                 int i8 = this.radius;
@@ -342,7 +355,7 @@ public class SmartClockPreview extends View {
                 double d47 = (double) i8;
                 Double.isNaN(d47);
                 Double.isNaN(d46);
-                canvas.drawText(str6, (float) (d44 + (d45 * 0.05d)), (float) (d46 + (d47 * 0.13d)), this.mPaint_date1);
+                canvas.drawText(str6, (float) (d44 + (d45 * 0.06d)), (float) (d46 + (d47 * 0.13d)), this.mPaint_date1);
                 BatteryManager batteryManager = (BatteryManager) this.context.getSystemService("batterymanager");
                 if (Build.VERSION.SDK_INT >= 21) {
                     float f8 = this.f204x;
@@ -358,15 +371,15 @@ public class SmartClockPreview extends View {
                 Paint paint12 = this.mPaintDigital_time_Hour;
                 double d50 = (double) this.radius;
                 Double.isNaN(d50);
-                paint12.setTextSize((float) (d50 * 0.27d));
+                paint12.setTextSize(scaledTextSize((float) (d50 * 0.27d)));
                 Paint paint13 = this.mPaintDigital_time_Min;
                 double d51 = (double) this.radius;
                 Double.isNaN(d51);
-                paint13.setTextSize((float) (d51 * 0.27d));
+                paint13.setTextSize(scaledTextSize((float) (d51 * 0.27d)));
                 Paint paint14 = this.mPaintDigital_time_Colon;
                 double d52 = (double) this.radius;
                 Double.isNaN(d52);
-                paint14.setTextSize((float) (d52 * 0.07d));
+                paint14.setTextSize(scaledTextSize((float) (d52 * 0.07d)));
                 float f9 = this.f204x;
                 this.Digital_time_Hours_X_offset = f9;
                 float f10 = this.f205y;
@@ -399,15 +412,15 @@ public class SmartClockPreview extends View {
                 Paint paint15 = this.mPaint_date;
                 double d61 = (double) this.radius;
                 Double.isNaN(d61);
-                paint15.setTextSize((float) (d61 * 0.07d));
+                paint15.setTextSize(scaledTextSize((float) (d61 * 0.07d)));
                 Paint paint16 = this.mPaint_date1;
                 double d62 = (double) this.radius;
                 Double.isNaN(d62);
-                paint16.setTextSize((float) (d62 * 0.07d));
+                paint16.setTextSize(scaledTextSize((float) (d62 * 0.07d)));
                 Paint paint17 = this.mPaint_date2;
                 double d63 = (double) this.radius;
                 Double.isNaN(d63);
-                paint17.setTextSize((float) (d63 * 0.07d));
+                paint17.setTextSize(scaledTextSize((float) (d63 * 0.07d)));
                 String str7 = this.usedweekday;
                 double d64 = (double) this.f204x;
                 int i10 = this.radius;
@@ -440,21 +453,21 @@ public class SmartClockPreview extends View {
                 double d75 = (double) i12;
                 Double.isNaN(d75);
                 Double.isNaN(d74);
-                canvas.drawText(str9, (float) (d72 + (d73 * 0.1d)), (float) (d74 + (d75 * 0.23d)), this.mPaint_date2);
+                canvas.drawText(str9, (float) (d72 + (d73 * 0.11d)), (float) (d74 + (d75 * 0.23d)), this.mPaint_date2);
                 return;
             case 3:
                 Paint paint18 = this.mPaintDigital_time_Min;
                 double d76 = (double) this.radius;
                 Double.isNaN(d76);
-                paint18.setTextSize((float) (d76 * 0.23d));
+                paint18.setTextSize(scaledTextSize((float) (d76 * 0.23d)));
                 Paint paint19 = this.mPaintDigital_time_Hour;
                 double d77 = (double) this.radius;
                 Double.isNaN(d77);
-                paint19.setTextSize((float) (d77 * 0.38d));
+                paint19.setTextSize(scaledTextSize((float) (d77 * 0.38d)));
                 Paint paint20 = this.mPaintDigital_time_Colon;
                 double d78 = (double) this.radius;
                 Double.isNaN(d78);
-                paint20.setTextSize((float) (d78 * 0.07d));
+                paint20.setTextSize(scaledTextSize((float) (d78 * 0.07d)));
                 float f12 = this.f204x;
                 double d79 = (double) f12;
                 int i13 = this.radius;
@@ -497,15 +510,15 @@ public class SmartClockPreview extends View {
                 Paint paint21 = this.mPaint_date;
                 double d91 = (double) this.radius;
                 Double.isNaN(d91);
-                paint21.setTextSize((float) (d91 * 0.12d));
+                paint21.setTextSize(scaledTextSize((float) (d91 * 0.12d)));
                 Paint paint22 = this.mPaint_date1;
                 double d92 = (double) this.radius;
                 Double.isNaN(d92);
-                paint22.setTextSize((float) (d92 * 0.07d));
+                paint22.setTextSize(scaledTextSize((float) (d92 * 0.07d)));
                 Paint paint23 = this.mPaint_date2;
                 double d93 = (double) this.radius;
                 Double.isNaN(d93);
-                paint23.setTextSize((float) (d93 * 0.07d));
+                paint23.setTextSize(scaledTextSize((float) (d93 * 0.07d)));
                 String str10 = this.usedweekday;
                 double d94 = (double) this.f204x;
                 int i14 = this.radius;
@@ -522,11 +535,11 @@ public class SmartClockPreview extends View {
                 Paint paint24 = this.mPaintDigital_time_Min;
                 double d98 = (double) this.radius;
                 Double.isNaN(d98);
-                paint24.setTextSize((float) (d98 * 0.15d));
+                paint24.setTextSize(scaledTextSize((float) (d98 * 0.15d)));
                 Paint paint25 = this.mPaintDigital_time_Hour;
                 double d99 = (double) this.radius;
                 Double.isNaN(d99);
-                paint25.setTextSize((float) (d99 * 0.15d));
+                paint25.setTextSize(scaledTextSize((float) (d99 * 0.15d)));
                 float f17 = this.f204x;
                 double d100 = (double) f17;
                 int i15 = this.radius;
@@ -577,15 +590,15 @@ public class SmartClockPreview extends View {
                 Paint paint26 = this.mPaint_date;
                 double d114 = (double) this.radius;
                 Double.isNaN(d114);
-                paint26.setTextSize((float) (d114 * 0.07d));
+                paint26.setTextSize(scaledTextSize((float) (d114 * 0.07d)));
                 Paint paint27 = this.mPaint_date1;
                 double d115 = (double) this.radius;
                 Double.isNaN(d115);
-                paint27.setTextSize((float) (d115 * 0.07d));
+                paint27.setTextSize(scaledTextSize((float) (d115 * 0.07d)));
                 Paint paint28 = this.mPaint_date2;
                 double d116 = (double) this.radius;
                 Double.isNaN(d116);
-                paint28.setTextSize((float) (d116 * 0.06d));
+                paint28.setTextSize(scaledTextSize((float) (d116 * 0.06d)));
                 String str11 = this.usedweekday;
                 double d117 = (double) this.f204x;
                 int i17 = this.radius;
@@ -596,7 +609,7 @@ public class SmartClockPreview extends View {
                 double d120 = (double) i17;
                 Double.isNaN(d120);
                 Double.isNaN(d119);
-                canvas.drawText(str11, (float) (d117 - (d118 * 0.06d)), (float) (d119 + (d120 * 0.09d)), this.mPaint_date);
+                canvas.drawText(str11, (float) (d117 - (d118 * 0.07d)), (float) (d119 + (d120 * 0.09d)), this.mPaint_date);
                 String str12 = this.useddate;
                 double d121 = (double) this.f204x;
                 int i18 = this.radius;
@@ -607,7 +620,7 @@ public class SmartClockPreview extends View {
                 double d124 = (double) i18;
                 Double.isNaN(d124);
                 Double.isNaN(d123);
-                canvas.drawText(str12, (float) (d121 + (d122 * 0.08d)), (float) (d123 + (d124 * 0.09d)), this.mPaint_date1);
+                canvas.drawText(str12, (float) (d121 + (d122 * 0.07d)), (float) (d123 + (d124 * 0.09d)), this.mPaint_date1);
                 String str13 = this.usedmonth;
                 float f23 = this.f204x;
                 double d125 = (double) this.f205y;
@@ -632,15 +645,15 @@ public class SmartClockPreview extends View {
                 Paint paint29 = this.mPaintDigital_time_Hour;
                 double d129 = (double) this.radius;
                 Double.isNaN(d129);
-                paint29.setTextSize((float) (d129 * 0.27d));
+                paint29.setTextSize(scaledTextSize((float) (d129 * 0.27d)));
                 Paint paint30 = this.mPaintDigital_time_Min;
                 double d130 = (double) this.radius;
                 Double.isNaN(d130);
-                paint30.setTextSize((float) (d130 * 0.17d));
+                paint30.setTextSize(scaledTextSize((float) (d130 * 0.17d)));
                 Paint paint31 = this.mPaintDigital_time_Colon;
                 double d131 = (double) this.radius;
                 Double.isNaN(d131);
-                paint31.setTextSize((float) (d131 * 0.07d));
+                paint31.setTextSize(scaledTextSize((float) (d131 * 0.07d)));
                 float f25 = this.f204x;
                 this.Digital_time_Hours_X_offset = f25;
                 float f26 = this.f205y;
@@ -673,15 +686,15 @@ public class SmartClockPreview extends View {
                 Paint paint32 = this.mPaint_date;
                 double d140 = (double) this.radius;
                 Double.isNaN(d140);
-                paint32.setTextSize((float) (d140 * 0.07d));
+                paint32.setTextSize(scaledTextSize((float) (d140 * 0.07d)));
                 Paint paint33 = this.mPaint_date1;
                 double d141 = (double) this.radius;
                 Double.isNaN(d141);
-                paint33.setTextSize((float) (d141 * 0.07d));
+                paint33.setTextSize(scaledTextSize((float) (d141 * 0.07d)));
                 Paint paint34 = this.mPaint_date2;
                 double d142 = (double) this.radius;
                 Double.isNaN(d142);
-                paint34.setTextSize((float) (d142 * 0.07d));
+                paint34.setTextSize(scaledTextSize((float) (d142 * 0.07d)));
                 String str14 = this.usedweekday;
                 double d143 = (double) this.f204x;
                 int i20 = this.radius;
@@ -709,15 +722,15 @@ public class SmartClockPreview extends View {
                 Paint paint35 = this.mPaintDigital_time_Hour;
                 double d151 = (double) this.radius;
                 Double.isNaN(d151);
-                paint35.setTextSize((float) (d151 * 0.32d));
+                paint35.setTextSize(scaledTextSize((float) (d151 * 0.32d)));
                 Paint paint36 = this.mPaintDigital_time_Min;
                 double d152 = (double) this.radius;
                 Double.isNaN(d152);
-                paint36.setTextSize((float) (d152 * 0.17d));
+                paint36.setTextSize(scaledTextSize((float) (d152 * 0.17d)));
                 Paint paint37 = this.mPaintDigital_time_Colon;
                 double d153 = (double) this.radius;
                 Double.isNaN(d153);
-                paint37.setTextSize((float) (d153 * 0.07d));
+                paint37.setTextSize(scaledTextSize((float) (d153 * 0.07d)));
                 float f28 = this.f204x;
                 double d154 = (double) f28;
                 int i22 = this.radius;
@@ -755,15 +768,15 @@ public class SmartClockPreview extends View {
                 Paint paint38 = this.mPaint_date;
                 double d164 = (double) this.radius;
                 Double.isNaN(d164);
-                paint38.setTextSize((float) (d164 * 0.07d));
+                paint38.setTextSize(scaledTextSize((float) (d164 * 0.07d)));
                 Paint paint39 = this.mPaint_date1;
                 double d165 = (double) this.radius;
                 Double.isNaN(d165);
-                paint39.setTextSize((float) (d165 * 0.07d));
+                paint39.setTextSize(scaledTextSize((float) (d165 * 0.07d)));
                 Paint paint40 = this.mPaint_date2;
                 double d166 = (double) this.radius;
                 Double.isNaN(d166);
-                paint40.setTextSize((float) (d166 * 0.07d));
+                paint40.setTextSize(scaledTextSize((float) (d166 * 0.07d)));
                 String str16 = this.usedweekday;
                 double d167 = (double) this.f204x;
                 int i23 = this.radius;
@@ -807,15 +820,15 @@ public class SmartClockPreview extends View {
                 Paint paint41 = this.mPaintDigital_time_Min;
                 double d179 = (double) this.radius;
                 Double.isNaN(d179);
-                paint41.setTextSize((float) (d179 * 0.24d));
+                paint41.setTextSize(scaledTextSize((float) (d179 * 0.24d)));
                 Paint paint42 = this.mPaintDigital_time_Hour;
                 double d180 = (double) this.radius;
                 Double.isNaN(d180);
-                paint42.setTextSize((float) (d180 * 0.38d));
+                paint42.setTextSize(scaledTextSize((float) (d180 * 0.38d)));
                 Paint paint43 = this.mPaintDigital_time_Colon;
                 double d181 = (double) this.radius;
                 Double.isNaN(d181);
-                paint43.setTextSize((float) (d181 * 0.07d));
+                paint43.setTextSize(scaledTextSize((float) (d181 * 0.07d)));
                 float f32 = this.f204x;
                 double d182 = (double) f32;
                 int i26 = this.radius;
@@ -858,15 +871,15 @@ public class SmartClockPreview extends View {
                 Paint paint44 = this.mPaint_date;
                 double d194 = (double) this.radius;
                 Double.isNaN(d194);
-                paint44.setTextSize((float) (d194 * 0.12d));
+                paint44.setTextSize(scaledTextSize((float) (d194 * 0.12d)));
                 Paint paint45 = this.mPaint_date1;
                 double d195 = (double) this.radius;
                 Double.isNaN(d195);
-                paint45.setTextSize((float) (d195 * 0.07d));
+                paint45.setTextSize(scaledTextSize((float) (d195 * 0.07d)));
                 Paint paint46 = this.mPaint_date2;
                 double d196 = (double) this.radius;
                 Double.isNaN(d196);
-                paint46.setTextSize((float) (d196 * 0.07d));
+                paint46.setTextSize(scaledTextSize((float) (d196 * 0.07d)));
                 String str18 = this.usedweekday;
                 double d197 = (double) this.f204x;
                 int i27 = this.radius;
@@ -877,21 +890,21 @@ public class SmartClockPreview extends View {
                 double d200 = (double) i27;
                 Double.isNaN(d200);
                 Double.isNaN(d199);
-                canvas.drawText(str18, (float) (d197 + (d198 * 0.06d)), (float) (d199 + (d200 * 0.18d)), this.mPaint_date);
+                canvas.drawText(str18, (float) (d197 + (d198 * 0.0d)), (float) (d199 + (d200 * 0.18d)), this.mPaint_date);
                 return;
             case 8:
                 Paint paint47 = this.mPaintDigital_time_Min;
                 double d201 = (double) this.radius;
                 Double.isNaN(d201);
-                paint47.setTextSize((float) (d201 * 0.24d));
+                paint47.setTextSize(scaledTextSize((float) (d201 * 0.24d)));
                 Paint paint48 = this.mPaintDigital_time_Hour;
                 double d202 = (double) this.radius;
                 Double.isNaN(d202);
-                paint48.setTextSize((float) (d202 * 0.35d));
+                paint48.setTextSize(scaledTextSize((float) (d202 * 0.35d)));
                 Paint paint49 = this.mPaintDigital_time_Colon;
                 double d203 = (double) this.radius;
                 Double.isNaN(d203);
-                paint49.setTextSize((float) (d203 * 0.07d));
+                paint49.setTextSize(scaledTextSize((float) (d203 * 0.07d)));
                 float f37 = this.f204x;
                 double d204 = (double) f37;
                 int i28 = this.radius;
@@ -934,15 +947,15 @@ public class SmartClockPreview extends View {
                 Paint paint50 = this.mPaint_date;
                 double d216 = (double) this.radius;
                 Double.isNaN(d216);
-                paint50.setTextSize((float) (d216 * 0.12d));
+                paint50.setTextSize(scaledTextSize((float) (d216 * 0.12d)));
                 Paint paint51 = this.mPaint_date1;
                 double d217 = (double) this.radius;
                 Double.isNaN(d217);
-                paint51.setTextSize((float) (d217 * 0.07d));
+                paint51.setTextSize(scaledTextSize((float) (d217 * 0.07d)));
                 Paint paint52 = this.mPaint_date2;
                 double d218 = (double) this.radius;
                 Double.isNaN(d218);
-                paint52.setTextSize((float) (d218 * 0.07d));
+                paint52.setTextSize(scaledTextSize((float) (d218 * 0.07d)));
                 String str19 = this.usedweekday;
                 double d219 = (double) this.f204x;
                 int i29 = this.radius;
@@ -953,21 +966,21 @@ public class SmartClockPreview extends View {
                 double d222 = (double) i29;
                 Double.isNaN(d222);
                 Double.isNaN(d221);
-                canvas.drawText(str19, (float) (d219 - (d220 * 0.06d)), (float) (d221 + (d222 * 0.35d)), this.mPaint_date);
+                canvas.drawText(str19, (float) (d219 - (d220 * 0.0d)), (float) (d221 + (d222 * 0.35d)), this.mPaint_date);
                 return;
             case 9:
                 Paint paint53 = this.mPaintDigital_time_Hour;
                 double d223 = (double) this.radius;
                 Double.isNaN(d223);
-                paint53.setTextSize((float) (d223 * 0.2d));
+                paint53.setTextSize(scaledTextSize((float) (d223 * 0.2d)));
                 Paint paint54 = this.mPaintDigital_time_Min;
                 double d224 = (double) this.radius;
                 Double.isNaN(d224);
-                paint54.setTextSize((float) (d224 * 0.2d));
+                paint54.setTextSize(scaledTextSize((float) (d224 * 0.2d)));
                 Paint paint55 = this.mPaintDigital_time_Colon;
                 double d225 = (double) this.radius;
                 Double.isNaN(d225);
-                paint55.setTextSize((float) (d225 * 0.07d));
+                paint55.setTextSize(scaledTextSize((float) (d225 * 0.07d)));
                 float f42 = this.f204x;
                 double d226 = (double) f42;
                 int i30 = this.radius;
@@ -1010,15 +1023,15 @@ public class SmartClockPreview extends View {
                 Paint paint56 = this.mPaint_date;
                 double d238 = (double) this.radius;
                 Double.isNaN(d238);
-                paint56.setTextSize((float) (d238 * 0.1d));
+                paint56.setTextSize(scaledTextSize((float) (d238 * 0.1d)));
                 Paint paint57 = this.mPaint_date1;
                 double d239 = (double) this.radius;
                 Double.isNaN(d239);
-                paint57.setTextSize((float) (d239 * 0.1d));
+                paint57.setTextSize(scaledTextSize((float) (d239 * 0.1d)));
                 Paint paint58 = this.mPaint_date2;
                 double d240 = (double) this.radius;
                 Double.isNaN(d240);
-                paint58.setTextSize((float) (d240 * 0.1d));
+                paint58.setTextSize(scaledTextSize((float) (d240 * 0.1d)));
                 String str20 = this.usedweekday;
                 double d241 = (double) this.f204x;
                 int i31 = this.radius;
@@ -1046,15 +1059,15 @@ public class SmartClockPreview extends View {
                 Paint paint59 = this.mPaintDigital_time_Hour;
                 double d249 = (double) this.radius;
                 Double.isNaN(d249);
-                paint59.setTextSize((float) (d249 * 0.15d));
+                paint59.setTextSize(scaledTextSize((float) (d249 * 0.15d)));
                 Paint paint60 = this.mPaintDigital_time_Min;
                 double d250 = (double) this.radius;
                 Double.isNaN(d250);
-                paint60.setTextSize((float) (d250 * 0.15d));
+                paint60.setTextSize(scaledTextSize((float) (d250 * 0.15d)));
                 Paint paint61 = this.mPaintDigital_time_Colon;
                 double d251 = (double) this.radius;
                 Double.isNaN(d251);
-                paint61.setTextSize((float) (d251 * 0.07d));
+                paint61.setTextSize(scaledTextSize((float) (d251 * 0.07d)));
                 float f47 = this.f204x;
                 double d252 = (double) f47;
                 int i33 = this.radius;
@@ -1097,30 +1110,104 @@ public class SmartClockPreview extends View {
                 Paint paint62 = this.mPaint_date;
                 double d264 = (double) this.radius;
                 Double.isNaN(d264);
-                paint62.setTextSize((float) (d264 * 0.1d));
+                paint62.setTextSize(scaledTextSize((float) (d264 * 0.1d)));
                 Paint paint63 = this.mPaint_date1;
                 double d265 = (double) this.radius;
                 Double.isNaN(d265);
-                paint63.setTextSize((float) (d265 * 0.1d));
+                paint63.setTextSize(scaledTextSize((float) (d265 * 0.1d)));
                 Paint paint64 = this.mPaint_date2;
                 double d266 = (double) this.radius;
                 Double.isNaN(d266);
-                paint64.setTextSize((float) (d266 * 0.1d));
+                paint64.setTextSize(scaledTextSize((float) (d266 * 0.1d)));
                 return;
             default:
                 return;
         }
     }
 
+    public void setTextScale(float scale) {
+        this.textScale = scale <= 0.0f ? 1.0f : scale;
+        invalidate();
+    }
+
+    public float getTextScale() {
+        return this.textScale;
+    }
+
+    private float scaledTextSize(float px) {
+        return px * this.textScale;
+    }
+
+    public void setCardAlpha(int alpha) {
+        if (alpha < 0) {
+            alpha = 0;
+        }
+        if (alpha > 255) {
+            alpha = 255;
+        }
+        this.cardAlpha = alpha;
+        invalidate();
+    }
+
+    public int getCardAlpha() {
+        return this.cardAlpha;
+    }
+
+    private boolean isArabic() {
+        return !"en".equals(this.tinyDB.getString("appLang"));
+    }
+
+    private String getAmPm() {
+        boolean am = this.mCalendar.get(Calendar.AM_PM) == Calendar.AM;
+        if (isArabic()) {
+            return am ? "ص" : "م";
+        }
+        return am ? "AM" : "PM";
+    }
+
+    private void drawCard(Canvas canvas) {
+        if (this.cardAlpha <= 0 || this.cardPaint == null) {
+            return;
+        }
+        float cx = this.f204x;
+        float cy = this.f205y + (((float) this.radius) * 0.08f);
+        float hw = ((float) this.radius) * 0.62f;
+        float hh = ((float) this.radius) * 0.45f;
+        this.cardPaint.setColor(Color.argb(this.cardAlpha, 0, 0, 0));
+        canvas.drawPath(roundRectPath(cx - hw, cy - hh, cx + hw, cy + hh, ((float) this.radius) * 0.10f), this.cardPaint);
+    }
+
+    private Path roundRectPath(float l, float t, float r, float b, float corner) {
+        Path path = new Path();
+        float d = corner * 2.0f;
+        path.moveTo(l + corner, t);
+        path.lineTo(r - corner, t);
+        path.arcTo(new RectF(r - d, t, r, t + d), -90.0f, 90.0f);
+        path.lineTo(r, b - corner);
+        path.arcTo(new RectF(r - d, b - d, r, b), 0.0f, 90.0f);
+        path.lineTo(l + corner, b);
+        path.arcTo(new RectF(l, b - d, l + d, b), 90.0f, 90.0f);
+        path.lineTo(l, t + corner);
+        path.arcTo(new RectF(l, t, l + d, t + d), 180.0f, 90.0f);
+        path.close();
+        return path;
+    }
+
     private void Calendar_data() {
         Date time = Calendar.getInstance().getTime();
         Calendar instance = Calendar.getInstance();
         instance.setTime(time);
-        String[] split = new SimpleDateFormat("yyyy-MMM-dd").format(time).split("-");
+        String[] split = new SimpleDateFormat("yyyy-MMM-dd", Locale.US).format(time).split("-");
         this.useddate = split[2];
-        this.usedmonth = split[1].toUpperCase();
-        this.usedweekday = this.stringsDays[instance.get(7) - 1];
+        if (isArabic()) {
+            this.usedmonth = MONTHS_AR[instance.get(Calendar.MONTH)];
+            this.usedweekday = DAYS_AR[instance.get(Calendar.DAY_OF_WEEK) - 1];
+        } else {
+            this.usedmonth = split[1].toUpperCase(Locale.US);
+            this.usedweekday = this.stringsDays[instance.get(Calendar.DAY_OF_WEEK) - 1];
+        }
     }
+
 
     public void setTextFace() {
         switch (this.textClockPosition) {

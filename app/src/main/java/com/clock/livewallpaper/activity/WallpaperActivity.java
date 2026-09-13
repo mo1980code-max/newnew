@@ -1,5 +1,6 @@
 package com.clock.livewallpaper.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -16,6 +17,7 @@ import com.clock.livewallpaper.AdAdmob;
 import com.clock.livewallpaper.R;
 import com.clock.livewallpaper.adapter.WallpaperAdapter;
 import com.clock.livewallpaper.model.ResponseWallpaperItem;
+import com.clock.livewallpaper.utils.LocaleHelper;
 
 
 
@@ -25,6 +27,11 @@ public class WallpaperActivity extends AppCompatActivity {
     private ImageView ivBack;
     private RecyclerView recyclerViewCategory;
     private TextView txtTitle;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase));
+    }
 
     @Override
 

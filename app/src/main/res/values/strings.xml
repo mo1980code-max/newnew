@@ -1,6 +1,42 @@
 <resources>
 
-    <string name="app_name">clock live wallpaper</string>
+    <string name="app_name">Clock Live Wallpaper</string>
 
+    <!-- Main menu -->
+    <string name="menu_clock">Clock</string>
+    <string name="menu_wallpaper">Wallpaper</string>
+    <string name="market_error">Unable to find market app</string>
+    <string name="share_app">Share Application</string>
+    <string name="share_text">Open this Link on Play Store</string>
+
+    <!-- Clock type screens -->
+    <string name="clock_analog">Analog\nClock</string>
+    <string name="clock_digital">Digital\nClock</string>
+    <string name="clock_smart">Smart\nClock</string>
+    <string name="title_analog">Analog Clock</string>
+    <string name="title_digital">Digital Clock</string>
+    <string name="title_smart">Smart Clock</string>
+
+    <!-- Editor -->
+    <string name="choose_color">Choose color</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="select_picture">Select Picture</string>
+    <string name="color1">Color 1</string>
+    <string name="color2">Color 2</string>
+    <string name="slider_size">Clock size</string>
+    <string name="slider_card_alpha">Card transparency</string>
+    <string name="slider_text_size">Font size</string>
+    <string name="auto_bg">Auto background</string>
+    <string name="auto_bg_off">Off</string>
+    <string name="auto_bg_daily">Change daily</string>
+    <string name="auto_bg_day_night">Day / Night</string>
+    <string name="auto_bg_current">Auto background: %1$s</string>
+
+    <!-- Wallpaper -->
+    <string name="set_wallpaper">Set Wallpaper</string>
+    <string name="download_wallpaper">Download Wallpaper</string>
+    <string name="downloading">Downloading %1$d%%</string>
+    <string name="select">Select</string>
 
 </resources>

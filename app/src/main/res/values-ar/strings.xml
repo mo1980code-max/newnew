@@ -1,0 +1,42 @@
+<resources>
+
+    <string name="app_name">ساعة الخلفية الحية</string>
+
+    <!-- Main menu -->
+    <string name="menu_clock">الساعة</string>
+    <string name="menu_wallpaper">الخلفيات</string>
+    <string name="market_error">تعذّر العثور على تطبيق المتجر</string>
+    <string name="share_app">مشاركة التطبيق</string>
+    <string name="share_text">افتح هذا الرابط على متجر Play</string>
+
+    <!-- Clock type screens -->
+    <string name="clock_analog">ساعة\nتناظرية</string>
+    <string name="clock_digital">ساعة\nرقمية</string>
+    <string name="clock_smart">ساعة\nذكية</string>
+    <string name="title_analog">ساعة تناظرية</string>
+    <string name="title_digital">ساعة رقمية</string>
+    <string name="title_smart">ساعة ذكية</string>
+
+    <!-- Editor -->
+    <string name="choose_color">اختر اللون</string>
+    <string name="ok">حسناً</string>
+    <string name="cancel">إلغاء</string>
+    <string name="select_picture">اختر صورة</string>
+    <string name="color1">اللون 1</string>
+    <string name="color2">اللون 2</string>
+    <string name="slider_size">حجم الساعة</string>
+    <string name="slider_card_alpha">شفافية البطاقة</string>
+    <string name="slider_text_size">حجم الخط</string>
+    <string name="auto_bg">الخلفية التلقائية</string>
+    <string name="auto_bg_off">إيقاف</string>
+    <string name="auto_bg_daily">تغيير يومي</string>
+    <string name="auto_bg_day_night">نهار / ليل</string>
+    <string name="auto_bg_current">الخلفية التلقائية: %1$s</string>
+
+    <!-- Wallpaper -->
+    <string name="set_wallpaper">تعيين كخلفية</string>
+    <string name="download_wallpaper">تحميل الخلفية</string>
+    <string name="downloading">جارٍ التحميل %1$d%%</string>
+    <string name="select">اختيار</string>
+
+</resources>

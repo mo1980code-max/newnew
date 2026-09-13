@@ -1,5 +1,6 @@
 package com.clock.livewallpaper.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import com.clock.livewallpaper.model.Clocks;
 import com.clock.livewallpaper.model.SmartClocks;
 import com.clock.livewallpaper.model.TextClocks;
 import com.clock.livewallpaper.utils.GetClocks;
+import com.clock.livewallpaper.utils.LocaleHelper;
 import com.clock.livewallpaper.utils.TinyDB;
 
 
@@ -35,6 +37,11 @@ public class ClockCardActivity extends AppCompatActivity {
     private TextAdapter textAdapter;
     private TinyDB tinyDB;
     private TextView txtTitle;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase));
+    }
 
     @Override
 
@@ -56,7 +63,7 @@ public class ClockCardActivity extends AppCompatActivity {
         this.recyclerViewCategory = (RecyclerView) findViewById(R.id.recyclerViewCategory);
         if (getIntent().getIntExtra("isWhich", 0) == 0) {
             GetClocks getClocks = new GetClocks();
-            this.txtTitle.setText("Analog Clock");
+            this.txtTitle.setText(R.string.title_analog);
             CustomAdapter customAdapter = new CustomAdapter(getClocks.getClocks());
             this.customAdapter = customAdapter;
             GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
@@ -79,7 +86,7 @@ public class ClockCardActivity extends AppCompatActivity {
         } else if (getIntent().getIntExtra("isWhich", 0) == 1) {
             TextAdapter textAdapter = new TextAdapter(new GetClocks().getTextClocks());
             this.textAdapter = textAdapter;
-            this.txtTitle.setText("Digital Clock");
+            this.txtTitle.setText(R.string.title_digital);
             GridLayoutManager gridLayoutManager2 = new GridLayoutManager(this, 2);
 
             this.recyclerViewCategory.setLayoutManager(gridLayoutManager2);
@@ -100,7 +107,7 @@ public class ClockCardActivity extends AppCompatActivity {
         } else if (getIntent().getIntExtra("isWhich", 0) == 2) {
             SmartTextAdapter smartTextAdapter = new SmartTextAdapter(new GetClocks().getSmartClocks());
             this.smartTextAdapter = smartTextAdapter;
-            this.txtTitle.setText("Smart Clock");
+            this.txtTitle.setText(R.string.title_smart);
             GridLayoutManager gridLayoutManager3 = new GridLayoutManager(this, 2);
 
             this.recyclerViewCategory.setLayoutManager(gridLayoutManager3);

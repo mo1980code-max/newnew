@@ -1,5 +1,6 @@
 package com.clock.livewallpaper.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -18,6 +19,7 @@ import com.google.gson.Gson;
 import com.clock.livewallpaper.adapter.CategoryWallpaperAdapter;
 import com.clock.livewallpaper.model.ResponseWallpaper;
 import com.clock.livewallpaper.model.ResponseWallpaperItem;
+import com.clock.livewallpaper.utils.LocaleHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +31,11 @@ public class WallpaperCategoryActivity extends AppCompatActivity {
 
     private ImageView ivBack;
     private RecyclerView recyclerViewCategory;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase));
+    }
 
     @Override
 

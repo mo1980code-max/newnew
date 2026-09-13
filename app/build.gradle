@@ -9,7 +9,7 @@ android {
         targetSdkVersion 34
         versionCode 1
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        resConfigs "en"
+        resConfigs "en", "ar"
         multiDexEnabled true
     }
     dataBinding {

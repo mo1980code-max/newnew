@@ -17,6 +17,7 @@ import android.widget.LinearLayout;
 import androidx.core.view.InputDeviceCompat;
 
 import com.clock.livewallpaper.model.Clocks;
+import com.clock.livewallpaper.utils.AutoBackground;
 import com.clock.livewallpaper.utils.TinyDB;
 import com.clock.livewallpaper.viewUtils.AnalogClock;
 import com.clock.livewallpaper.viewUtils.SmartClockPreview;
@@ -211,7 +212,30 @@ public class LiveClockWallpaper extends WallpaperService {
             liveClockWallpaper3.mClockSize = liveClockWallpaper3.tinyDB.getInt("prefSize");
             Clocks clocks = (Clocks) LiveClockWallpaper.this.tinyDB.getObject("clocks", Clocks.class);
             int i = LiveClockWallpaper.this.tinyDB.getInt("textClockPosition");
-            if (LiveClockWallpaper.this.tinyDB.getBoolean("isImage")) {
+            int cardPct = LiveClockWallpaper.this.tinyDB.getInt("prefCardAlpha");
+            if (cardPct < 0) {
+                cardPct = 0;
+            }
+            if (cardPct > 100) {
+                cardPct = 100;
+            }
+            int cardAlpha = (cardPct * 255) / 100;
+            int textPct = LiveClockWallpaper.this.tinyDB.getInt("prefTextScale", 100);
+            if (textPct < 50) {
+                textPct = 50;
+            }
+            if (textPct > 150) {
+                textPct = 150;
+            }
+            float textScale = ((float) textPct) / 100.0f;
+            int autoBgMode = LiveClockWallpaper.this.tinyDB.getInt("autoBgMode");
+            if (autoBgMode == AutoBackground.MODE_DAILY) {
+                Log.e("autoBg", "daily");
+                LiveClockWallpaper.this.imageView.setImageResource(AutoBackground.resolveDaily());
+            } else if (autoBgMode == AutoBackground.MODE_DAY_NIGHT) {
+                Log.e("autoBg", "day/night");
+                LiveClockWallpaper.this.imageView.setImageResource(AutoBackground.resolveDayNight());
+            } else if (LiveClockWallpaper.this.tinyDB.getBoolean("isImage")) {
                 Log.e("isImage", "yes");
                 Log.e("aa", "="+aa);
                 if (aa != null) {
@@ -241,6 +265,8 @@ public class LiveClockWallpaper extends WallpaperService {
             } else if (LiveClockWallpaper.this.tinyDB.getInt("clockType") == 1) {
                 LiveClockWallpaper.this.smartClockPreview.layout(0, 0, LiveClockWallpaper.this.width, LiveClockWallpaper.this.height);
                 LiveClockWallpaper.this.smartClockPreview.setTextClockPosition(i);
+                LiveClockWallpaper.this.smartClockPreview.setCardAlpha(cardAlpha);
+                LiveClockWallpaper.this.smartClockPreview.setTextScale(textScale);
                 LiveClockWallpaper.this.smartClockPreview.config(LiveClockWallpaper.this.mClockPosX, LiveClockWallpaper.this.mClockPosY, LiveClockWallpaper.this.mClockSize * 2);
                 LiveClockWallpaper.this.imageViewBase.setVisibility(View.GONE);
                 LiveClockWallpaper.this.smartClockPreview.setVisibility(View.VISIBLE);
@@ -249,6 +275,8 @@ public class LiveClockWallpaper extends WallpaperService {
                 LiveClockWallpaper.this.cat1Clock.layout(0, 0, LiveClockWallpaper.this.width, LiveClockWallpaper.this.height);
                 LiveClockWallpaper.this.cat1Clock.setTextClockPosition(i);
                 LiveClockWallpaper.this.cat1Clock.setColors(LiveClockWallpaper.this.tinyDB.getInt("textColor1", -1), LiveClockWallpaper.this.tinyDB.getInt("textColor2", InputDeviceCompat.SOURCE_ANY));
+                LiveClockWallpaper.this.cat1Clock.setCardAlpha(cardAlpha);
+                LiveClockWallpaper.this.cat1Clock.setTextScale(textScale);
                 LiveClockWallpaper.this.cat1Clock.config(LiveClockWallpaper.this.mClockPosX, LiveClockWallpaper.this.mClockPosY, LiveClockWallpaper.this.mClockSize * 2);
                 LiveClockWallpaper.this.imageViewBase.setVisibility(View.GONE);
                 LiveClockWallpaper.this.smartClockPreview.setVisibility(View.GONE);
