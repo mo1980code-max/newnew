@@ -1,88 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  The athkar reader as a classic paper page: opaque, monochrome, no live wallpaper
+  behind it and no bottom-sheet chrome. UiCompat.applyEdgeToEdge() keeps the top bar
+  clear of the status bar, and AthkarActivity paints the window background with the
+  same paper so the system-bar area does not show a different colour.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/athkarRoot"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/athkarPaper"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="?attr/actionBarSize"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp">
 
-        <!-- Tapping above the sheet dismisses it, like a real bottom sheet. -->
-        <View
-            android:id="@+id/athkarOutside"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="22"
-            android:contentDescription="@string/cd_athkar_close" />
+        <ImageView
+            android:id="@+id/athkarClose"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cd_athkar_close"
+            android:padding="16dp"
+            android:src="@drawable/ic_cancel" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="78"
-            android:background="@drawable/bg_athkar_sheet"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="16dp">
+        <TextView
+            android:id="@+id/athkarTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:fontFamily="@font/myfont"
+            android:maxLines="1"
+            android:text="@string/athkar_morning_title"
+            android:textColor="@color/athkarInk"
+            android:textSize="19sp" />
 
-            <View
-                android:layout_width="44dp"
-                android:layout_height="4dp"
-                android:layout_gravity="center_horizontal"
-                android:background="@drawable/bg_athkar_card" />
+        <!-- How many athkar this list holds: 31 in the morning, 30 in the evening. -->
+        <TextView
+            android:id="@+id/athkarCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/athkarMuted"
+            android:textSize="12sp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/athkarTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/myfont"
-                    android:text="@string/athkar_morning_title"
-                    android:textColor="@color/textColor"
-                    android:textSize="20sp" />
-
-                <!-- How many athkar this list holds: 31 in the morning, 30 in the evening. -->
-                <TextView
-                    android:id="@+id/athkarCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_athkar_card"
-                    android:paddingStart="10dp"
-                    android:paddingTop="4dp"
-                    android:paddingEnd="10dp"
-                    android:paddingBottom="4dp"
-                    android:textColor="#CCFFE08A"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:id="@+id/athkarSettings"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:contentDescription="@string/athkar_settings"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_options" />
-            </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/athkarList"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginTop="10dp"
-                android:layout_weight="1"
-                android:clipToPadding="false"
-                android:paddingBottom="8dp" />
-        </LinearLayout>
+        <ImageView
+            android:id="@+id/athkarSettings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/athkar_settings"
+            android:padding="13dp"
+            android:src="@drawable/ic_options"
+            android:tint="@color/athkarInk" />
     </LinearLayout>
-</FrameLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/athkarHairline" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/athkarList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="10dp"
+        android:scrollbars="vertical" />
+</LinearLayout>
