@@ -23,6 +23,7 @@ import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.AnalogClock;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.SmartClockPreview;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.TextClockPreview;
+import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 
 
@@ -53,15 +54,18 @@ public class LiveClockWallpaper extends WallpaperService {
     }
 
     public void init(Context context) {
-        WidgetGroup widgetGroup = new WidgetGroup(context);
+        // Views read their text (weekday, month, Hijri date, dhikr, athkar badge) from
+        // resources, so they must be built with a context that speaks the in-app language.
+        Context ui = LocaleHelper.wrap(context);
+        WidgetGroup widgetGroup = new WidgetGroup(ui);
         this.widgetGroup = widgetGroup;
         widgetGroup.removeAllViews();
-        this.imageViewBase = new AnalogClock(context);
-        ImageView imageView = new ImageView(context);
+        this.imageViewBase = new AnalogClock(ui);
+        ImageView imageView = new ImageView(ui);
         this.imageView = imageView;
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        this.cat1Clock = new TextClockPreview(context);
-        this.smartClockPreview = new SmartClockPreview(context);
+        this.cat1Clock = new TextClockPreview(ui);
+        this.smartClockPreview = new SmartClockPreview(ui);
         // The engine drives the frame rate itself (see FrameRate), so the view must not
         // run its own 800ms ticker on top of it.
         this.imageViewBase.setAutoUpdate(false);
@@ -72,7 +76,7 @@ public class LiveClockWallpaper extends WallpaperService {
         this.imageViewBase.setVisibility(View.GONE);
         this.widgetGroup.addView(this.cat1Clock);
         this.widgetGroup.addView(this.smartClockPreview);
-        this.overlayView = new WallpaperOverlayView(context);
+        this.overlayView = new WallpaperOverlayView(ui);
         this.widgetGroup.addView(this.overlayView);
     }
 

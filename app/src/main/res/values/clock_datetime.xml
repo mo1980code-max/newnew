@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Vocabulary the clock faces draw (weekday / month / AM-PM). Index 0 = Sunday and index 0 = January, matching java.util.Calendar. -->
+    <string-array name="clock_days">
+        <item>SUN</item>
+        <item>MON</item>
+        <item>TUE</item>
+        <item>WED</item>
+        <item>THU</item>
+        <item>FRI</item>
+        <item>SAT</item>
+    </string-array>
+
+    <string-array name="clock_months">
+        <item>JAN</item>
+        <item>FEB</item>
+        <item>MAR</item>
+        <item>APR</item>
+        <item>MAY</item>
+        <item>JUN</item>
+        <item>JUL</item>
+        <item>AUG</item>
+        <item>SEP</item>
+        <item>OCT</item>
+        <item>NOV</item>
+        <item>DEC</item>
+    </string-array>
+
+    <string name="clock_am">AM</string>
+    <string name="clock_pm">PM</string>
+    <string name="clock_day_date_format">%1$d %2$s</string>
+
+    <!-- Title-case weekday names for the analog clock date window (the digital faces use the uppercase array above). -->
+    <string-array name="clock_days_short">
+        <item>Sun</item>
+        <item>Mon</item>
+        <item>Tue</item>
+        <item>Wed</item>
+        <item>Thu</item>
+        <item>Fri</item>
+        <item>Sat</item>
+    </string-array>
+
+</resources>

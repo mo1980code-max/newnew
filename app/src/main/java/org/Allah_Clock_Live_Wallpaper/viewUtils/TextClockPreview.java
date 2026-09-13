@@ -9,9 +9,8 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
+import java.util.Locale;
 
 
 
@@ -48,7 +47,6 @@ public class TextClockPreview extends View {
 
     private float f207y = 100.0f;
     private int radius = 880;
-    private String[] stringsDays = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
     private int color1 = -1;
     private int color2 = Color.WHITE;
 
@@ -98,15 +96,15 @@ public class TextClockPreview extends View {
         Paint paint = new Paint();
         this.scaledmFilterPaint = paint;
         paint.setFilterBitmap(true);
-        TextPaint textPaint = new TextPaint();
+        LocalizedTextPaint textPaint = new LocalizedTextPaint(getContext(), 0.78f);
         this.mPaint_date = textPaint;
         textPaint.setTextAlign(Paint.Align.CENTER);
         this.mPaint_date.setAntiAlias(true);
-        TextPaint textPaint2 = new TextPaint();
+        LocalizedTextPaint textPaint2 = new LocalizedTextPaint(getContext(), 0.78f);
         this.mPaint_date1 = textPaint2;
         textPaint2.setTextAlign(Paint.Align.CENTER);
         this.mPaint_date1.setAntiAlias(true);
-        TextPaint textPaint3 = new TextPaint();
+        LocalizedTextPaint textPaint3 = new LocalizedTextPaint(getContext(), 0.78f);
         this.mPaint_date2 = textPaint3;
         textPaint3.setTextAlign(Paint.Align.CENTER);
         this.mPaint_date2.setAntiAlias(true);
@@ -118,7 +116,7 @@ public class TextClockPreview extends View {
         this.mPaintDigital_time_Min = textPaint5;
         textPaint5.setTextAlign(Paint.Align.CENTER);
         this.mPaintDigital_time_Min.setAntiAlias(true);
-        TextPaint textPaint6 = new TextPaint();
+        LocalizedTextPaint textPaint6 = new LocalizedTextPaint(getContext(), 1.0f);
         this.mPaintDigital_time_Colon = textPaint6;
         textPaint6.setTextAlign(Paint.Align.CENTER);
         this.mPaintDigital_time_Colon.setAntiAlias(true);
@@ -289,7 +287,7 @@ public class TextClockPreview extends View {
                 Double.isNaN(d40);
                 Double.isNaN(d39);
                 this.Digital_time_Colon_Y_offset = (float) (d39 + (d40 * 0.05d));
-                String str4 = this.mCalendar.get(9) == 0 ? "AM" : "PM";
+                String str4 = amPmMarker();
                 canvas.drawText(this.used12hours, this.Digital_time_Hours_X_offset, this.Digital_time_Hours_Y_offset, this.mPaintDigital_time_Hour);
                 canvas.drawText(str4, this.Digital_time_Colon_X_offset, this.Digital_time_Colon_Y_offset, this.mPaintDigital_time_Colon);
                 canvas.drawText(this.usedtwntymintues, this.Digital_time_Mintues_X_offset, this.Digital_time_Mintues_Y_offset, this.mPaintDigital_time_Min);
@@ -919,7 +917,7 @@ public class TextClockPreview extends View {
                 Double.isNaN(d229);
                 Double.isNaN(d228);
                 this.Digital_time_Colon_Y_offset = (float) (d228 + (d229 * 0.05d));
-                canvas.drawText(this.mCalendar.get(9) == 0 ? "AM" : "PM", this.Digital_time_Colon_X_offset, this.Digital_time_Colon_Y_offset, this.mPaintDigital_time_Colon);
+                canvas.drawText(amPmMarker(), this.Digital_time_Colon_X_offset, this.Digital_time_Colon_Y_offset, this.mPaintDigital_time_Colon);
                 canvas.drawText(this.usedtwntymintues, this.Digital_time_Mintues_X_offset, this.Digital_time_Mintues_Y_offset, this.mPaintDigital_time_Min);
                 canvas.drawText(this.used12hours, this.Digital_time_Hours_X_offset, this.Digital_time_Hours_Y_offset, this.mPaintDigital_time_Hour);
                 Calendar_data();
@@ -1051,14 +1049,28 @@ public class TextClockPreview extends View {
         }
     }
 
+    /** ص / م in Arabic, AM / PM otherwise - read from resources so the faces localise too. */
+    private String amPmMarker() {
+        return getResources().getString(this.mCalendar.get(Calendar.AM_PM) == Calendar.AM
+                ? R.string.clock_am
+                : R.string.clock_pm);
+    }
+
+    /**
+     * Weekday / day number / month, taken from localised resources instead of
+     * {@code SimpleDateFormat}: the old code depended on the device locale (never the language
+     * chosen inside the app) and produced English abbreviations in an Arabic UI. Digits stay
+     * Western on purpose - the design typefaces have no Arabic-Indic glyphs.
+     */
     private void Calendar_data() {
-        Date time = Calendar.getInstance().getTime();
         Calendar instance = Calendar.getInstance();
-        instance.setTime(time);
-        String[] split = new SimpleDateFormat("yyyy-MMM-dd").format(time).split("-");
-        this.useddate = split[2];
-        this.usedmonth = split[1].toUpperCase();
-        this.usedweekday = this.stringsDays[instance.get(7) - 1];
+        String[] months = getResources().getStringArray(R.array.clock_months);
+        String[] days = getResources().getStringArray(R.array.clock_days);
+        int monthIndex = instance.get(Calendar.MONTH);
+        int dayIndex = instance.get(Calendar.DAY_OF_WEEK) - 1;
+        this.useddate = String.format(Locale.US, "%02d", instance.get(Calendar.DAY_OF_MONTH));
+        this.usedmonth = months[monthIndex >= 0 && monthIndex < months.length ? monthIndex : 0];
+        this.usedweekday = days[dayIndex >= 0 && dayIndex < days.length ? dayIndex : 0];
     }
 
     public void setTextFace() {

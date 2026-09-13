@@ -7,6 +7,7 @@ import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.os.Looper;
 
+import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 import android.service.wallpaper.WallpaperService;
 import android.view.SurfaceHolder;
@@ -38,16 +39,18 @@ public class CustomWallpaper extends WallpaperService {
     }
 
     public void init(Context context) {
-        WidgetGroup widgetGroup = new WidgetGroup(context);
+        // The overlay draws the Hijri date, the rotating dhikr and the athkar badge.
+        Context ui = LocaleHelper.wrap(context);
+        WidgetGroup widgetGroup = new WidgetGroup(ui);
         this.widgetGroup = widgetGroup;
         widgetGroup.removeAllViews();
-        ImageView imageView = new ImageView(context);
+        ImageView imageView = new ImageView(ui);
         this.imageView = imageView;
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         this.widgetGroup.setLayoutParams(new LinearLayout.LayoutParams(-1, -1));
         this.widgetGroup.setAddStatesFromChildren(true);
         this.widgetGroup.addView(this.imageView);
-        this.overlayView = new WallpaperOverlayView(context);
+        this.overlayView = new WallpaperOverlayView(ui);
         this.widgetGroup.addView(this.overlayView);
     }
 

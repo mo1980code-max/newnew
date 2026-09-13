@@ -51,7 +51,6 @@ public class AnalogClock extends View {
     public float mClockSize = 500.0f;
     public float mClockPosY = 250.0f;
     private boolean isTouchEnable = false;
-    private String[] stringsDays = {"Sun", "Mon", "Tue", "Wed", "thu", "Fri", "Sat"};
 
     public void setTouchEnable(boolean z) {
         this.isTouchEnable = z;
@@ -190,7 +189,7 @@ public class AnalogClock extends View {
             it.next().onDraw(canvas, i3, i4, i5, i6, this.mCalendar, true);
         }
         this.mHandsOverlay.onDraw(canvas, i3, i4, i5, i6, this.mCalendar, true);
-        TextPaint textPaint = new TextPaint();
+        LocalizedTextPaint textPaint = new LocalizedTextPaint(getContext(), 0.85f);
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setAntiAlias(true);
         textPaint.setColor(Color.parseColor(this.clocks.textColor));
@@ -202,7 +201,13 @@ public class AnalogClock extends View {
         double d3 = (double) this.radius;
         Double.isNaN(d3);
         Double.isNaN(d2);
-        canvas.drawText(this.mCalendar.get(5) + " " + this.stringsDays[this.mCalendar.get(7) - 1], (float) ((double) i3), (float) (d2 - (d3 * 0.4d)), textPaint);
+        String[] dialDays = getResources().getStringArray(R.array.clock_days_short);
+        int dialDayIndex = this.mCalendar.get(Calendar.DAY_OF_WEEK) - 1;
+        String dialDayName = dialDays[dialDayIndex >= 0 && dialDayIndex < dialDays.length
+                ? dialDayIndex : 0];
+        canvas.drawText(getResources().getString(R.string.clock_day_date_format,
+                        this.mCalendar.get(Calendar.DAY_OF_MONTH), dialDayName),
+                (float) ((double) i3), (float) (d2 - (d3 * 0.4d)), textPaint);
         if (z) {
             canvas.restore();
         }

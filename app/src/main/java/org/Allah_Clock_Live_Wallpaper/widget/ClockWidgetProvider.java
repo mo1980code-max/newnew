@@ -15,6 +15,7 @@ import android.widget.RemoteViews;
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.activity.ClockFuntionActivity;
 import org.Allah_Clock_Live_Wallpaper.utils.HijriDate;
+import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.utils.WidgetClockRenderer;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 
@@ -76,6 +77,8 @@ public abstract class ClockWidgetProvider extends AppWidgetProvider {
     }
 
     private void updateWidgets(Context context, AppWidgetManager manager, int[] ids) {
+        // Text (Hijri date, dhikr, clock face) must follow the in-app language choice.
+        Context ui = LocaleHelper.wrap(context);
         float density = context.getResources().getDisplayMetrics().density;
         for (int id : ids) {
             int widthDp = DEFAULT_SIDE_DP;
@@ -100,13 +103,13 @@ public abstract class ClockWidgetProvider extends AppWidgetProvider {
             views.setViewVisibility(R.id.widgetTextColumn,
                     isWide() ? android.view.View.VISIBLE : android.view.View.GONE);
 
-            Bitmap clock = WidgetClockRenderer.render(context, widthPx, heightPx);
+            Bitmap clock = WidgetClockRenderer.render(ui, widthPx, heightPx);
             if (clock != null) {
                 views.setImageViewBitmap(R.id.widgetClockImage, clock);
             }
             long now = System.currentTimeMillis();
-            views.setTextViewText(R.id.widgetHijri, HijriDate.format(context, now));
-            views.setTextViewText(R.id.widgetDhikr, WallpaperOverlayView.currentDhikr(context, now));
+            views.setTextViewText(R.id.widgetHijri, HijriDate.format(ui, now));
+            views.setTextViewText(R.id.widgetDhikr, WallpaperOverlayView.currentDhikr(ui, now));
 
             PendingIntent open = PendingIntent.getActivity(context, 0,
                     new Intent(context, ClockFuntionActivity.class),

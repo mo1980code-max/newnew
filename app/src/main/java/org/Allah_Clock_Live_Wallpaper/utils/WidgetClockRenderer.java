@@ -10,6 +10,7 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 import org.Allah_Clock_Live_Wallpaper.model.Clocks;
+import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.AnalogClock;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.SmartClockPreview;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.TextClockPreview;
@@ -42,7 +43,9 @@ public final class WidgetClockRenderer {
             return null;
         }
         try {
-            View clockView = buildClockView(context, widthPx, heightPx);
+            // The clock face draws weekday / month / AM-PM text: render it in the language the
+            // user picked inside the app, not the device language (matters on API 32 and below).
+            View clockView = buildClockView(LocaleHelper.wrap(context), widthPx, heightPx);
             if (clockView == null) {
                 return null;
             }

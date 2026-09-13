@@ -28,6 +28,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 
 import org.Allah_Clock_Live_Wallpaper.R;
+import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 
 /**
@@ -465,7 +466,8 @@ public class FloatingTasbeehService extends Service implements SensorEventListen
     }
 
     private void toast(int messageRes) {
-        Toast.makeText(this, messageRes, Toast.LENGTH_SHORT).show();
+        // A service context speaks the device language; the toast must speak the app language.
+        Toast.makeText(LocaleHelper.wrap(this), messageRes, Toast.LENGTH_SHORT).show();
     }
 
     private int windowWidth() {
