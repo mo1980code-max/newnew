@@ -38,6 +38,12 @@ public final class AthkarItem {
     @SerializedName("reference_en")
     private String referenceEn;
 
+    @SerializedName("virtue_ar")
+    private String virtueAr;
+
+    @SerializedName("virtue_en")
+    private String virtueEn;
+
     public int getId() {
         return id;
     }
@@ -63,9 +69,18 @@ public final class AthkarItem {
         return transliteration == null ? "" : transliteration;
     }
 
-    /** Source / virtue line, in the language matching the app UI. */
+    /** Source line, in the language matching the app UI. Empty when the source lists none. */
     public String getReference(boolean arabicUi) {
         String value = arabicUi ? referenceAr : referenceEn;
         return value == null ? "" : value;
+    }
+
+    /**
+     * The reward note printed under the dhikr ("من قالها حين يصبح ..."), in the UI language.
+     * Many athkar carry none, so callers must hide the row when this returns an empty string.
+     */
+    public String getVirtue(boolean arabicUi) {
+        String value = arabicUi ? virtueAr : virtueEn;
+        return value == null ? "" : value.trim();
     }
 }

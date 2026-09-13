@@ -51,6 +51,21 @@
                     android:textColor="@color/textColor"
                     android:textSize="20sp" />
 
+                <!-- How many athkar this list holds: 31 in the morning, 30 in the evening. -->
+                <TextView
+                    android:id="@+id/athkarCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_athkar_card"
+                    android:paddingStart="10dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="4dp"
+                    android:textColor="#CCFFE08A"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
                 <ImageView
                     android:id="@+id/athkarSettings"
                     android:layout_width="40dp"

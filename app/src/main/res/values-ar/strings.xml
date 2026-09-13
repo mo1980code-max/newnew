@@ -113,7 +113,9 @@
     <string name="athkar_angle_18">زاوية الفجر 18°</string>
     <string name="athkar_morning_slot">نافذة الصباح (بداية / نهاية)</string>
     <string name="athkar_evening_slot">نافذة المساء (بداية / نهاية)</string>
-    <string name="athkar_repeat_total">× %1$d</string>
+    <string name="athkar_count">%1$d ذكرًا</string>
+    <string name="athkar_progress">%1$d / %2$d</string>
+    <string name="athkar_position">الذكر %1$d من %2$d</string>
     <string name="athkar_completed">تم ✓</string>
     <string name="option_athkar_badge">إظهار شارة الأذكار على الخلفية</string>
     <string name="cd_athkar_badge">افتح قارئ الأذكار</string>
