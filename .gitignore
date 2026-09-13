@@ -11,6 +11,9 @@
 /.kotlin
 *.hprof
 
+# generated mock assets (3.5 MB of copied wallpapers/thumbnails) - tools/preview/build_assets.py
+tools/preview/assets/
+
 # python bytecode (tools/athkar generator)
 __pycache__/
 *.py[cod]

@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Allah Clock — معاينة تفاعلية من موارد المستودع</title>
+<!-- The app bundles these faces in assets/fonts; the mock loads the same families so the
+     titles and the Arabic text fall back exactly the way they do on a device. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Noto+Naskh+Arabic:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="page">
+  <h1>Allah Clock · Live Wallpaper</h1>
+  <p>
+    معاينة تفاعلية مبنية من <b>موارد المستودع نفسها</b>: نصوص
+    <code>values/strings.xml</code> و<code>values-ar/strings.xml</code>، المصفوفات
+    (المدن، الأشهر الهجرية، اتجاهات البوصلة)، أذكار <code>res/raw/athkar.json</code>،
+    الألوان من <code>values/colors.xml</code>، الأيقونات المتجهية محوّلة إلى SVG،
+    الـ21 خلفية المدمجة، وصور التصاميم الحقيقية (<code>clock_bg_*</code> ·
+    <code>digital_thumb_*</code> · <code>smart_thumb_*</code>). الأبعاد 1:1 مع التخطيطات
+    (كل 1px هنا = 1dp هناك) داخل هاتف 360×720.
+  </p>
+
+  <div class="controls">
+    <div class="ctl">
+      <span>لغة التطبيق</span>
+      <div class="seg" id="langSeg">
+        <button data-lang="en">English</button>
+        <button data-lang="ar" class="on">العربية</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>نافذة الأذكار</span>
+      <div class="seg" id="winSeg">
+        <button data-win="morning" class="on">صباح</button>
+        <button data-win="evening">مساء</button>
+        <button data-win="none">خارجها</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>الخلفية</span>
+      <button class="btn" id="prevWp">›</button>
+      <button class="btn" id="nextWp">‹</button>
+      <em id="wpName"></em>
+    </div>
+    <div class="ctl">
+      <span>الساعات الذهبية</span>
+      <button class="btn" id="unlockBtn">شاهد إعلانًا (فتح الجلسة)</button>
+    </div>
+  </div>
+
+  <p class="warn">
+    ⚠ العناوين تستخدم <code>Dela Gothic One</code> مثل التطبيق تمامًا — ولاحظ أن العربية ترجع
+    تلقائيًا لخط النظام، تمامًا كما يحدث في أندرويد لأن الخط لا يملك حروفًا عربية.
+  </p>
+</header>
+
+<main class="grid">
+
+  <!-- 1 ─ home / select function -->
+  <figure class="shot">
+    <div class="phone" id="ph-home">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen home" id="homeScreen">
+        <div class="topbar">
+          <div class="ic" data-icon="ic_language"></div>
+          <div class="ic" data-icon="ic_tasbeeh"></div>
+          <div class="ic" data-icon="ic_qibla"></div>
+          <div class="ic" data-icon="ic_privacy_shield"></div>
+          <div class="ic"><img class="icon" src="assets/star.png" alt=""></div>
+          <div class="ic" data-icon="ic_share"></div>
+        </div>
+        <div class="appName" data-i18n="app_name"></div>
+        <div class="tiles">
+          <div class="tile">
+            <img src="assets/clock_logo.png" alt="">
+            <b data-i18n="tile_android_clock"></b>
+          </div>
+          <div class="tile">
+            <img src="assets/wallpaper_logo.png" alt="">
+            <b data-i18n="title_wallpaper"></b>
+          </div>
+        </div>
+        <div class="badgeWrap">
+          <div class="athkar-badge hidden" id="homeBadge"><span id="homeBadgeText"></span></div>
+        </div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="home"></b>
+      <span>أيقونات اللغة والسبحة والقبلة، وبلاطتان (التصاميم / الخلفيات). شارة الأذكار الذهبية
+        تظهر <b>فقط داخل نافذتها</b> — جرّب «خارجها» من الأعلى فتختفي من كل الشاشات.</span>
+      <code>activity_select_function.xml</code>
+    </figcaption>
+  </figure>
+
+  <!-- 2 ─ live wallpaper -->
+  <figure class="shot">
+    <div class="phone" id="ph-wall">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen wall" id="wallScreen">
+        <div class="scrim"></div>
+        <div class="clockFace"><img id="wallClockImg" src="assets/clock_bg_1.png" alt=""></div>
+        <div class="hijri" id="wallHijri"></div>
+        <div class="wpBadge hidden" id="wallBadge"></div>
+        <div class="dhikr" id="wallDhikr"></div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="wallpaper"></b>
+      <span>الخلفية الحية: التاريخ الهجري أعلى الشاشة (بأشهر
+        <code>hijri_months</code> الحقيقية)، ذكر قصير يتبدّل أسفلها من مصفوفة
+        <code>adhkar</code>، وشارة الأذكار. بدّل الخلفية من الأعلى.</span>
+      <code>CustomWallpaper.java · WallpaperOverlayView.java</code>
+    </figcaption>
+  </figure>
+
+  <!-- 3 ─ athkar reader (paper) -->
+  <figure class="shot">
+    <div class="phone" id="ph-athkar">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen athkarPage" id="athkarPage">
+        <div class="athkarTop">
+          <div class="x" data-icon="ic_cancel"></div>
+          <div class="title" id="athkarTitle"></div>
+          <div class="cnt" id="athkarCount"></div>
+          <div class="gear" data-icon="ic_options"></div>
+        </div>
+        <div class="hairline"></div>
+        <div class="athkarList" id="athkarList"></div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="athkar"></b>
+      <span>القائمة منقولة كما هي من إسلام بوك: <b>٣١ ذكرًا للصباح و٣٠ للمساء</b> بنفس الترتيب
+        وبنفس أعداد التكرار (١/٣/٤/٧/١٠/١٠٠) وبسطر «الفضل» تحت الذكر.
+        <b>التصميم كلاسيكي ورقي</b>: صفحة معتمة بلا صورة مسجد وبلا ألوان (حبر على ورق)،
+        ولا دائرة للعدّ — <b>انقر أي مكان في الذكر</b> فيتناقص الرقم المطبوع بجانب النص
+        و«الباقي / الإجمالي» في الأعلى، وعند الصفر يبهت السطر وتظهر «تم ✓».</span>
+      <code>activity_athkar.xml · item_athkar.xml · res/raw/athkar.json</code>
+    </figcaption>
+  </figure>
+
+  <!-- 4 ─ athkar timing dialog -->
+  <figure class="shot">
+    <div class="phone" id="ph-settings">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen athkarPage" id="settingsPage">
+        <div class="dialogWrap">
+          <div class="dialog paper">
+            <h3 data-i18n="athkar_settings"></h3>
+            <div class="radio on"><span class="dot"></span><span data-i18n="athkar_mode_auto"></span></div>
+            <div class="radio"><span class="dot"></span><span data-i18n="athkar_mode_fixed"></span></div>
+            <div class="sec" data-cap="angle"></div>
+            <div class="radio on"><span class="dot"></span><span data-i18n="athkar_angle_15"></span></div>
+            <div class="radio"><span class="dot"></span><span data-i18n="athkar_angle_18"></span></div>
+            <div class="sec" data-i18n="athkar_morning_slot"></div>
+            <div class="slots">
+              <div class="slot"><span data-cap="start"></span><b>04:30</b></div>
+              <div class="slot"><span data-cap="end"></span><b>09:00</b></div>
+            </div>
+            <div class="sec" data-i18n="athkar_evening_slot"></div>
+            <div class="slots">
+              <div class="slot"><span data-cap="start"></span><b>16:00</b></div>
+              <div class="slot"><span data-cap="end"></span><b>20:30</b></div>
+            </div>
+            <div class="dlgActions"><button data-i18n="cancel"></button><button data-i18n="ok"></button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="settings"></b>
+      <span>حساب فلكي بلا إنترنت (زاوية الفجر 15° أو 18°) أو أربعة أوقات ثابتة تختارها بنفسك.
+        الحوار فاتح مثل صفحة الأذكار: حبر على أبيض وبلاطات الوقت بإطار شعرة —
+        <b>كان نصّه أبيض على أبيض</b> فأُصلح ضمن إعادة التصميم.</span>
+      <code>dialog_athkar_settings.xml · PrayerWindow.java</code>
+    </figcaption>
+  </figure>
+
+  <!-- 5 ─ qibla -->
+  <figure class="shot">
+    <div class="phone" id="ph-qibla">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen qibla" id="qiblaScreen">
+        <div class="topbar dark">
+          <div class="ic" data-icon="ic_back"></div>
+          <div class="title" data-i18n="title_qibla"></div>
+          <div class="ic" data-icon="ic_center"></div>
+        </div>
+        <div class="compass">
+          <div class="dial" id="compassTicks"></div>
+          <div class="needle" id="needle"><div class="kaaba"><div class="band"></div></div></div>
+          <div class="pivot"></div>
+        </div>
+        <div class="qiblaInfo">
+          <div class="cityRow"><span data-i18n="qibla_city"></span><b id="qiblaCity"></b></div>
+          <div id="qiblaBearing"></div>
+          <div id="qiblaDistance"></div>
+        </div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="qibla"></b>
+      <span>73 مدينة بإحداثياتها الحقيقية من <code>QiblaUtil</code>، والاتجاه والمسافة
+        محسوبان هنا بنفس معادلته (عمّان: 161° و1234 كم). حروف الاتجاهات من
+        <code>compass_cardinals</code> (شمال/شرق/جنوب/غرب) فتتبدّل مع اللغة.</span>
+      <code>activity_qibla.xml · CompassView.java · QiblaUtil.java</code>
+    </figcaption>
+  </figure>
+
+  <!-- 6 ─ clock designs -->
+  <figure class="shot">
+    <div class="phone" id="ph-clocks">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen picker" id="clocksScreen">
+        <div class="topbar dark">
+          <div class="ic" data-icon="ic_back"></div>
+          <div class="title" data-i18n="tile_android_clock"></div>
+        </div>
+        <div class="pickerBody" id="clockLists"></div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="clocks"></b>
+      <span>14 تصميمًا تناظريًا + 10 رقمية + 11 ذكية، بصورها الحقيقية من
+        <code>GetClocks.java</code>. <b>آخر ثلاثة من كل قائمة</b> عليها القفل الذهبي:
+        انقرها فيظهر حوار الإعلان المكافئ، أو افتحها من زر الأعلى (فتح الجلسة).</span>
+      <code>activity_clock_funtion.xml · item_clocks.xml · GetClocks.java</code>
+    </figcaption>
+  </figure>
+
+  <!-- 7 ─ editor -->
+  <figure class="shot">
+    <div class="phone" id="ph-editor">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen editor" id="editorScreen">
+        <div class="editorStage"><img id="editorClockImg" src="assets/clock_bg_1.png" alt=""></div>
+        <div class="editorBar">
+          <div class="ic" data-icon="ic_zoom_in"></div>
+          <div class="ic" data-icon="ic_zoom_out"></div>
+          <div class="ic" data-icon="ic_color"></div>
+          <div class="ic" data-icon="ic_color_text"></div>
+          <div class="ic" data-icon="ic_gallery"></div>
+          <div class="ic" data-icon="ic_background"></div>
+        </div>
+        <div class="editorActions">
+          <button class="ghost" data-i18n="cancel"></button>
+          <button class="solid" data-i18n="set_wallpaper"></button>
+        </div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="editor"></b>
+      <span>محرّر الساعة: تكبير/تصغير، لونا الخلفية والنص، معرض الصور، وتطبيق الخلفية.
+        الشاشة غامرة (بلا أشرطة نظام) كما في <code>UiCompat.applyImmersive</code>.
+        اختر تصميمًا من الشاشة السابقة فيتغيّر هنا.</span>
+      <code>activity_editor.xml · EditorActivity.java</code>
+    </figcaption>
+  </figure>
+
+  <!-- 8 ─ wallpaper options -->
+  <figure class="shot">
+    <div class="phone" id="ph-options">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen wall" id="optionsBg">
+        <div class="dialogWrap">
+          <div class="dialog">
+            <h3 data-i18n="options_title"></h3>
+            <div class="switchRow"><span class="sw on" data-sw="hijri"></span><span data-i18n="option_hijri"></span></div>
+            <div class="switchRow"><span class="sw on" data-sw="dhikr"></span><span data-i18n="option_dhikr"></span></div>
+            <div class="switchRow"><span class="sw" data-sw="power"></span><span data-i18n="option_power"></span></div>
+            <div class="switchRow"><span class="sw on" data-sw="badge"></span><span data-i18n="option_athkar_badge"></span></div>
+            <div class="hint" data-i18n="options_hint"></div>
+            <div class="dlgActions"><button data-i18n="ok"></button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="options"></b>
+      <span>مفاتيح الطبقات: التاريخ الهجري، الذكر المتبدّل، <b>موفّر الطاقة (محدّد الإطارات)</b>،
+        وشارة الأذكار. جرّب إطفاء الهجري أو الذكر فتراهما يختفيان من شاشة الخلفية الحية،
+        وإطفاء الشارة فتختفي من الرئيسية والخلفية وقارئ الأذكار.</span>
+      <code>dialog_wallpaper_options.xml · FrameRate.java</code>
+    </figcaption>
+  </figure>
+
+  <!-- 9 ─ floating tasbeeh -->
+  <figure class="shot">
+    <div class="phone" id="ph-tasbeeh">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen wall" id="tasbeehBg">
+        <div class="tasbeeh">
+          <div class="tasbeehCircle" id="tasbeehCircle">
+            <span class="tasbeehCount" id="tasbeehCount">0</span>
+            <span class="tasbeehLock hidden" id="tasbeehLock" data-i18n="tasbeeh_lock_glyph"></span>
+          </div>
+          <div class="tasbeehReset" id="tasbeehReset" data-icon="ic_tasbeeh_reset"></div>
+        </div>
+        <div class="tasbeehHint" data-cap="tasbeehHint"></div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="tasbeeh"></b>
+      <span>السبحة العائمة فوق أي تطبيق: انقر الدائرة للعدّ، اضغط مطوّلًا 1.5 ثانية للقفل
+        (تظهر علامة القفل ويتوقف العدّ)، وصفّر بضغط مطوّل 0.7 ثانية على الزر الذهبي.</span>
+      <code>view_floating_tasbeeh.xml · TasbeehService.java</code>
+    </figcaption>
+  </figure>
+
+  <!-- 10 ─ widgets -->
+  <figure class="shot">
+    <div class="phone" id="ph-widget">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen wall" id="widgetBg">
+        <div class="widgetStrip">
+          <div class="widget w22">
+            <img id="widgetImg22" src="assets/clock_bg_1.png" alt="">
+          </div>
+          <div class="widget w42">
+            <img id="widgetImg42" src="assets/clock_bg_1.png" alt="">
+            <div class="wCol">
+              <div class="wHijri" id="widgetHijri"></div>
+              <div class="wDhikr" id="widgetDhikr"></div>
+            </div>
+          </div>
+        </div>
+        <div class="widgetNames">
+          <span data-i18n="widget_name_square"></span>
+          <span data-i18n="widget_name_wide"></span>
+        </div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="widgets"></b>
+      <span>ودجت 2×2 و4×2 يعيدان استخدام تصاميم الساعة نفسها (تُرسم كصورة لأن
+        <code>RemoteViews</code> لا يقبل Views مخصصة ولا <code>TextClock</code>)،
+        مع التاريخ الهجري والذكر في العريض.</span>
+      <code>widget_clock.xml · WidgetClockRenderer.java</code>
+    </figcaption>
+  </figure>
+
+  <!-- 11 ─ wallpaper gallery -->
+  <figure class="shot">
+    <div class="phone" id="ph-gallery">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen picker" id="galleryScreen">
+        <div class="topbar dark">
+          <div class="ic" data-icon="ic_back"></div>
+          <div class="title" data-i18n="title_wallpaper"></div>
+        </div>
+        <div class="cats" id="galleryCats"></div>
+        <div class="pickerBody"><div class="gallery" id="galleryGrid"></div></div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="gallery"></b>
+      <span>الـ21 خلفية كلها <b>مدمجة داخل التطبيق</b> (لا أي مصدر خارجي): الكعبة، المسجد
+        النبوي، الأقصى، مساجد ومئذنة. انقر أي صورة فتصير الخلفية المعروضة في كل الشاشات
+        (الخلفية الحية، الودجت، السبحة، الحوارات).</span>
+      <code>activity_wallpaper.xml · res/drawable-nodpi/wp_*.jpg</code>
+    </figcaption>
+  </figure>
+
+  <!-- 12 ─ rewarded unlock -->
+  <figure class="shot">
+    <div class="phone" id="ph-reward">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen picker" id="rewardScreen">
+        <div class="dialogWrap">
+          <div class="dialog reward">
+            <div class="premiumBadge"><span data-icon="ic_lock_gold"></span></div>
+            <h3 data-i18n="premium_dialog_title"></h3>
+            <p class="hint" data-i18n="premium_dialog_message"></p>
+            <button class="rewardBtn" id="rewardWatch" data-i18n="premium_dialog_watch"></button>
+            <button class="linkBtn" data-i18n="premium_dialog_cancel"></button>
+            <div class="unlockState" id="unlockState"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="reward"></b>
+      <span>إعلان مكافأة يفتح <b>كل الساعات الذهبية لهذه الجلسة</b> (يعود القفل عند إعادة
+        تشغيل التطبيق) — قرار مقصود: لا تخزين لحالة الدفع. الحوار بمواردNative Ad
+        الحقيقية وبشارة «Ad» الإلزامية.</span>
+      <code>dialog_reward_unlock.xml · AdManager.java</code>
+    </figcaption>
+  </figure>
+
+</main>
+
+<footer class="page">
+  <p>
+    المعاينة <b>ليست لقطات شاشة</b> ولا رسومات مولّدة: كل ما فيها مبني من ملفات المستودع
+    بوساطة <code>tools/preview/build_assets.py</code>، فالنصوص والألوان والأبعاد والصور
+    والأذكار (61 ذكرًا) هي نفسها التي سيُبنى منها التطبيق.
+  </p>
+</footer>
+
+<script src="assets/data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
