@@ -19,6 +19,12 @@
     <color name="textWhite">#fff</color>
     <color name="themeColor">#eeeeee</color>
     <color name="themeDarkColor">#dedede</color>
+    <!--
+      Qibla screen background. CompassView draws its dial, ticks and cardinal letters in
+      translucent white and its needle in gold, and the screen's texts are @color/textColor
+      (white) - all of which disappear on the light themeDarkColor this screen used to have.
+    -->
+    <color name="qiblaBg">#101820</color>
     <color name="transparent">#00000000</color>
 
     <!-- ── Native ad card ─────────────────────────────────────────────── -->
