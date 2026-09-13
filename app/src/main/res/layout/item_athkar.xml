@@ -11,6 +11,16 @@
     android:orientation="vertical"
     android:padding="14dp">
 
+    <!-- Position inside the list, the way the source numbers its athkar (الذكر ١ من ٣١). -->
+    <TextView
+        android:id="@+id/athkarIndex"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:textColor="#99FFE08A"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
     <TextView
         android:id="@+id/athkarArabic"
         android:layout_width="match_parent"
@@ -41,12 +51,23 @@
         android:textDirection="ltr"
         android:textSize="13sp" />
 
+    <!-- Reward note printed under the dhikr on the source site. Hidden when there is none. -->
+    <TextView
+        android:id="@+id/athkarVirtue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:lineSpacingExtra="4dp"
+        android:textColor="#B3FFE08A"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/athkarReference"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textColor="@color/adBg"
+        android:layout_marginTop="6dp"
+        android:textColor="#80FFFFFF"
         android:textSize="11sp" />
 
     <LinearLayout

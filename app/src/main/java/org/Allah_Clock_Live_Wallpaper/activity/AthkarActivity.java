@@ -61,6 +61,9 @@ public class AthkarActivity extends AppCompatActivity {
                 ? R.string.athkar_morning_title
                 : R.string.athkar_evening_title);
 
+        TextView count = findViewById(R.id.athkarCount);
+        count.setText(getString(R.string.athkar_count, items.size()));
+
         findViewById(R.id.athkarOutside).setOnClickListener(view -> finish());
         ImageView settings = findViewById(R.id.athkarSettings);
         settings.setOnClickListener(view -> showSettingsDialog());

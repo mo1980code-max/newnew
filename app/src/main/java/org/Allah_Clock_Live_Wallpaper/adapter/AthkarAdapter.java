@@ -5,6 +5,7 @@ import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,10 @@ import java.util.Map;
  * <p>Each card carries its own countdown: tapping the golden circle decrements it with a
  * gentle tick, and reaching zero fades the card and stamps it as completed. Progress is
  * deliberately kept in memory only — a dhikr session is a worship act, not user data.</p>
+ *
+ * <p>The cards mirror the layout of the athkar list they are transcribed from: the dhikr text,
+ * the translation, the reward note ("من قالها حين يصبح ...") on its own line under it, the
+ * source, then the counter showing what is left of the repeat count (some athkar are 100).</p>
  */
 public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder> {
 
@@ -50,9 +55,11 @@ public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private final View card;
+        private final TextView index;
         private final TextView arabic;
         private final TextView transliteration;
         private final TextView english;
+        private final TextView virtue;
         private final TextView reference;
         private final TextView counter;
         private final TextView repeatInfo;
@@ -61,9 +68,11 @@ public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder
         public ViewHolder(View view) {
             super(view);
             this.card = view.findViewById(R.id.athkarCard);
+            this.index = view.findViewById(R.id.athkarIndex);
             this.arabic = view.findViewById(R.id.athkarArabic);
             this.transliteration = view.findViewById(R.id.athkarTransliteration);
             this.english = view.findViewById(R.id.athkarEnglish);
+            this.virtue = view.findViewById(R.id.athkarVirtue);
             this.reference = view.findViewById(R.id.athkarReference);
             this.counter = view.findViewById(R.id.athkarCounter);
             this.repeatInfo = view.findViewById(R.id.athkarRepeatInfo);
@@ -81,15 +90,20 @@ public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         final AthkarItem item = this.items.get(position);
+        holder.index.setText(holder.index.getContext()
+                .getString(R.string.athkar_position, position + 1, getItemCount()));
         holder.arabic.setText(item.getArabicText());
         // A transliteration only helps a reader who cannot read Arabic script, so an Arabic UI
         // drops it and keeps the English translation (the reader is bilingual by design).
         holder.transliteration.setText(item.getTransliteration());
         holder.transliteration.setVisibility(this.arabicUi ? View.GONE : View.VISIBLE);
         holder.english.setText(item.getEnglishText());
-        holder.reference.setText(item.getReference(this.arabicUi));
-        holder.repeatInfo.setText(holder.repeatInfo.getContext()
-                .getString(R.string.athkar_repeat_total, item.getRepeat()));
+        String virtue = item.getVirtue(this.arabicUi);
+        holder.virtue.setText(virtue);
+        holder.virtue.setVisibility(virtue.isEmpty() ? View.GONE : View.VISIBLE);
+        String reference = item.getReference(this.arabicUi);
+        holder.reference.setText(reference);
+        holder.reference.setVisibility(reference.isEmpty() ? View.GONE : View.VISIBLE);
 
         final int left = leftOf(item);
         paint(holder, item, left);
@@ -112,7 +126,12 @@ public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder
     }
 
     private void paint(ViewHolder holder, AthkarItem item, int left) {
-        holder.counter.setText(String.valueOf(left));
+        int remaining = Math.max(left, 0);
+        holder.counter.setText(String.valueOf(remaining));
+        // "100" is a third of the circle wider than "7": step the digits down so they fit.
+        holder.counter.setTextSize(TypedValue.COMPLEX_UNIT_SP, remaining >= 100 ? 13f : 17f);
+        holder.repeatInfo.setText(holder.repeatInfo.getContext()
+                .getString(R.string.athkar_progress, remaining, item.getRepeat()));
         boolean finished = left <= 0;
         holder.card.setAlpha(finished ? 0.45f : 1f);
         holder.done.setVisibility(finished ? View.VISIBLE : View.GONE);
