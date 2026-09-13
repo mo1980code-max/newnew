@@ -508,6 +508,7 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         SwitchCompat switchHijri = content.findViewById(R.id.switchHijri);
         SwitchCompat switchDhikr = content.findViewById(R.id.switchDhikr);
         SwitchCompat switchPower = content.findViewById(R.id.switchPower);
+        SwitchCompat switchAthkarBadge = content.findViewById(R.id.switchAthkarBadge);
         switchHijri.setChecked(this.tinyDB.getBoolean("showHijri"));
         switchDhikr.setChecked(this.tinyDB.getBoolean("showDhikr"));
         switchHijri.setOnCheckedChangeListener((button, checked) -> {
@@ -525,6 +526,13 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         switchPower.setChecked(FrameRate.isPowerSaver(this.tinyDB));
         switchPower.setOnCheckedChangeListener((button, checked) ->
                 this.tinyDB.putBoolean("powerSaver", checked));
+        switchAthkarBadge.setChecked(this.tinyDB.getBoolean("showAthkarBadge", true));
+        switchAthkarBadge.setOnCheckedChangeListener((button, checked) -> {
+            this.tinyDB.putBoolean("showAthkarBadge", checked);
+            if (this.overlayPreview != null) {
+                this.overlayPreview.refresh();
+            }
+        });
         new AlertDialog.Builder(this)
                 .setView(content)
                 .setPositiveButton(R.string.ok, null)

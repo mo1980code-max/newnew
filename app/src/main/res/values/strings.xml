@@ -106,6 +106,29 @@
     <string name="widget_name_wide">Allah Clock 4×2</string>
     <string name="widget_desc">Your chosen clock design with the Hijri date and a rotating dhikr. Refreshes once a minute, far lighter on battery than the live wallpaper.</string>
 
+    <!-- Morning / evening athkar -->
+    <string name="athkar_morning_title">Morning Athkar</string>
+    <string name="athkar_evening_title">Evening Athkar</string>
+    <string name="athkar_settings">Athkar timing settings</string>
+    <string name="athkar_mode_auto">Astronomical times (fajr, asr and maghrib computed offline)</string>
+    <string name="athkar_mode_fixed">Fixed time slots of my own</string>
+    <string name="athkar_angle_15">Fajr angle 15°</string>
+    <string name="athkar_angle_18">Fajr angle 18°</string>
+    <string name="athkar_morning_slot">Morning window (start / end)</string>
+    <string name="athkar_evening_slot">Evening window (start / end)</string>
+    <string name="athkar_repeat_total">× %1$d</string>
+    <string name="athkar_completed">Completed ✓</string>
+    <string name="option_athkar_badge">Show the athkar badge on the wallpaper</string>
+    <string name="cd_athkar_badge">Open the athkar reader</string>
+    <string name="cd_athkar_close">Close the athkar reader</string>
+    <string name="cd_athkar_counter">Dhikr counter, tap to count</string>
+
+    <!-- Language -->
+    <string name="choose_language">Language</string>
+    <string name="language_english">English</string>
+    <string name="language_arabic">العربية</string>
+    <string name="cd_language">Change the app language</string>
+
     <string name="privacy_settings">Privacy settings</string>
     <string name="privacy_settings_content_description">Change your advertising and privacy choices</string>
 

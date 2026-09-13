@@ -18,8 +18,8 @@
             android:id="@+id/frameAnalogClock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="35dp"
-            android:layout_marginRight="35dp">
+            android:layout_marginStart="35dp"
+            android:layout_marginEnd="35dp">
 
             <ImageView
                 android:layout_width="wrap_content"
@@ -56,8 +56,8 @@
             android:id="@+id/frameTextClock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="35dp"
-            android:layout_marginRight="35dp">
+            android:layout_marginStart="35dp"
+            android:layout_marginEnd="35dp">
 
             <ImageView
                 android:layout_width="wrap_content"
@@ -100,8 +100,8 @@
             android:id="@+id/frameSmartClock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="35dp"
-            android:layout_marginRight="35dp">
+            android:layout_marginStart="35dp"
+            android:layout_marginEnd="35dp">
 
             <ImageView
                 android:layout_width="wrap_content"
