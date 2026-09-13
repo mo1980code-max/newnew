@@ -5,6 +5,7 @@
     <!-- Main menu -->
     <string name="menu_clock">Clock</string>
     <string name="menu_wallpaper">Wallpaper</string>
+    <string name="menu_tasbih">Tasbih &amp; Athkar</string>
     <string name="market_error">Unable to find market app</string>
     <string name="share_app">Share Application</string>
     <string name="share_text">Open this Link on Play Store</string>
@@ -38,5 +39,26 @@
     <string name="download_wallpaper">Download Wallpaper</string>
     <string name="downloading">Downloading %1$d%%</string>
     <string name="select">Select</string>
+
+    <!-- Tasbih & Occasions -->
+    <string name="tasbih_use_occasion_dhikr">Use Today\'s Occasion Dhikr 📿</string>
+    <string name="tasbih_target_open">∞</string>
+    <string name="tasbih_stats_title">Tasbih Log &amp; Statistics</string>
+    <string name="tasbih_stat_today">Today</string>
+    <string name="tasbih_stat_week">7 Days</string>
+    <string name="tasbih_stat_month">30 Days</string>
+    <string name="tasbih_stat_streak">Streak</string>
+    <string name="tasbih_weekly_chart">Weekly Activity (Last 7 Days)</string>
+    <string name="tasbih_export_text">Share Report</string>
+    <string name="tasbih_export_csv">Export CSV</string>
+    <string name="tasbih_clear_confirm_title">Reset Tasbih History?</string>
+    <string name="tasbih_clear_confirm_msg">Are you sure you want to clear all your tasbih logs? This cannot be undone.</string>
+    <string name="tasbih_clear_done">History cleared successfully</string>
+    <string name="tasbih_target_reached">Target reached! Round completed.</string>
+    <string name="occasions_all_title">Occasions &amp; Day-Specific Athkar</string>
+    <string name="occasions_today_badge">Today\'s Occasion</string>
+    <string name="custom_dhikr_title">Add Custom Dhikr</string>
+    <string name="custom_dhikr_hint">Enter your dhikr...</string>
+    <string name="add">Add</string>
 
 </resources>

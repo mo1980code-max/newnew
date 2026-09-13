@@ -27,6 +27,7 @@
         <activity android:name="com.clock.livewallpaper.activity.SetWallpaperActivity" />
         <activity android:name="com.clock.livewallpaper.activity.WallpaperActivity" />
         <activity android:name="com.clock.livewallpaper.activity.EditorActivity" />
+        <activity android:name="com.clock.livewallpaper.activity.TasbihActivity" />
         <activity
             android:name="com.clock.livewallpaper.activity.MainActivity"
             android:exported="true"

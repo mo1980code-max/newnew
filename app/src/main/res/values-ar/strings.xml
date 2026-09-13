@@ -5,6 +5,7 @@
     <!-- Main menu -->
     <string name="menu_clock">الساعة</string>
     <string name="menu_wallpaper">الخلفيات</string>
+    <string name="menu_tasbih">المسبحة والأذكار</string>
     <string name="market_error">تعذّر العثور على تطبيق المتجر</string>
     <string name="share_app">مشاركة التطبيق</string>
     <string name="share_text">افتح هذا الرابط على متجر Play</string>
@@ -38,5 +39,26 @@
     <string name="download_wallpaper">تحميل الخلفية</string>
     <string name="downloading">جارٍ التحميل %1$d%%</string>
     <string name="select">اختيار</string>
+
+    <!-- Tasbih & Occasions -->
+    <string name="tasbih_use_occasion_dhikr">بدء التسبيح بذكر اليوم 📿</string>
+    <string name="tasbih_target_open">مفتوح</string>
+    <string name="tasbih_stats_title">سجل وإحصائيات التسبيح</string>
+    <string name="tasbih_stat_today">اليوم</string>
+    <string name="tasbih_stat_week">7 أيام</string>
+    <string name="tasbih_stat_month">30 يوماً</string>
+    <string name="tasbih_stat_streak">أيام متتالية</string>
+    <string name="tasbih_weekly_chart">النشاط الأسبوعي (آخر 7 أيام)</string>
+    <string name="tasbih_export_text">مشاركة التقرير</string>
+    <string name="tasbih_export_csv">تصدير CSV</string>
+    <string name="tasbih_clear_confirm_title">إعادة ضبط السجل؟</string>
+    <string name="tasbih_clear_confirm_msg">هل أنت متأكد من مسح جميع إحصائيات وسجلات التسبيح؟ لا يمكن التراجع عن هذا الإجراء.</string>
+    <string name="tasbih_clear_done">تم تصفير السجل بنجاح</string>
+    <string name="tasbih_target_reached">تم إكمال الهدف! اكتملت الدورة.</string>
+    <string name="occasions_all_title">أذكار الأيام والمناسبات الإسلامية</string>
+    <string name="occasions_today_badge">مناسبة اليوم</string>
+    <string name="custom_dhikr_title">إضافة ذكر مخصص</string>
+    <string name="custom_dhikr_hint">اكتب الذكر هنا...</string>
+    <string name="add">إضافة</string>
 
 </resources>

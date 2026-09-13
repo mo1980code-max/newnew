@@ -18,12 +18,11 @@ import com.clock.livewallpaper.AdAdmob;
 import com.clock.livewallpaper.R;
 import com.clock.livewallpaper.utils.LocaleHelper;
 
-
 public class MainActivity extends AppCompatActivity {
     private RelativeLayout adContainer;
     private FrameLayout frameClock;
     private FrameLayout frameWallpaper;
-
+    private FrameLayout frameTasbih;
 
     ImageView rate, share;
     TextView btnLang;
@@ -34,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_select_function);
@@ -42,12 +40,12 @@ public class MainActivity extends AppCompatActivity {
 
         AdAdmob adAdmob = new AdAdmob(this);
         adAdmob.BannerAd((RelativeLayout) findViewById(R.id.bannerAd), this);
-
     }
 
     private void initView() {
         this.frameClock = (FrameLayout) findViewById(R.id.frameClock);
         this.frameWallpaper = (FrameLayout) findViewById(R.id.frameWallpaper);
+        this.frameTasbih = (FrameLayout) findViewById(R.id.frameTasbih);
         this.adContainer = (RelativeLayout) findViewById(R.id.adContainer);
         rate = findViewById(R.id.rateus);
         share = findViewById(R.id.share);
@@ -86,25 +84,25 @@ public class MainActivity extends AppCompatActivity {
         this.frameClock.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 MainActivity.this.startActivity(new Intent(MainActivity.this, ClockFuntionActivity.class));
-
             }
         });
         this.frameWallpaper.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 MainActivity.this.startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class));
-
+            }
+        });
+        this.frameTasbih.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.this.startActivity(new Intent(MainActivity.this, TasbihActivity.class));
             }
         });
     }
 
     @Override
     public void onBackPressed() {
-
         MainActivity.this.finish();
-
     }
 }
