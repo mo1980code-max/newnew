@@ -24,8 +24,8 @@ FFMPEG = os.environ.get("FFMPEG_BIN", shutil.which("ffmpeg") or "ffmpeg")
 FONT_BOLD = str((ROOT.parent / "app/src/main/assets/montserrat_semi_bold.ttf").resolve())
 FONT_REGULAR = str((ROOT.parent / "app/src/main/assets/open_sans_regular.ttf").resolve())
 
-# The missing later visual beats are represented by the closest generated
-# posture frame, while the title card and narration make each beat distinct.
+# Scenes 7–15 use the detailed continuation frames generated from the latest
+# brief; each title card and narrated chapter follows that updated sequence.
 SCENES = [
     ("01_intro.png", "LEARN TO PRAY WITH LAYAN", "A gentle step by step guide"),
     ("02_qiblah.png", "FACE THE QIBLAH", "Make your intention in your heart"),
@@ -33,15 +33,15 @@ SCENES = [
     ("04_hands_dua.png", "HANDS AND OPENING DUA", "Right hand over left, then opening dua"),
     ("05_recitation.png", "RECITATION", "Al Fatihah, then a short surah"),
     ("06_ruku.png", "RUKU", "Straight back and hands on your knees"),
-    ("07_rising.png", "RISE FROM RUKU", "Stand tall and praise Allah"),
-    ("08_first_sujud.png", "FIRST SUJOOD", "Forehead, hands, knees and toes on the mat"),
-    ("09_between_sujud.png", "SIT BETWEEN PROSTRATIONS", "Rest calmly and ask Allah for forgiveness"),
-    ("10_second_sujud.png", "SECOND SUJOOD", "Repeat the humble prostration"),
-    ("11_second_rakah.png", "SECOND RAKAH", "Repeat the first rakah movements"),
-    ("12_tashahhud.png", "TASHAHHUD", "Sit calmly and recite Tashahhud"),
-    ("13_salawat.png", "BLESSINGS AND DUA", "Send blessings and make a sincere dua"),
-    ("14_salam.png", "SALAM", "Turn right, then left, with peace"),
-    ("15_closing.png", "WELL DONE", "Practice with a trusted parent or teacher"),
+    ("07_rising_v2.png", "RISE FROM RUKU", "Stand tall and praise Allah"),
+    ("08_first_sujud_v2.png", "FIRST SUJOOD", "Seven points touch the mat"),
+    ("09_between_sujud_v2.png", "SIT BETWEEN PROSTRATIONS", "Rest calmly and ask Allah to forgive you"),
+    ("10_second_sujud_v2.png", "SECOND SUJOOD", "Repeat the humble prostration, then stand"),
+    ("11_second_rakah_v2.png", "SECOND RAKAH", "Repeat the first rakah movements"),
+    ("12_middle_tashahhud_v2.png", "MIDDLE TASHAHHUD", "Raise your right index finger gently"),
+    ("13_third_fourth_v2.png", "THIRD AND FOURTH RAKAH", "Recite Al Fatihah quietly"),
+    ("14_final_tashahhud_v2.png", "FINAL TASHAHHUD AND DUA", "Complete the Tashahhud and Ibrahimic prayer"),
+    ("15_salam_wave_v2.png", "TASLEEM AND ENDING", "Turn right, then left, then wave"),
 ]
 
 # One voice clip covers each chapter of three scenes. The weights keep the
@@ -50,9 +50,9 @@ SCENES = [
 CHAPTERS = [
     ("01_intro_to_takbeer.mp3", (0.35, 0.38, 0.27)),
     ("02_opening_to_ruku.mp3", (0.34, 0.28, 0.38)),
-    ("03_rising_to_second_sujud.mp3", (0.23, 0.43, 0.34)),
-    ("04_second_rakah_to_tashahhud.mp3", (0.29, 0.39, 0.32)),
-    ("05_salams_and_close.mp3", (0.34, 0.42, 0.24)),
+    ("03_rising_to_first_sujud_v2.mp3", (0.27, 0.43, 0.30)),
+    ("04_second_sujud_to_tashahhud_v2.mp3", (0.28, 0.40, 0.32)),
+    ("05_final_tashahhud_to_salam_v2.mp3", (0.30, 0.43, 0.27)),
 ]
 
 

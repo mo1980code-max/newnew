@@ -2,11 +2,11 @@
 
 **Deliverable:** `english_prayer_with_layan.mp4`
 
-A 16:9 English narrated tutorial with Layan, a cheerful 7-year-old Arab girl in a pastel-pink prayer dress and white hijab. It includes all 15 scenes in order, English title cards, gentle Ken Burns motion, and a warm feminine voiceover.
+A 16:9 English narrated tutorial with Layan, a cheerful 7-year-old Arab girl in a pastel-pink prayer dress and white hijab. It includes all 15 scenes in order, English title cards, gentle Ken Burns motion, and a warm feminine voiceover. Scenes 7–15 follow the detailed continuation supplied in the latest brief.
 
 - Resolution: 1280 × 720
 - Frame rate: 25 fps
-- Duration: about 2 minutes 55 seconds
+- Duration: about 2 minutes 50 seconds
 - Audio: English AAC narration, stereo
 - Poster: `preview.png`
 
