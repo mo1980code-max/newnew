@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Rebuild the English prayer tutorial with three-angle motion-study boards.
+"""Rebuild the English prayer tutorial with one consistent Layan character.
 
 The first six scenes are preserved from the already-rendered base video. The
-continuation scenes use three consistent Layan figures in each board so a
-child can see a front, side, or transition view of the movement.
+continuation scenes use one Layan per frame with corrected prayer anatomy and
+scene durations derived from the narration clips.
 """
 from __future__ import annotations
 
@@ -27,15 +27,15 @@ FONT_BOLD = str((ROOT.parent / "app/src/main/assets/montserrat_semi_bold.ttf").r
 FONT_REGULAR = str((ROOT.parent / "app/src/main/assets/open_sans_regular.ttf").resolve())
 
 CONTINUATION_SCENES = [
-    ("07_rising_three_angle.png", "RISING FROM RUKU", "Three views: bow, lift, stand"),
-    ("08_first_sujud_three_angle_corrected.png", "FIRST SUJOOD", "Forehead and nose touch the mat"),
-    ("09_between_sujud_three_angle.png", "SITTING BETWEEN SUJOODS", "Straight back, hands near the knees"),
-    ("10_second_sujud_stand_three_angle.png", "SECOND SUJOOD AND STANDING", "Prostrate, rise, and stand for rakah two"),
-    ("11_second_rakah_three_angle.png", "THE SECOND RAKAH", "Standing, Ruku, and Sujood views"),
-    ("12_middle_tashahhud_three_angle.png", "MIDDLE TASHAHHUD", "Point gently with the right index finger"),
-    ("13_third_fourth_three_angle.png", "THIRD AND FOURTH RAKAH", "Recite Al Fatihah quietly"),
-    ("14_final_tashahhud_three_angle.png", "FINAL TASHAHHUD AND DUA", "Complete the Tashahhud and Ibrahimic prayer"),
-    ("15_salam_three_angle.png", "TASLEEM AND ENDING", "Right, left, then a happy wave"),
+    ("07_rising_single_v4.png", "RISING FROM RUKU", "Stand straight and praise Allah"),
+    ("08_first_sujud_single_v4.png", "FIRST SUJOOD", "Forehead and nose touch the mat"),
+    ("09_between_sujud_single_v4.png", "SITTING BETWEEN SUJOODS", "Straight back, hands on the thighs"),
+    ("10_second_sujud_single_v4.png", "SECOND SUJOOD AND STANDING", "Prostrate, then stand for rakah two"),
+    ("11_second_rakah_single_v4.png", "THE SECOND RAKAH", "Repeat the prayer movements calmly"),
+    ("12_middle_tashahhud_single_v4.png", "MIDDLE TASHAHHUD", "Raise the right index finger gently"),
+    ("13_third_fourth_single_v4.png", "THIRD AND FOURTH RAKAH", "Recite Al Fatihah quietly"),
+    ("14_final_tashahhud_single_v4.png", "FINAL TASHAHHUD AND DUA", "Complete the prayer with calm focus"),
+    ("15_salam_single_v4.png", "TASLEEM AND ENDING", "Turn right, left, then wave"),
 ]
 
 CHAPTERS = [
