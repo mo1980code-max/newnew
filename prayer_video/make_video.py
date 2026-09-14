@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Build the English Learn to Pray with Layan video.
+"""Rebuild the English prayer tutorial with three-angle motion-study boards.
 
-The script intentionally uses only Python's standard library plus an ffmpeg
-binary. Set FFMPEG_BIN when ffmpeg is not on PATH.
+The first six scenes are preserved from the already-rendered base video. The
+continuation scenes use three consistent Layan figures in each board so a
+child can see a front, side, or transition view of the movement.
 """
 from __future__ import annotations
 
@@ -19,40 +20,28 @@ AUDIO = ROOT / "audio"
 BUILD = ROOT / ".build"
 OUTPUT = ROOT / "english_prayer_with_layan.mp4"
 POSTER = ROOT / "preview.png"
+PREFIX_DURATION = 70.68  # scenes 1–6 in the base render
 
 FFMPEG = os.environ.get("FFMPEG_BIN", shutil.which("ffmpeg") or "ffmpeg")
 FONT_BOLD = str((ROOT.parent / "app/src/main/assets/montserrat_semi_bold.ttf").resolve())
 FONT_REGULAR = str((ROOT.parent / "app/src/main/assets/open_sans_regular.ttf").resolve())
 
-# Scenes 7–15 use the detailed continuation frames generated from the latest
-# brief; each title card and narrated chapter follows that updated sequence.
-SCENES = [
-    ("01_intro.png", "LEARN TO PRAY WITH LAYAN", "A gentle step by step guide"),
-    ("02_qiblah.png", "FACE THE QIBLAH", "Make your intention in your heart"),
-    ("03_takbeer.png", "TAKBEER", "Raise your hands and say Allahu Akbar"),
-    ("04_hands_dua.png", "HANDS AND OPENING DUA", "Right hand over left, then opening dua"),
-    ("05_recitation.png", "RECITATION", "Al Fatihah, then a short surah"),
-    ("06_ruku.png", "RUKU", "Straight back and hands on your knees"),
-    ("07_rising_v2.png", "RISE FROM RUKU", "Stand tall and praise Allah"),
-    ("08_first_sujud_v2.png", "FIRST SUJOOD", "Seven points touch the mat"),
-    ("09_between_sujud_v2.png", "SIT BETWEEN PROSTRATIONS", "Rest calmly and ask Allah to forgive you"),
-    ("10_second_sujud_v2.png", "SECOND SUJOOD", "Repeat the humble prostration, then stand"),
-    ("11_second_rakah_v2.png", "SECOND RAKAH", "Repeat the first rakah movements"),
-    ("12_middle_tashahhud_v2.png", "MIDDLE TASHAHHUD", "Raise your right index finger gently"),
-    ("13_third_fourth_v2.png", "THIRD AND FOURTH RAKAH", "Recite Al Fatihah quietly"),
-    ("14_final_tashahhud_v2.png", "FINAL TASHAHHUD AND DUA", "Complete the Tashahhud and Ibrahimic prayer"),
-    ("15_salam_wave_v2.png", "TASLEEM AND ENDING", "Turn right, then left, then wave"),
+CONTINUATION_SCENES = [
+    ("07_rising_three_angle.png", "RISING FROM RUKU", "Three views: bow, lift, stand"),
+    ("08_first_sujud_three_angle_corrected.png", "FIRST SUJOOD", "Forehead and nose touch the mat"),
+    ("09_between_sujud_three_angle.png", "SITTING BETWEEN SUJOODS", "Straight back, hands near the knees"),
+    ("10_second_sujud_stand_three_angle.png", "SECOND SUJOOD AND STANDING", "Prostrate, rise, and stand for rakah two"),
+    ("11_second_rakah_three_angle.png", "THE SECOND RAKAH", "Standing, Ruku, and Sujood views"),
+    ("12_middle_tashahhud_three_angle.png", "MIDDLE TASHAHHUD", "Point gently with the right index finger"),
+    ("13_third_fourth_three_angle.png", "THIRD AND FOURTH RAKAH", "Recite Al Fatihah quietly"),
+    ("14_final_tashahhud_three_angle.png", "FINAL TASHAHHUD AND DUA", "Complete the Tashahhud and Ibrahimic prayer"),
+    ("15_salam_three_angle.png", "TASLEEM AND ENDING", "Right, left, then a happy wave"),
 ]
 
-# One voice clip covers each chapter of three scenes. The weights keep the
-# image changes near the corresponding narration instead of splitting every
-# chapter into equal thirds.
 CHAPTERS = [
-    ("01_intro_to_takbeer.mp3", (0.35, 0.38, 0.27)),
-    ("02_opening_to_ruku.mp3", (0.34, 0.28, 0.38)),
-    ("03_rising_to_first_sujud_v2.mp3", (0.27, 0.43, 0.30)),
-    ("04_second_sujud_to_tashahhud_v2.mp3", (0.28, 0.40, 0.32)),
-    ("05_final_tashahhud_to_salam_v2.mp3", (0.30, 0.43, 0.27)),
+    ("03_rising_to_first_sujud_v3.mp3", (0.26, 0.47, 0.27)),
+    ("04_second_sujud_to_tashahhud_v3.mp3", (0.27, 0.30, 0.43)),
+    ("05_final_tashahhud_to_salam_v3.mp3", (0.31, 0.37, 0.32)),
 ]
 
 
@@ -79,7 +68,6 @@ def audio_duration(path: Path) -> float:
 
 
 def escape_drawtext(text: str) -> str:
-    # drawtext uses ':' and ',' as option separators even inside text='...'.
     return (
         text.replace("\\", r"\\")
         .replace(":", r"\:")
@@ -89,9 +77,6 @@ def escape_drawtext(text: str) -> str:
 
 
 def make_filter(scene_no: int, title: str, subtitle: str) -> str:
-    title_size = 40 if scene_no == 1 else 31
-    title_y = 38 if scene_no == 1 else 42
-    subtitle_y = 103 if scene_no == 1 else 96
     title = escape_drawtext(title)
     subtitle = escape_drawtext(subtitle)
     number = escape_drawtext(f"SCENE {scene_no:02d} OF 15")
@@ -99,10 +84,10 @@ def make_filter(scene_no: int, title: str, subtitle: str) -> str:
         [
             "scale=1440:810:force_original_aspect_ratio=increase",
             "crop=1440:810",
-            "zoompan=z='min(zoom+0.0007,1.055)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1280x720:fps=25",
+            "zoompan=z='min(zoom+0.0008,1.06)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1280x720:fps=25",
             "setsar=1",
-            f"drawtext=fontfile={FONT_BOLD}:text='{title}':fontcolor=white:fontsize={title_size}:x=48:y={title_y}:box=1:boxcolor=0x243b53@0.88:boxborderw=16",
-            f"drawtext=fontfile={FONT_REGULAR}:text='{subtitle}':fontcolor=white@0.97:fontsize=23:x=52:y={subtitle_y}:box=1:boxcolor=0x243b53@0.66:boxborderw=10",
+            f"drawtext=fontfile={FONT_BOLD}:text='{title}':fontcolor=white:fontsize=30:x=48:y=42:box=1:boxcolor=0x243b53@0.88:boxborderw=16",
+            f"drawtext=fontfile={FONT_REGULAR}:text='{subtitle}':fontcolor=white@0.97:fontsize=22:x=52:y=96:box=1:boxcolor=0x243b53@0.66:boxborderw=10",
             "drawbox=x=48:y=678:w=1184:h=4:color=white@0.34:t=fill",
             f"drawbox=x=48:y=678:w={max(8, round(1184 * scene_no / 15))}:h=4:color=0xf4c6a8@0.98:t=fill",
             f"drawtext=fontfile={FONT_REGULAR}:text='{number}':fontcolor=white@0.96:fontsize=18:x=48:y=693:box=1:boxcolor=0x243b53@0.78:boxborderw=8",
@@ -110,11 +95,8 @@ def make_filter(scene_no: int, title: str, subtitle: str) -> str:
     )
 
 
-def make_scene_segment(index: int, image_name: str, title: str, subtitle: str, duration: float) -> Path:
-    out = BUILD / f"scene_{index:02d}.mp4"
-    # A small pad avoids cutting the final phoneme at a chapter boundary. The
-    # final mux is still limited by the narration with -shortest.
-    duration += 0.08
+def make_segment(index: int, image_name: str, title: str, subtitle: str, duration: float) -> Path:
+    out = BUILD / f"tail_scene_{index:02d}.mp4"
     run(
         [
             "-y",
@@ -126,7 +108,7 @@ def make_scene_segment(index: int, image_name: str, title: str, subtitle: str, d
             "-i",
             str(ASSETS / image_name),
             "-t",
-            f"{duration:.3f}",
+            f"{duration + 0.15:.3f}",
             "-vf",
             make_filter(index, title, subtitle),
             "-an",
@@ -148,10 +130,10 @@ def make_scene_segment(index: int, image_name: str, title: str, subtitle: str, d
 
 def main() -> int:
     if not Path(FFMPEG).exists() and shutil.which(FFMPEG) is None:
-        raise SystemExit(
-            "ffmpeg was not found. Install ffmpeg or run with FFMPEG_BIN=/path/to/ffmpeg."
-        )
-    for image_name, _, _ in SCENES:
+        raise SystemExit("ffmpeg was not found; set FFMPEG_BIN to its executable path")
+    if not OUTPUT.exists():
+        raise FileNotFoundError(f"The base video is missing: {OUTPUT}")
+    for image_name, _, _ in CONTINUATION_SCENES:
         if not (ASSETS / image_name).exists():
             raise FileNotFoundError(ASSETS / image_name)
     for audio_name, _ in CHAPTERS:
@@ -162,47 +144,62 @@ def main() -> int:
         shutil.rmtree(BUILD)
     BUILD.mkdir(parents=True)
 
-    durations = [audio_duration(AUDIO / name) for name, _ in CHAPTERS]
-    scene_durations: list[float] = []
-    for duration, (_, weights) in zip(durations, CHAPTERS):
-        scene_durations.extend(duration * weight for weight in weights)
-
-    segments = [
-        make_scene_segment(i, image, title, subtitle, scene_durations[i - 1])
-        for i, (image, title, subtitle) in enumerate(SCENES, start=1)
-    ]
-
-    video_list = BUILD / "video_concat.txt"
-    video_list.write_text(
-        "".join(f"file '{segment.as_posix()}'\n" for segment in segments),
-        encoding="utf-8",
-    )
-    silent_video = BUILD / "silent_video.mp4"
+    # Render the existing first-six-scenes portion before replacing OUTPUT.
+    prefix = BUILD / "prefix_scenes_01_06.mp4"
     run(
         [
             "-y",
             "-hide_banner",
             "-loglevel",
             "error",
-            "-f",
-            "concat",
-            "-safe",
-            "0",
             "-i",
-            str(video_list),
-            "-c",
-            "copy",
-            "-an",
-            str(silent_video),
+            str(OUTPUT),
+            "-t",
+            f"{PREFIX_DURATION:.3f}",
+            "-map",
+            "0:v:0",
+            "-map",
+            "0:a:0",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "22",
+            "-pix_fmt",
+            "yuv420p",
+            "-r",
+            "25",
+            "-c:a",
+            "aac",
+            "-ar",
+            "44100",
+            "-ac",
+            "2",
+            "-b:a",
+            "128k",
+            "-avoid_negative_ts",
+            "make_zero",
+            str(prefix),
         ]
     )
 
-    audio_list = BUILD / "audio_concat.txt"
-    audio_list.write_text(
-        "".join(f"file '{(AUDIO / name).as_posix()}'\n" for name, _ in CHAPTERS),
+    durations = [audio_duration(AUDIO / name) for name, _ in CHAPTERS]
+    weights = [weight for _, weight in CHAPTERS]
+    scene_durations: list[float] = []
+    for duration, chapter_weights in zip(durations, weights):
+        scene_durations.extend(duration * weight for weight in chapter_weights)
+
+    segments = [
+        make_segment(i, image, title, subtitle, scene_durations[i - 7])
+        for i, (image, title, subtitle) in enumerate(CONTINUATION_SCENES, start=7)
+    ]
+    tail_video_list = BUILD / "tail_video_concat.txt"
+    tail_video_list.write_text(
+        "".join(f"file '{segment.as_posix()}'\n" for segment in segments),
         encoding="utf-8",
     )
-    narration = BUILD / "narration.m4a"
+    tail_silent = BUILD / "tail_silent.mp4"
     run(
         [
             "-y",
@@ -214,7 +211,32 @@ def main() -> int:
             "-safe",
             "0",
             "-i",
-            str(audio_list),
+            str(tail_video_list),
+            "-c",
+            "copy",
+            "-an",
+            str(tail_silent),
+        ]
+    )
+
+    tail_audio_list = BUILD / "tail_audio_concat.txt"
+    tail_audio_list.write_text(
+        "".join(f"file '{(AUDIO / name).as_posix()}'\n" for name, _ in CHAPTERS),
+        encoding="utf-8",
+    )
+    tail_audio = BUILD / "tail_audio.m4a"
+    run(
+        [
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(tail_audio_list),
             "-ar",
             "44100",
             "-ac",
@@ -223,12 +245,10 @@ def main() -> int:
             "aac",
             "-b:a",
             "128k",
-            str(narration),
+            str(tail_audio),
         ]
     )
-
-    if OUTPUT.exists():
-        OUTPUT.unlink()
+    tail = BUILD / "tail_scenes_07_15.mp4"
     run(
         [
             "-y",
@@ -236,9 +256,9 @@ def main() -> int:
             "-loglevel",
             "error",
             "-i",
-            str(silent_video),
+            str(tail_silent),
             "-i",
-            str(narration),
+            str(tail_audio),
             "-map",
             "0:v:0",
             "-map",
@@ -250,12 +270,36 @@ def main() -> int:
             "-b:a",
             "128k",
             "-shortest",
-            "-movflags",
-            "+faststart",
-            str(OUTPUT),
+            str(tail),
         ]
     )
 
+    concat_list = BUILD / "full_video_concat.txt"
+    concat_list.write_text(
+        f"file '{prefix.as_posix()}'\nfile '{tail.as_posix()}'\n",
+        encoding="utf-8",
+    )
+    combined = BUILD / "combined.mp4"
+    run(
+        [
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(concat_list),
+            "-c",
+            "copy",
+            "-movflags",
+            "+faststart",
+            str(combined),
+        ]
+    )
+    shutil.copyfile(combined, OUTPUT)
     if POSTER.exists():
         POSTER.unlink()
     run(
@@ -273,7 +317,6 @@ def main() -> int:
     )
     shutil.rmtree(BUILD)
     print(f"Built {OUTPUT} ({OUTPUT.stat().st_size / 1024 / 1024:.1f} MB)")
-    print(f"Poster: {POSTER}")
     return 0
 
 

@@ -33,4 +33,4 @@ A gentle English-language, 16:9 children's prayer tutorial in a polished 3D fami
 
 ## Production note
 
-The generated MP4 uses one narrated audio chapter for every three scenes, with gentle scene changes, English title cards, and clean lower-third guidance. Arabic prayer phrases are preserved in transliteration so the English narration remains respectful and usable as a teaching guide.
+The generated MP4 uses one narrated audio chapter for every three scenes, with gentle scene changes, English title cards, and clean lower-third guidance. Scenes 7–15 use three consistent Layan figures or transition views to make the movement easier to follow. The corrected Sujood board keeps the forehead and nose visibly touching the mat in every view. Arabic prayer phrases are preserved in transliteration so the English narration remains respectful and usable as a teaching guide.
