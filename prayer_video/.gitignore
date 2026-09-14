@@ -1,0 +1,8 @@
+# Generated source media is kept locally; the finished MP4 is the deliverable.
+assets/
+audio/
+preview.png
+.build/
+work/
+check/
+check2/
