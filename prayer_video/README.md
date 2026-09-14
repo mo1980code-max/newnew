@@ -12,6 +12,6 @@ A 16:9 English narrated tutorial with one consistent Layan character: a cheerful
 
 `ENGLISH_STORYBOARD.md` contains the complete English narration and scene plan. `make_video.py` documents the assembly pipeline used to create the MP4. The generated image and audio sources are kept locally under `assets/` and `audio/` and are ignored by Git because the finished MP4 is the requested deliverable.
 
-The current render uses a separate English narration track over the educational frames; it does not claim phoneme-level lip-sync. True mouth-to-audio sync requires a dedicated lip-sync pass such as Hedra, D-ID, LivePortrait, or a comparable video model using the Layan reference and the supplied narration.
+Scene 4 now visibly places the right hand over the left during the opening dua. Scene 15 keeps Layan seated and shows the Tasleem turning to the right and then to the left. The current render uses a separate English narration track over the educational frames; it does not claim phoneme-level lip-sync. True mouth-to-audio sync requires a dedicated lip-sync pass such as Hedra, D-ID, LivePortrait, or a comparable video model using the Layan reference and the supplied narration.
 
 Prayer practice can differ by school or community. Children should use this as a gentle visual guide and learn the details with a trusted parent, teacher, or imam.

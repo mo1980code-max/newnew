@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Rebuild the English prayer tutorial with one consistent Layan character.
 
-The first six scenes are preserved from the already-rendered base video. The
-continuation scenes use one Layan per frame with corrected prayer anatomy and
-scene durations derived from the narration clips.
+The existing first six scenes are reused with two visual corrections: scene 4
+shows the right hand over the left for the opening dua, and scene 15 uses two
+seated frames so Tasleem visibly turns right and then left. Scenes 7–14 use
+single-character, anatomy-checked frames and narration-derived timings.
 """
 from __future__ import annotations
 
@@ -20,13 +21,17 @@ AUDIO = ROOT / "audio"
 BUILD = ROOT / ".build"
 OUTPUT = ROOT / "english_prayer_with_layan.mp4"
 POSTER = ROOT / "preview.png"
-PREFIX_DURATION = 70.68  # scenes 1–6 in the base render
+
+# Durations from the base render's first six scenes. The first-six audio is
+# extracted from the base MP4 so the corrected visuals keep the same narration.
+PREFIX_DURATIONS = [11.539, 12.521, 8.920, 12.980, 10.703, 14.497]
+PREFIX_TOTAL = sum(PREFIX_DURATIONS)
 
 FFMPEG = os.environ.get("FFMPEG_BIN", shutil.which("ffmpeg") or "ffmpeg")
 FONT_BOLD = str((ROOT.parent / "app/src/main/assets/montserrat_semi_bold.ttf").resolve())
 FONT_REGULAR = str((ROOT.parent / "app/src/main/assets/open_sans_regular.ttf").resolve())
 
-CONTINUATION_SCENES = [
+TAIL_SCENES = [
     ("07_rising_single_v4.png", "RISING FROM RUKU", "Stand straight and praise Allah"),
     ("08_first_sujud_single_v4.png", "FIRST SUJOOD", "Forehead and nose touch the mat"),
     ("09_between_sujud_single_v4.png", "SITTING BETWEEN SUJOODS", "Straight back, hands on the thighs"),
@@ -35,7 +40,6 @@ CONTINUATION_SCENES = [
     ("12_middle_tashahhud_single_v4.png", "MIDDLE TASHAHHUD", "Raise the right index finger gently"),
     ("13_third_fourth_single_v4.png", "THIRD AND FOURTH RAKAH", "Recite Al Fatihah quietly"),
     ("14_final_tashahhud_single_v4.png", "FINAL TASHAHHUD AND DUA", "Complete the prayer with calm focus"),
-    ("15_salam_single_v4.png", "TASLEEM AND ENDING", "Turn right, left, then wave"),
 ]
 
 CHAPTERS = [
@@ -95,8 +99,8 @@ def make_filter(scene_no: int, title: str, subtitle: str) -> str:
     )
 
 
-def make_segment(index: int, image_name: str, title: str, subtitle: str, duration: float) -> Path:
-    out = BUILD / f"tail_scene_{index:02d}.mp4"
+def encode_still(index: int, image_name: str, title: str, subtitle: str, duration: float) -> Path:
+    out = BUILD / f"scene_{index:02d}_{len(list(BUILD.glob('scene_*.mp4'))):02d}.mp4"
     run(
         [
             "-y",
@@ -128,24 +132,8 @@ def make_segment(index: int, image_name: str, title: str, subtitle: str, duratio
     return out
 
 
-def main() -> int:
-    if not Path(FFMPEG).exists() and shutil.which(FFMPEG) is None:
-        raise SystemExit("ffmpeg was not found; set FFMPEG_BIN to its executable path")
-    if not OUTPUT.exists():
-        raise FileNotFoundError(f"The base video is missing: {OUTPUT}")
-    for image_name, _, _ in CONTINUATION_SCENES:
-        if not (ASSETS / image_name).exists():
-            raise FileNotFoundError(ASSETS / image_name)
-    for audio_name, _ in CHAPTERS:
-        if not (AUDIO / audio_name).exists():
-            raise FileNotFoundError(AUDIO / audio_name)
-
-    if BUILD.exists():
-        shutil.rmtree(BUILD)
-    BUILD.mkdir(parents=True)
-
-    # Render the existing first-six-scenes portion before replacing OUTPUT.
-    prefix = BUILD / "prefix_scenes_01_06.mp4"
+def extract_video(base: Path, start: float, duration: float, name: str) -> Path:
+    out = BUILD / name
     run(
         [
             "-y",
@@ -153,13 +141,12 @@ def main() -> int:
             "-loglevel",
             "error",
             "-i",
-            str(OUTPUT),
+            str(base),
+            "-ss",
+            f"{start:.3f}",
             "-t",
-            f"{PREFIX_DURATION:.3f}",
-            "-map",
-            "0:v:0",
-            "-map",
-            "0:a:0",
+            f"{duration:.3f}",
+            "-an",
             "-c:v",
             "libx264",
             "-preset",
@@ -170,36 +157,16 @@ def main() -> int:
             "yuv420p",
             "-r",
             "25",
-            "-c:a",
-            "aac",
-            "-ar",
-            "44100",
-            "-ac",
-            "2",
-            "-b:a",
-            "128k",
-            "-avoid_negative_ts",
-            "make_zero",
-            str(prefix),
+            str(out),
         ]
     )
+    return out
 
-    durations = [audio_duration(AUDIO / name) for name, _ in CHAPTERS]
-    weights = [weight for _, weight in CHAPTERS]
-    scene_durations: list[float] = []
-    for duration, chapter_weights in zip(durations, weights):
-        scene_durations.extend(duration * weight for weight in chapter_weights)
 
-    segments = [
-        make_segment(i, image, title, subtitle, scene_durations[i - 7])
-        for i, (image, title, subtitle) in enumerate(CONTINUATION_SCENES, start=7)
-    ]
-    tail_video_list = BUILD / "tail_video_concat.txt"
-    tail_video_list.write_text(
-        "".join(f"file '{segment.as_posix()}'\n" for segment in segments),
-        encoding="utf-8",
-    )
-    tail_silent = BUILD / "tail_silent.mp4"
+def concat_video(files: list[Path], name: str) -> Path:
+    list_file = BUILD / f"{name}.txt"
+    list_file.write_text("".join(f"file '{item.as_posix()}'\n" for item in files), encoding="utf-8")
+    out = BUILD / f"{name}.mp4"
     run(
         [
             "-y",
@@ -211,13 +178,126 @@ def main() -> int:
             "-safe",
             "0",
             "-i",
-            str(tail_video_list),
+            str(list_file),
             "-c",
             "copy",
             "-an",
-            str(tail_silent),
+            str(out),
         ]
     )
+    return out
+
+
+def mux(video: Path, audio: Path, name: str) -> Path:
+    out = BUILD / name
+    run(
+        [
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            str(video),
+            "-i",
+            str(audio),
+            "-map",
+            "0:v:0",
+            "-map",
+            "1:a:0",
+            "-c:v",
+            "copy",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
+            "-shortest",
+            str(out),
+        ]
+    )
+    return out
+
+
+def main() -> int:
+    if not Path(FFMPEG).exists() and shutil.which(FFMPEG) is None:
+        raise SystemExit("ffmpeg was not found; set FFMPEG_BIN to its executable path")
+    if not OUTPUT.exists():
+        raise FileNotFoundError(f"The base video is missing: {OUTPUT}")
+
+    required_images = ["04_hands_dua_corrected_v5.png", "15_tasleem_sitting_single_v5.png", "15_tasleem_sitting_left_v5.png"]
+    required_images += [item[0] for item in TAIL_SCENES]
+    required_audio = [item[0] for item in CHAPTERS]
+    for image_name in required_images:
+        if not (ASSETS / image_name).exists():
+            raise FileNotFoundError(ASSETS / image_name)
+    for audio_name in required_audio:
+        if not (AUDIO / audio_name).exists():
+            raise FileNotFoundError(AUDIO / audio_name)
+
+    if BUILD.exists():
+        shutil.rmtree(BUILD)
+    BUILD.mkdir(parents=True)
+    base = BUILD / "base_before_corrections.mp4"
+    shutil.copyfile(OUTPUT, base)
+
+    # Preserve the first three base scenes, replace scene 4 with corrected hands,
+    # then preserve scenes 5 and 6.
+    start = 0.0
+    first_three = extract_video(base, start, sum(PREFIX_DURATIONS[:3]), "scenes_01_03.mp4")
+    start += sum(PREFIX_DURATIONS[:3])
+    corrected_scene4 = encode_still(
+        4,
+        "04_hands_dua_corrected_v5.png",
+        "HANDS AND OPENING DUA",
+        "Right hand over left, then opening dua",
+        PREFIX_DURATIONS[3],
+    )
+    start += PREFIX_DURATIONS[3]
+    scenes_05_06 = extract_video(base, start, sum(PREFIX_DURATIONS[4:6]), "scenes_05_06.mp4")
+    prefix_silent = concat_video([first_three, corrected_scene4, scenes_05_06], "prefix_silent")
+
+    prefix_audio = BUILD / "prefix_audio.m4a"
+    run(
+        [
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            str(base),
+            "-t",
+            f"{PREFIX_TOTAL:.3f}",
+            "-vn",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
+            "-ar",
+            "44100",
+            "-ac",
+            "2",
+            str(prefix_audio),
+        ]
+    )
+    prefix = mux(prefix_silent, prefix_audio, "prefix.mp4")
+
+    durations = [audio_duration(AUDIO / name) for name, _ in CHAPTERS]
+    tail_durations: list[float] = []
+    for chapter_duration, (_, weights) in zip(durations, CHAPTERS):
+        tail_durations.extend(chapter_duration * weight for weight in weights)
+
+    tail_files: list[Path] = []
+    for scene_no, ((image, title, subtitle), duration) in enumerate(zip(TAIL_SCENES, tail_durations[:8]), start=7):
+        tail_files.append(encode_still(scene_no, image, title, subtitle, duration))
+
+    # Scene 15 explicitly shows seated Tasleem turning right and then left.
+    final_duration = tail_durations[8]
+    tail_files.append(
+        encode_still(15, "15_tasleem_sitting_single_v5.png", "TASLEEM AND ENDING", "Turn your head right", final_duration / 2)
+    )
+    tail_files.append(
+        encode_still(15, "15_tasleem_sitting_left_v5.png", "TASLEEM AND ENDING", "Then turn your head left", final_duration / 2)
+    )
+    tail_silent = concat_video(tail_files, "tail_silent")
 
     tail_audio_list = BUILD / "tail_audio_concat.txt"
     tail_audio_list.write_text(
@@ -248,37 +328,10 @@ def main() -> int:
             str(tail_audio),
         ]
     )
-    tail = BUILD / "tail_scenes_07_15.mp4"
-    run(
-        [
-            "-y",
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-i",
-            str(tail_silent),
-            "-i",
-            str(tail_audio),
-            "-map",
-            "0:v:0",
-            "-map",
-            "1:a:0",
-            "-c:v",
-            "copy",
-            "-c:a",
-            "aac",
-            "-b:a",
-            "128k",
-            "-shortest",
-            str(tail),
-        ]
-    )
+    tail = mux(tail_silent, tail_audio, "tail.mp4")
 
-    concat_list = BUILD / "full_video_concat.txt"
-    concat_list.write_text(
-        f"file '{prefix.as_posix()}'\nfile '{tail.as_posix()}'\n",
-        encoding="utf-8",
-    )
+    final_list = BUILD / "full_video_concat.txt"
+    final_list.write_text(f"file '{prefix.as_posix()}'\nfile '{tail.as_posix()}'\n", encoding="utf-8")
     combined = BUILD / "combined.mp4"
     run(
         [
@@ -291,7 +344,7 @@ def main() -> int:
             "-safe",
             "0",
             "-i",
-            str(concat_list),
+            str(final_list),
             "-c",
             "copy",
             "-movflags",
@@ -300,21 +353,10 @@ def main() -> int:
         ]
     )
     shutil.copyfile(combined, OUTPUT)
+
     if POSTER.exists():
         POSTER.unlink()
-    run(
-        [
-            "-y",
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-i",
-            str(OUTPUT),
-            "-frames:v",
-            "1",
-            str(POSTER),
-        ]
-    )
+    run(["-y", "-hide_banner", "-loglevel", "error", "-i", str(OUTPUT), "-frames:v", "1", str(POSTER)])
     shutil.rmtree(BUILD)
     print(f"Built {OUTPUT} ({OUTPUT.stat().st_size / 1024 / 1024:.1f} MB)")
     return 0
