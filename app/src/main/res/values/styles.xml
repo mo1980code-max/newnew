@@ -21,4 +21,12 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
+
+
+    <!-- The Quran reader is an opaque, distraction-free paper page. -->
+    <style name="AppTheme.QuranReader" parent="AppTheme">
+        <item name="android:windowBackground">@color/quranPaper</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
 </resources>

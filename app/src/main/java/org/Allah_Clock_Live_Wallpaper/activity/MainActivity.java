@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FrameLayout frameClock;
     private FrameLayout frameWallpaper;
+    private FrameLayout frameQuran;
     private ImageView rate;
     private ImageView share;
     private ImageView privacy;
@@ -119,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
     private void initView() {
         this.frameClock = findViewById(R.id.frameClock);
         this.frameWallpaper = findViewById(R.id.frameWallpaper);
+        this.frameQuran = findViewById(R.id.frameQuran);
         this.rate = findViewById(R.id.rateus);
         this.share = findViewById(R.id.share);
         this.privacy = findViewById(R.id.privacy);
@@ -170,6 +172,9 @@ public class MainActivity extends AppCompatActivity {
 
         this.frameWallpaper.setOnClickListener(view ->
                 startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class)));
+
+        this.frameQuran.setOnClickListener(view ->
+                startActivity(new Intent(MainActivity.this, QuranIndexActivity.class)));
     }
 
     /**

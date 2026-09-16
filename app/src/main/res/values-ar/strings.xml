@@ -132,4 +132,46 @@
     <string name="privacy_settings">إعدادات الخصوصية</string>
     <string name="privacy_settings_content_description">تغيير خياراتك الإعلانية والخصوصية</string>
 
+
+
+    <!-- ── القرآن الكريم: قراءة دون إنترنت وبحث وعلامات محفوظة ───────────── -->
+    <string name="title_quran">القرآن الكريم</string>
+    <string name="tile_quran">القرآن الكريم</string>
+    <string name="quran_index_intro">اقرأ القرآن الكريم كاملًا دون إنترنت</string>
+    <string name="quran_continue_title">متابعة القراءة</string>
+    <string name="quran_continue_position">%1$s · الآية %2$d</string>
+    <string name="quran_search">البحث في القرآن</string>
+    <string name="quran_search_hint">ابحث في آية أو سورة أو مرجع مثل 2:255</string>
+    <string name="quran_search_prompt">اكتب كلمة أو اسم سورة أو مرجعًا للبحث في القرآن الكريم.</string>
+    <string name="quran_search_no_results">لا توجد نتائج</string>
+    <string name="quran_search_results">%1$d نتيجة</string>
+    <string name="quran_search_results_limited">عرض أول %1$d من أصل %2$d نتيجة</string>
+    <string name="quran_search_type_surah">سورة</string>
+    <string name="quran_search_type_ayah">آية</string>
+    <string name="quran_bookmarks">العلامات</string>
+    <string name="quran_bookmarks_title">العلامات المحفوظة</string>
+    <string name="quran_no_bookmarks">لا توجد علامات محفوظة بعد</string>
+    <string name="quran_no_bookmarks_hint">انقر أيقونة العلامة بجانب أي آية لحفظها هنا.</string>
+    <string name="quran_bookmark_added">تم حفظ العلامة</string>
+    <string name="quran_bookmark_removed">تمت إزالة العلامة</string>
+    <string name="quran_add_bookmark">حفظ علامة عند الآية %1$d</string>
+    <string name="quran_remove_bookmark">إزالة علامة الآية %1$d</string>
+    <string name="quran_reader_hint">انقر على آية لحفظ موضع القراءة. استخدم أيقونة العلامة لحفظها.</string>
+    <string name="quran_surah_title">سورة %1$d · %2$s</string>
+    <string name="quran_ayah_reference">سورة %1$d · %2$s · الآية %3$d</string>
+    <string name="quran_surah_metadata">%1$d آيات · %2$s</string>
+    <string name="quran_meccan">مكية</string>
+    <string name="quran_medinan">مدنية</string>
+    <string name="quran_open_surah">فتح سورة %1$s</string>
+    <string name="quran_text_source_short">نص القرآن: مشروع تنزيل · tanzil.net</string>
+    <string name="quran_text_source_title">مصدر نص القرآن</string>
+    <string name="quran_text_source_message">يحتوي التطبيق على نص القرآن العثماني الحرفي من مشروع تنزيل، الإصدار 1.1، وفق ترخيص المشاع الإبداعي للنسبة 3.0. يتضمن مصدر التطبيق الإشعار الكامل. تفضل بزيارة tanzil.net لمعرفة التحديثات.</string>
+    <string name="quran_text_source_link">فتح Tanzil.net</string>
+    <string name="quran_load_failed">تعذّر فتح نص القرآن. يرجى إعادة تثبيت التطبيق.</string>
+    <string name="cd_quran">فتح قارئ القرآن الكريم</string>
+    <string name="cd_quran_search">البحث في نص القرآن</string>
+    <string name="cd_quran_bookmarks">فتح علامات القرآن المحفوظة</string>
+    <string name="cd_quran_text_source">عرض مصدر نص القرآن وترخيصه</string>
+    <string name="cd_quran_search_input">البحث في نص القرآن</string>
+
 </resources>
