@@ -16,14 +16,13 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        // jitpack is still required by com.github.QuadFlask:colorpicker
-        maven { url 'https://jitpack.io' }
-    }
-}
+// Module repositories are NOT declared here on purpose.
+// settings.gradle owns them through dependencyResolutionManagement with
+// RepositoriesMode.PREFER_SETTINGS, which ignores any repository declared in a build script
+// (Gradle would log a warning about the duplicate). That block already lists google(),
+// mavenCentral() and https://jitpack.io - the last one is required by
+// com.github.QuadFlask:colorpicker:0.0.14, used by EditorActivity.
+// The buildscript block above is unaffected: plugin classpaths resolve separately.
 
 tasks.register('clean', Delete) {
     delete rootProject.layout.buildDirectory
