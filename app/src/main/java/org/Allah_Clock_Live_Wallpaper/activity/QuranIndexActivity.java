@@ -63,6 +63,7 @@ public final class QuranIndexActivity extends AppCompatActivity {
         bookmarks.setOnClickListener(view -> startActivity(new Intent(this,
                 QuranBookmarksActivity.class)));
         findViewById(R.id.quranIndexSource).setOnClickListener(view -> showTextSource());
+        findViewById(R.id.quranMushafCard).setOnClickListener(view -> openMushaf());
 
         this.surahList.setLayoutManager(new LinearLayoutManager(this));
         loadRepository();
@@ -124,10 +125,12 @@ public final class QuranIndexActivity extends AppCompatActivity {
             return;
         }
         String name = surah.getDisplayName(LocaleHelper.isArabic(this));
-        this.continuePosition.setText(getString(R.string.quran_continue_position, name,
-                ayah.getAyahNumber()));
-        this.continueCard.setContentDescription(getString(R.string.quran_continue_position, name,
-                ayah.getAyahNumber()));
+        int page = this.repository.getPageForAyah(last.getSurahNumber(), last.getAyahNumber());
+        String position = page > 0
+                ? getString(R.string.quran_continue_position_page, name, ayah.getAyahNumber(), page)
+                : getString(R.string.quran_continue_position, name, ayah.getAyahNumber());
+        this.continuePosition.setText(position);
+        this.continueCard.setContentDescription(position);
         this.continueCard.setOnClickListener(view -> openReader(last.getSurahNumber(),
                 last.getAyahNumber()));
         this.continueCard.setVisibility(View.VISIBLE);
@@ -139,6 +142,19 @@ public final class QuranIndexActivity extends AppCompatActivity {
 
     private void openReader(int surahNumber, int ayahNumber) {
         startActivity(QuranReaderActivity.createIntent(this, surahNumber, ayahNumber));
+    }
+
+    private void openMushaf() {
+        int page = -1;
+        QuranBookmark last = this.store == null ? null : this.store.getLastReading();
+        if (last != null && this.repository != null) {
+            int savedPage = this.repository.getPageForAyah(last.getSurahNumber(),
+                    last.getAyahNumber());
+            if (savedPage > 0) {
+                page = savedPage;
+            }
+        }
+        startActivity(QuranMushafActivity.createIntent(this, page));
     }
 
     private void showTextSource() {

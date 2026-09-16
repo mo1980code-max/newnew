@@ -79,8 +79,13 @@ public final class QuranBookmarkAdapter
             return;
         }
         String name = surah.getDisplayName(arabicUi);
-        holder.title.setText(holder.itemView.getContext().getString(R.string.quran_ayah_reference,
-                surah.getNumber(), name, ayah.getAyahNumber()));
+        int page = repository.getPageForAyah(surah.getNumber(), ayah.getAyahNumber());
+        int title = page > 0 ? R.string.quran_ayah_reference_page : R.string.quran_ayah_reference;
+        holder.title.setText(page > 0
+                ? holder.itemView.getContext().getString(title, surah.getNumber(), name,
+                        ayah.getAyahNumber(), page)
+                : holder.itemView.getContext().getString(title, surah.getNumber(), name,
+                        ayah.getAyahNumber()));
         holder.text.setText(ayah.getText());
         holder.remove.setContentDescription(holder.itemView.getContext().getString(
                 R.string.quran_remove_bookmark, ayah.getAyahNumber()));

@@ -5,10 +5,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -70,6 +72,10 @@ public final class QuranReaderActivity extends AppCompatActivity {
         this.title.setText(R.string.title_quran);
 
         findViewById(R.id.quranReaderBack).setOnClickListener(view -> finish());
+        ImageButton textSize = findViewById(R.id.quranReaderTextSize);
+        textSize.setOnClickListener(view -> showTextSizePicker());
+        ImageButton mushaf = findViewById(R.id.quranReaderMushaf);
+        mushaf.setOnClickListener(view -> openMushafAtVisiblePage());
         ImageButton bookmarks = findViewById(R.id.quranReaderBookmarks);
         bookmarks.setOnClickListener(view -> startActivity(new Intent(this,
                 QuranBookmarksActivity.class)));
@@ -144,7 +150,7 @@ public final class QuranReaderActivity extends AppCompatActivity {
                                 ? R.string.quran_bookmark_added : R.string.quran_bookmark_removed,
                                 Toast.LENGTH_SHORT).show();
                     }
-                });
+                }, this.store.getTextSizeSp());
         this.ayahList.setAdapter(this.adapter);
         this.loading.setVisibility(View.GONE);
         this.error.setVisibility(View.GONE);
@@ -172,6 +178,38 @@ public final class QuranReaderActivity extends AppCompatActivity {
             return last;
         }
         return new QuranBookmark(1, 1);
+    }
+
+    private void showTextSizePicker() {
+        if (this.store == null || this.adapter == null) {
+            return;
+        }
+        NumberPicker picker = new NumberPicker(this);
+        picker.setMinValue(QuranStore.MIN_TEXT_SIZE_SP);
+        picker.setMaxValue(QuranStore.MAX_TEXT_SIZE_SP);
+        picker.setValue(this.store.getTextSizeSp());
+        picker.setWrapSelectorWheel(false);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.quran_text_size)
+                .setView(picker)
+                .setPositiveButton(R.string.ok, (dialog, which) -> {
+                    int selected = picker.getValue();
+                    store.saveTextSizeSp(selected);
+                    adapter.setTextSizeSp(selected);
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void openMushafAtVisiblePage() {
+        saveVisiblePosition();
+        int page = -1;
+        QuranBookmark reading = this.store == null ? null : this.store.getLastReading();
+        if (reading != null && this.repository != null) {
+            page = this.repository.getPageForAyah(reading.getSurahNumber(),
+                    reading.getAyahNumber());
+        }
+        startActivity(QuranMushafActivity.createIntent(this, page));
     }
 
     private void saveVisiblePosition() {

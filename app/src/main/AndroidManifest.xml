@@ -163,6 +163,12 @@
             android:theme="@style/AppTheme.QuranReader"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
         <activity
+            android:name=".activity.QuranMushafActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.QuranReader"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
             android:name=".activity.QuranSearchActivity"
             android:exported="false"
             android:screenOrientation="portrait"

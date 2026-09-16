@@ -23,6 +23,11 @@ public final class QuranStore {
     private static final String PREF_BOOKMARKS = "quranBookmarksV1";
     private static final String PREF_LAST_SURAH = "quranLastSurahV1";
     private static final String PREF_LAST_AYAH = "quranLastAyahV1";
+    private static final String PREF_TEXT_SIZE = "quranTextSizeSpV1";
+
+    public static final int DEFAULT_TEXT_SIZE_SP = 23;
+    public static final int MIN_TEXT_SIZE_SP = 18;
+    public static final int MAX_TEXT_SIZE_SP = 34;
 
     private final TinyDB tinyDB;
     @Nullable
@@ -86,6 +91,19 @@ public final class QuranStore {
         int surah = this.tinyDB.getInt(PREF_LAST_SURAH, -1);
         int ayah = this.tinyDB.getInt(PREF_LAST_AYAH, -1);
         return isPlausible(surah, ayah) ? new QuranBookmark(surah, ayah) : null;
+    }
+
+    /** The reader's accessible text size, shared by surah and page-by-page reading modes. */
+    public int getTextSizeSp() {
+        int saved = this.tinyDB.getInt(PREF_TEXT_SIZE, DEFAULT_TEXT_SIZE_SP);
+        return saved >= MIN_TEXT_SIZE_SP && saved <= MAX_TEXT_SIZE_SP
+                ? saved : DEFAULT_TEXT_SIZE_SP;
+    }
+
+    public void saveTextSizeSp(int textSizeSp) {
+        if (textSizeSp >= MIN_TEXT_SIZE_SP && textSizeSp <= MAX_TEXT_SIZE_SP) {
+            this.tinyDB.putInt(PREF_TEXT_SIZE, textSizeSp);
+        }
     }
 
     @NonNull

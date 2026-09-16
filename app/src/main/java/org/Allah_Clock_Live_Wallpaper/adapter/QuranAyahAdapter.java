@@ -1,5 +1,6 @@
 package org.Allah_Clock_Live_Wallpaper.adapter;
 
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,12 +31,14 @@ public final class QuranAyahAdapter extends RecyclerView.Adapter<QuranAyahAdapte
     private final QuranStore store;
     @NonNull
     private final Listener listener;
+    private int textSizeSp;
 
     public QuranAyahAdapter(@NonNull List<QuranAyah> items, @NonNull QuranStore store,
-                            @NonNull Listener listener) {
+                            @NonNull Listener listener, int textSizeSp) {
         this.items = items;
         this.store = store;
         this.listener = listener;
+        this.textSizeSp = textSizeSp;
         setHasStableIds(true);
     }
 
@@ -70,6 +73,7 @@ public final class QuranAyahAdapter extends RecyclerView.Adapter<QuranAyahAdapte
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         QuranAyah ayah = items.get(position);
         holder.number.setText(String.valueOf(ayah.getAyahNumber()));
+        holder.text.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSizeSp);
         holder.text.setText(ayah.getText());
         paintBookmark(holder, ayah, store.isBookmarked(ayah.getSurahNumber(), ayah.getAyahNumber()));
 
@@ -99,6 +103,14 @@ public final class QuranAyahAdapter extends RecyclerView.Adapter<QuranAyahAdapte
     /** Repaints saved icons after returning to the saved-marks screen. */
     public void refreshBookmarks() {
         notifyDataSetChanged();
+    }
+
+    /** Applies a locally persisted accessible size without replacing the current reading list. */
+    public void setTextSizeSp(int textSizeSp) {
+        if (this.textSizeSp != textSizeSp) {
+            this.textSizeSp = textSizeSp;
+            notifyDataSetChanged();
+        }
     }
 
     @NonNull
