@@ -91,7 +91,7 @@ git clone -b arena/01a0970d-newnew https://github.com/mo1980code-max/newnew.git
 | العَرَض | السبب والحل |
 |---|---|
 | `Android Gradle plugin requires Java 17` | Settings → Build, Execution, Deployment → Build Tools → Gradle → **Gradle JDK = 17 (Embedded)** |
-| تعذّر تنزيل `com.github.QuadFlask:colorpicker` | المستودع `jitpack.io` معلن في `build.gradle` الجذر — تحقق من اتصالك أو البروكسي |
+| تعذّر تنزيل `com.github.QuadFlask:colorpicker` | المستودع `jitpack.io` معلن في **`settings.gradle`** (نمط `PREFER_SETTINGS`، أي أن مستودعات `build.gradle` الجذر تُتجاهل) — تحقق من اتصالك أو البروكسي |
 | تحذير من `enableJetifier` | مقصود: مكتبتان (colorpicker وokdownload القديمة) مبنيتان على `android.support` |
 | إعلانات لا تظهر | طبيعية: المعرّفات اختبارية، وقد يتأخر أول إعلان. الإصدار `debug` لا يقلّص الكود |
 | الخلفية الحية لا تعمل فورًا | فعّلها من الجهاز: ضغط مطوّل على الرئيسية → **Wallpaper → Live wallpaper**، أو من داخل التطبيق |

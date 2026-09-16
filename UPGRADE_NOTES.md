@@ -592,3 +592,48 @@ ads/
 و`smart_thumb_*`) بدل الرسوم التقريبية، وتحسب اتجاه القبلة ومسافتها من إحداثيات
 `QiblaUtil` نفسها (عمّان 161° و1234 كم)، وتحمّل خطوط العرض نفسها التي يحزمها التطبيق.
 أصولها (`tools/preview/assets/`، 3.5 م.ب) متجاهَلة في git وتُعاد بأمر واحد.
+
+---
+
+## 15. حالة المستودع والتسليم (16 سبتمبر 2026)
+
+### الفرع و`main`
+كل العمل موثّق على الفرع `arena/01a0970d-newnew`. أُعيد نقل (rebase) 19 commit فوق
+`main` مباشرة، فصار `main` أصلًا للفرع والدمج نظيفًا بلا تعارض — طلب الدمج
+[PR #1](https://github.com/mo1980code-max/newnew/pull/1) حالته `MERGEABLE / CLEAN`.
+قبل النقل كانت الشجرتان غير مرتبطتين تاريخيًا (`main` commit جذري واحد)، والفرق الوحيد
+في المحتوى كان `settings.gradle`.
+
+### من يملك إعلان المستودعات
+`settings.gradle` (الآتي من `main`) يعلن `pluginManagement` و`dependencyResolutionManagement`
+بنمط `RepositoriesMode.PREFER_SETTINGS`. هذا النمط **يتجاهل** أي مستودع مُعلن داخل
+`build.gradle`، لذلك حُذف كتلة `allprojects { repositories { ... } }` من `build.gradle`
+الجذر وصارت الإشارة إلى `settings.gradle` وحده (فيه `google()` و`mavenCentral()` و`jitpack.io`
+اللازمة لـ `com.github.QuadFlask:colorpicker:0.0.14`). كتلة `buildscript` لم تُمسّ:
+مسار classpath للإضافات يُحلّ مستقلًا عن `dependencyResolutionManagement`.
+
+### حزمة التنزيل ولماذا هي داخل المستودع
+`Allah-Clock-Live-Wallpaper-android-studio.zip` (9.2 م.ب / 358 ملفًا) محفوظ **داخل المستودع**
+على جذر الفرع، لأن بيئة البناء لا تصل إلى `uploads.github.com` (فشل TLS فوري) فمرفقات
+Releases غير ممكنة. يُعاد بناؤه بالأمر:
+
+```bash
+python3 tools/build_package.py
+```
+
+وهو يستثني `.git` وكل `build/` و`.gradle/` و`local.properties` وأصول المعاينة المولَّدة
+`tools/preview/assets/` وأي `*.zip` (حتى لا تبتلع الحزمة نسخةً منها تُقدَّم عبر خادم
+المعاينة)، ويحفظ صلاحية `gradlew` = 0755 داخل الأرشيف.
+
+> بعد أي تعديل على المصدر: `python3 tools/build_package.py` ثم الالتزام، حتى تبقى الحزمة
+> مطابقة للشجرة. النسخة المقدَّمة عبر خادم المعاينة تُنسخ يدويًا:
+> `cp Allah-Clock-*.zip tools/preview/` (وهي متجاهَلة في git).
+
+### فحص التسليم الأخير
+| الفحص | النتيجة |
+|---|---|
+| `tools/verify_resources.py` | NO ERRORS |
+| بصمة blob للحزمة: محليًا مقابل GitHub API | `ced60e7a…c52abc` متطابقة (9,646,452 بايت) |
+| سلامة الأرشيف وعدد مدخلاته | OK · 358 |
+| المحتوى | 61 صنف جافا · 85 ملف res XML · 21 خلفية · 16 خطًا |
+| خادم المعاينة | `/` و`/assets/data.js` والحزمة كلها 200 |
