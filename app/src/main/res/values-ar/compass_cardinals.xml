@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- اتجاهات البوصلة كما ترسمها CompassView. الترتيب: شمال، شرق، جنوب، غرب. الكلمات كاملة لأن «شرق» و«شمال» يشتركان في الحرف الأول. -->
+    <string-array name="compass_cardinals">
+        <item>شمال</item>
+        <item>شرق</item>
+        <item>جنوب</item>
+        <item>غرب</item>
+    </string-array>
+
+</resources>

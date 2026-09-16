@@ -31,6 +31,7 @@
 
                 <ImageView
                     android:id="@+id/ivBack"
+                    android:contentDescription="@string/cd_back"
                     android:layout_width="?attr/actionBarSize"
                     android:layout_height="?attr/actionBarSize"
                     android:padding="10dp"

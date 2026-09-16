@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:aapt="http://schemas.android.com/aapt">
-    <external-path name="external_files" path="."/>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- App-specific external storage (Android/data/<pkg>/files and .../cache). -->
+    <external-path name="external_files" path="." />
+    <external-files-path name="external_app_files" path="." />
+    <external-cache-path name="external_app_cache" path="." />
+    <!-- App-specific internal storage. -->
+    <files-path name="internal_files" path="." />
+    <cache-path name="internal_cache" path="." />
 </paths>

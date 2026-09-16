@@ -1,6 +1,137 @@
 <resources>
 
-    <string name="app_name">clock live wallpaper</string>
+    <string name="app_name">Allah Clock Live Wallpaper</string>
 
+    <!-- ── Screen titles ─────────────────────────────────────────────── -->
+    <string name="title_analog_clock">Analog Clock</string>
+    <string name="title_digital_clock">Digital Clock</string>
+    <string name="title_smart_clock">Smart Clock</string>
+    <string name="title_wallpaper">Wallpaper</string>
+    <string name="tile_android_clock">Android 12 Clock</string>
+    <string name="tile_analog_clock">Analog\nClock</string>
+    <string name="tile_digital_clock">Digital\nClock</string>
+    <string name="tile_smart_clock">Smart\nClock</string>
+
+    <!-- ── Editor ────────────────────────────────────────────────────── -->
+    <string name="choose_color">Choose color</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="color_1">Color 1</string>
+    <string name="color_2">Color 2</string>
+    <string name="select_picture">Select picture</string>
+    <string name="image_loading">Importing image…</string>
+    <string name="image_failed">Could not read that image, please pick another one</string>
+
+    <!-- ── Wallpaper ─────────────────────────────────────────────────── -->
+    <string name="set_wallpaper">Set Wallpaper</string>
+    <string name="save_failed">Could not prepare this wallpaper, please try again</string>
+
+    <!-- Wallpaper categories (all images are bundled inside the APK) -->
+    <string name="cat_kaaba">Kaaba &amp; Masjid al-Haram</string>
+    <string name="cat_madina">The Prophet\'s Mosque</string>
+    <string name="cat_aqsa">Al-Aqsa &amp; Jerusalem</string>
+    <string name="cat_mosques">Mosques &amp; Minarets</string>
+    <string name="cat_classic">Classic Gradients</string>
+    <string name="wallpaper_chooser_unavailable">No wallpaper picker is available on this device</string>
+    <string name="wallpaper_preview_content_description">Wallpaper preview</string>
+
+    <!-- ── Share / rate ──────────────────────────────────────────────── -->
+    <string name="share_application">Share application</string>
+    <string name="rate_unavailable">Could not open the Play Store</string>
+
+    <!-- ── Content descriptions (accessibility) ──────────────────────── -->
+    <string name="cd_rate">Rate this app</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_done">Done</string>
+    <string name="cd_zoom_in">Zoom in</string>
+    <string name="cd_zoom_out">Zoom out</string>
+    <string name="cd_center">Center the clock</string>
+    <string name="cd_background_color">Background color</string>
+    <string name="cd_text_color">Text color</string>
+    <string name="cd_gallery">Pick an image from the gallery</string>
+    <string name="cd_backgrounds">Choose a built-in background</string>
+    <string name="cd_apply_wallpaper">Apply as live wallpaper</string>
+    <string name="cd_wallpaper_preview">Wallpaper preview</string>
+    <string name="cd_clock_type">Clock type</string>
+
+    <!-- ── Native ad ─────────────────────────────────────────────────── -->
+    <string name="ad_badge">Ad</string>
+    <string name="ad_badge_content_description">Advertisement</string>
+    <string name="ad_media_content_description">Advertisement media</string>
+    <string name="ad_icon_content_description">Advertiser logo</string>
+
+    <!-- ── Premium (golden) clocks ───────────────────────────────────── -->
+    <string name="premium_lock_content_description">Premium clock, watch an ad to unlock</string>
+    <string name="premium_dialog_title">Premium Clocks</string>
+    <string name="premium_dialog_message">Watch one short video to unlock every Premium golden clock for this session. You can always cancel and keep using the free clocks.</string>
+    <string name="premium_dialog_watch">Watch ad &amp; unlock</string>
+    <string name="premium_dialog_cancel">Not now</string>
+    <string name="premium_unlocked">Premium clocks unlocked</string>
+    <string name="premium_not_unlocked">Premium clocks are still locked</string>
+    <string name="ad_loading">Loading…</string>
+
+    <!-- ── Privacy / consent ─────────────────────────────────────────── -->
+    <!-- Qibla compass -->
+    <string name="title_qibla">Qibla Compass</string>
+    <string name="cd_qibla">Open the Qibla compass</string>
+    <string name="qibla_city">Choose your city</string>
+    <string name="qibla_bearing">Qibla direction: %1$d° from north</string>
+    <string name="qibla_distance">Distance to Makkah: %1$d km</string>
+    <string name="qibla_sensor_unavailable">The compass sensor is not available on this device</string>
+    <string name="qibla_calibrate">Move your phone in a figure of eight to calibrate the compass</string>
+
+    <!-- Wallpaper overlay options -->
+    <string name="options_title">Wallpaper options</string>
+    <string name="cd_options">Wallpaper options</string>
+    <string name="option_hijri">Show the Hijri date</string>
+    <string name="option_dhikr">Show rotating Adhkar</string>
+    <string name="option_power">Power saver: second hand ticks once per second</string>
+    <string name="options_hint">The Hijri date appears at the top of the live wallpaper and a short dhikr rotates at the bottom every few hours. Power saver keeps the wallpaper redraw at one frame per second; switch it off for a continuously sweeping second hand, which looks smoother but uses noticeably more battery.</string>
+    <string name="hijri_format">%1$d %2$s %3$d AH</string>
+
+    <!-- Floating tasbeeh -->
+    <string name="cd_tasbeeh">Start or stop the floating tasbeeh</string>
+    <string name="tasbeeh_started">Floating tasbeeh is on — tap it to count</string>
+    <string name="tasbeeh_stopped">Floating tasbeeh stopped</string>
+    <string name="tasbeeh_permission_needed">Allow “Display over other apps” so the tasbeeh can float above other apps</string>
+    <string name="tasbeeh_locked">Counter locked</string>
+    <string name="tasbeeh_unlocked">Counter unlocked</string>
+    <string name="tasbeeh_reset_done">Counter reset to zero</string>
+    <string name="tasbeeh_lock_glyph">🔒</string>
+    <string name="tasbeeh_count_content_description">Dhikr count</string>
+    <string name="tasbeeh_reset_content_description">Reset the counter, long press</string>
+
+    <!-- Home screen widgets -->
+    <string name="widget_name_square">Allah Clock 2×2</string>
+    <string name="widget_name_wide">Allah Clock 4×2</string>
+    <string name="widget_desc">Your chosen clock design with the Hijri date and a rotating dhikr. Refreshes once a minute, far lighter on battery than the live wallpaper.</string>
+
+    <!-- Morning / evening athkar -->
+    <string name="athkar_morning_title">Morning Athkar</string>
+    <string name="athkar_evening_title">Evening Athkar</string>
+    <string name="athkar_settings">Athkar timing settings</string>
+    <string name="athkar_mode_auto">Astronomical times (fajr, asr and maghrib computed offline)</string>
+    <string name="athkar_mode_fixed">Fixed time slots of my own</string>
+    <string name="athkar_angle_15">Fajr angle 15°</string>
+    <string name="athkar_angle_18">Fajr angle 18°</string>
+    <string name="athkar_morning_slot">Morning window (start / end)</string>
+    <string name="athkar_evening_slot">Evening window (start / end)</string>
+    <string name="athkar_count">%1$d athkar</string>
+    <string name="athkar_progress">%1$d / %2$d</string>
+    <string name="athkar_position">Dhikr %1$d of %2$d</string>
+    <string name="athkar_completed">Completed ✓</string>
+    <string name="option_athkar_badge">Show the athkar badge on the wallpaper</string>
+    <string name="cd_athkar_badge">Open the athkar reader</string>
+    <string name="cd_athkar_close">Close the athkar reader</string>
+    <string name="cd_athkar_counter">Repeats left, tap the dhikr to count</string>
+
+    <!-- Language -->
+    <string name="choose_language">Language</string>
+    <string name="language_english">English</string>
+    <string name="language_arabic">العربية</string>
+    <string name="cd_language">Change the app language</string>
+
+    <string name="privacy_settings">Privacy settings</string>
+    <string name="privacy_settings_content_description">Change your advertising and privacy choices</string>
 
 </resources>

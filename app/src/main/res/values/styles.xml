@@ -4,10 +4,21 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <!-- Edge-to-edge is enforced from targetSdk 35; a white window background matches
+             the list screens so the system-bar padding never shows a different colour. -->
+        <item name="android:windowBackground">@color/textColor</item>
     </style>
 
-    <style name="TabTextAppearance" parent="@style/TextAppearance.Design.Tab">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/appColor</item>
+    <!--
+      Athkar reader: an opaque paper page, not a translucent sheet. The live wallpaper
+      (mosque photographs) no longer shows through it, the dialog animation is gone and
+      the window background is the same paper as the page, so the system-bar area that
+      edge-to-edge exposes does not show a different colour. Light status-bar icons are
+      set by UiCompat.applyEdgeToEdge(), which the activity calls for the insets.
+    -->
+    <style name="AppTheme.AthkarReader" parent="AppTheme">
+        <item name="android:windowBackground">@color/athkarPaper</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
+
 </resources>

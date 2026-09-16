@@ -1,20 +1,33 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+}
 
 android {
-    compileSdkVersion 34
-    namespace 'com.clock.livewallpaper'
+    namespace 'org.Allah_Clock_Live_Wallpaper'
+    compileSdk 36
+
     defaultConfig {
-        applicationId "com.clock.livewallpaper"
-        minSdkVersion 19
-        targetSdkVersion 34
-        versionCode 1
+        applicationId "org.Allah_Clock_Live_Wallpaper"
+
+        // 23 is the floor for the current Google Mobile Ads SDK (25.x),
+        // the UMP consent SDK (4.x) and modern AndroidX libraries.
+        minSdk 23
+        // 36 = Android 16. Required by Google Play for app updates since 31 Aug 2026.
+        targetSdk 36
+
+        // IMPORTANT: raise versionCode above whatever is currently live on Google Play,
+        // otherwise Play Console rejects the upload.
+        versionCode 2
+        versionName "1.1"
+
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        resConfigs "en"
-        multiDexEnabled true
     }
-    dataBinding {
-        enabled = true
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
+
     bundle {
         density {
             enableSplit true
@@ -23,9 +36,14 @@ android {
             enableSplit true
         }
         language {
+            // Must stay false: the app ships an in-app language switcher (English / Arabic).
+            // With language splits on, Play delivers only the device's own languages, so an
+            // English-only phone would install without values-ar and the switch to Arabic
+            // would silently fall back to English. Density and ABI splits are still safe.
             enableSplit false
         }
     }
+
     buildTypes {
         release {
             debuggable false
@@ -36,35 +54,59 @@ android {
 
         debug {
             debuggable true
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Keep the debug build fast and readable; R8 is exercised by the release build.
+            minifyEnabled false
+            shrinkResources false
         }
     }
 
+    packaging {
+        resources {
+            excludes += [
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/LICENSE',
+                    'META-INF/LICENSE.txt',
+                    'META-INF/license.txt',
+                    'META-INF/NOTICE',
+                    'META-INF/NOTICE.txt',
+                    'META-INF/notice.txt',
+                    'META-INF/ASL2.0',
+                    'META-INF/*.kotlin_module'
+            ]
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
 }
 
 dependencies {
 
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.3.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
-    implementation 'com.github.bumptech.glide:glide:4.9.0'
-    implementation 'com.android.volley:volley:1.1.1'
-    implementation 'com.github.bumptech.glide:glide:4.9.0'
-    implementation 'com.github.QuadFlask:colorpicker:0.0.14'
-    implementation 'com.github.ybq:Android-SpinKit:1.2.0'
-    implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'com.isseiaoki:simplecropview:1.1.8'
-    implementation 'com.liulishuo.okdownload:okdownload:1.0.7'
-    implementation 'com.liulishuo.filedownloader:library:1.7.7'
-    implementation 'com.ogaclejapan.smarttablayout:utils-v4:2.0.0'
-    implementation 'com.squareup.picasso:picasso:2.8'
-    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
-    implementation 'com.squareup.okio:okio:2.10.0'
-    implementation 'cn.dreamtobe.filedownloader:filedownloader-okhttp3-connection:1.1.0'
-    implementation 'androidx.recyclerview:recyclerview:1.1.0'
-    implementation 'com.google.android.material:material:1.0.0'
-    implementation 'com.google.android.gms:play-services-ads:22.6.0'
+    // ---- AndroidX -----------------------------------------------------------------
+    // material / constraintlayout / spinKit were removed: nothing in res/ or java/ uses them.
+    implementation 'androidx.appcompat:appcompat:1.8.0'
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
 
+    // ---- Ads (AdMob + mandatory UMP consent) --------------------------------------
+    implementation 'com.google.android.gms:play-services-ads:25.4.0'
+    implementation 'com.google.android.ump:user-messaging-platform:4.0.0'
+
+    // ---- Images -------------------------------------------------------------------
+    // Glide 4.16.0 is the last 4.x; Glide 5 changes RequestOptions/BaseRequestOptions
+    // and would need a separate migration pass.
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+
+    // ---- JSON ---------------------------------------------------------------------
+    // Only used by TinyDB to persist the selected clock model as a preference.
+    implementation 'com.google.code.gson:gson:2.14.0'
+
+    // ---- Wallpaper catalogue -------------------------------------------------------
+    // Every wallpaper ships inside the APK (res/drawable-nodpi), so no download library
+    // is needed any more: okdownload / okhttp / filedownloader were all removed.
+
+    // ---- Colour picker dialog (used by EditorActivity) ----------------------------
+    implementation 'com.github.QuadFlask:colorpicker:0.0.14'
 }

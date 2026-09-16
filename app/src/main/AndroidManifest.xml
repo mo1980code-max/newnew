@@ -1,48 +1,166 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-   >
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 
+    <!--
+      Storage permissions were removed on purpose.
+      Picked gallery images are copied into app-private storage and wallpapers are
+      downloaded into getExternalCacheDir(), so no runtime storage permission is
+      needed on any API level. Fewer permissions = fewer Play Console questions.
+    -->
+
+    <!--
+      Only used when the user explicitly switches the floating tasbeeh on from the home
+      screen; the app never requests it silently and never starts the overlay by itself.
+    -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Required by the Google Mobile Ads SDK for the Data Safety form. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
     <application
-        android:name="com.clock.livewallpaper.AppClass"
+        android:name=".AppClass"
         android:allowBackup="true"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@drawable/icon200"
         android:label="@string/app_name"
-        android:requestLegacyExternalStorage="true"
+        android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:targetApi="33">
 
-        <activity android:name="com.clock.livewallpaper.activity.ClockCardActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.WallpaperCategoryActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.ClockFuntionActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.SetWallpaperActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.WallpaperActivity" />
-        <activity android:name="com.clock.livewallpaper.activity.EditorActivity" />
         <activity
-            android:name="com.clock.livewallpaper.activity.MainActivity"
+            android:name=".activity.MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".activity.ClockFuntionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.ClockCardActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.WallpaperCategoryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.WallpaperActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.SetWallpaperActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <activity
+            android:name=".activity.EditorActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+
+        <!--
+          Floating digital tasbeeh. Started only when the user switches it on from the home
+          screen (SYSTEM_ALERT_WINDOW is requested at that moment, never silently), and it
+          stops itself when the user switches it off or swipes it away.
+        -->
         <service
-            android:name="com.clock.livewallpaper.LiveClockWallpaper"
+            android:name=".service.FloatingTasbeehService"
+            android:exported="false" />
+
+        <!--
+          Home-screen clock widgets (2x2 and 4x2). No permissions needed: they render the
+          user's selected clock design from local resources and refresh through a single
+          non-waking AlarmManager tick, so they keep time on every supported API level.
+          TIME_SET / TIMEZONE_CHANGED / MY_PACKAGE_REPLACED are exempt from the Android 8
+          implicit-broadcast restriction and always reach a manifest receiver. SCREEN_ON is
+          not exempt: it is kept for API 23-25 devices, where it still fires, and on newer
+          ones the alarm above covers the refresh instead.
+        -->
+
+        <!--
+          Persists the in-app language choice on API 32 and below (the platform handles it
+          natively from API 33). Disabled service, metadata only - AppCompat reads the flag.
+        -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+
+        <receiver
+            android:name=".widget.ClockWidgetSquare"
+            android:exported="true"
+            android:label="@string/widget_name_square">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="org.Allah_Clock_Live_Wallpaper.action.CLOCK_TICK" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.SCREEN_ON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_clock_square" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.ClockWidgetWide"
+            android:exported="true"
+            android:label="@string/widget_name_wide">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="org.Allah_Clock_Live_Wallpaper.action.CLOCK_TICK" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.SCREEN_ON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_clock_wide" />
+        </receiver>
+
+        <activity
+            android:name=".activity.AthkarActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.AthkarReader"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+
+        <activity
+            android:name=".activity.QiblaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+
+        <service
+            android:name=".LiveClockWallpaper"
             android:enabled="true"
+            android:exported="true"
             android:label="@string/app_name"
-            android:permission="android.permission.BIND_WALLPAPER"
-            android:exported="true">
+            android:permission="android.permission.BIND_WALLPAPER">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
             </intent-filter>
@@ -50,12 +168,13 @@
                 android:name="android.service.wallpaper"
                 android:resource="@xml/bosswallpaper" />
         </service>
+
         <service
-            android:name="com.clock.livewallpaper.CustomWallpaper"
+            android:name=".CustomWallpaper"
             android:enabled="true"
+            android:exported="true"
             android:label="@string/app_name"
-            android:permission="android.permission.BIND_WALLPAPER"
-            android:exported="true">
+            android:permission="android.permission.BIND_WALLPAPER">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
             </intent-filter>
@@ -73,12 +192,22 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
-        <meta-data
-            android:name="com.google.android.gms.ads.AD_MANAGER_APP"
-            android:value="true" />
+
+        <!--
+          AdMob application id.
+          "com.google.android.gms.ads.AD_MANAGER_APP" was removed: it tells the SDK the
+          app is an Ad Manager (DFP) publisher, which makes plain AdMob ad units fail.
+          Keep this value in sync with AdConfig.ADMOB_APP_ID.
+        -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+            android:value="true" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
+            android:value="true" />
     </application>
 
 </manifest>

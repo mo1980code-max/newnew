@@ -19,5 +19,38 @@
     <color name="textWhite">#fff</color>
     <color name="themeColor">#eeeeee</color>
     <color name="themeDarkColor">#dedede</color>
+    <!--
+      Qibla screen background. CompassView draws its dial, ticks and cardinal letters in
+      translucent white and its needle in gold, and the screen's texts are @color/textColor
+      (white) - all of which disappear on the light themeDarkColor this screen used to have.
+    -->
+    <color name="qiblaBg">#101820</color>
     <color name="transparent">#00000000</color>
+
+    <!-- ── Native ad card ─────────────────────────────────────────────── -->
+    <color name="nativeAdCard">#F5F5FA</color>
+    <color name="nativeAdBorder">#D9D9E3</color>
+    <color name="nativeAdText">#22222A</color>
+    <color name="nativeAdTextSecondary">#6B6B78</color>
+    <!-- The "Ad" badge is mandatory: a native ad must never look like app content. -->
+    <color name="adBadge">#CC3A3A45</color>
+    <color name="adBadgeText">#FFFFFF</color>
+
+    <!-- ── Athkar reader: classic paper, no colours ────────────────────────
+      The reader used to float over the live wallpaper (mosque photographs) with a
+      gold counter circle and a teal "done" tag. It is now an opaque paper page in
+      ink and warm greys only: nothing between the reader and the text.
+    -->
+    <color name="athkarPaper">#FBF8F2</color>
+    <color name="athkarInk">#1B1B1B</color>
+    <color name="athkarBody">#3D3A35</color>
+    <color name="athkarMuted">#6E6A63</color>
+    <color name="athkarSoft">#8C867C</color>
+    <color name="athkarHairline">#E3DDD1</color>
+
+    <!-- ── Premium / golden clocks ────────────────────────────────────── -->
+    <color name="goldLight">#FFE08A</color>
+    <color name="goldDark">#E0A100</color>
+    <color name="goldVeryDark">#6E4A00</color>
+    <color name="premiumOverlay">#26FFD86B</color>
 </resources>

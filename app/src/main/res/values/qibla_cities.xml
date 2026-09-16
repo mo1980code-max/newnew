@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Qibla city picker, parallel index-for-index with QiblaUtil.CITY_COORDS. Localised: values-ar carries the Arabic names. -->
+    <string-array name="qibla_cities">
+        <item>Amman</item>
+        <item>Jerusalem</item>
+        <item>Gaza</item>
+        <item>Makkah</item>
+        <item>Madinah</item>
+        <item>Riyadh</item>
+        <item>Jeddah</item>
+        <item>Cairo</item>
+        <item>Alexandria</item>
+        <item>Khartoum</item>
+        <item>Tripoli</item>
+        <item>Tunis</item>
+        <item>Algiers</item>
+        <item>Casablanca</item>
+        <item>Rabat</item>
+        <item>Nouakchott</item>
+        <item>Dakar</item>
+        <item>Lagos</item>
+        <item>Kano</item>
+        <item>Mogadishu</item>
+        <item>Djibouti</item>
+        <item>Sana\'a</item>
+        <item>Aden</item>
+        <item>Muscat</item>
+        <item>Dubai</item>
+        <item>Abu Dhabi</item>
+        <item>Doha</item>
+        <item>Manama</item>
+        <item>Kuwait City</item>
+        <item>Baghdad</item>
+        <item>Basra</item>
+        <item>Erbil</item>
+        <item>Aleppo</item>
+        <item>Damascus</item>
+        <item>Beirut</item>
+        <item>Tehran</item>
+        <item>Mashhad</item>
+        <item>Kabul</item>
+        <item>Karachi</item>
+        <item>Lahore</item>
+        <item>Islamabad</item>
+        <item>Peshawar</item>
+        <item>Dhaka</item>
+        <item>Chittagong</item>
+        <item>Malé</item>
+        <item>Colombo</item>
+        <item>Kuala Lumpur</item>
+        <item>Jakarta</item>
+        <item>Surabaya</item>
+        <item>Bandar Seri Begawan</item>
+        <item>Manila</item>
+        <item>Istanbul</item>
+        <item>Ankara</item>
+        <item>Konya</item>
+        <item>Baku</item>
+        <item>Tashkent</item>
+        <item>Almaty</item>
+        <item>Bishkek</item>
+        <item>Dushanbe</item>
+        <item>Ashgabat</item>
+        <item>Kazan</item>
+        <item>Sarajevo</item>
+        <item>Tirana</item>
+        <item>Pristina</item>
+        <item>London</item>
+        <item>Paris</item>
+        <item>Berlin</item>
+        <item>Madrid</item>
+        <item>Rome</item>
+        <item>New York</item>
+        <item>Toronto</item>
+        <item>Sydney</item>
+        <item>Johannesburg</item>
+    </string-array>
+
+</resources>

@@ -1,31 +1,29 @@
-
+// Top-level build file.
+//
+// AGP 8.13.2 is the last stable 8.x line. It fully supports compileSdk / targetSdk 36
+// (Android 16), which Google Play requires for every app update since 31 Aug 2026,
+// while staying on the Gradle 8.x DSL that this project already uses.
+// (AGP 9.x exists but forces Gradle 9.6 + the new variant DSL + built-in Kotlin;
+//  migrate to it separately, in its own release.)
 
 buildscript {
-
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
-
-
-
+        classpath 'com.android.tools.build:gradle:8.13.2'
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        jcenter()
-        maven { url "https://jitpack.io" }
-        mavenCentral()
+// Module repositories are NOT declared here on purpose.
+// settings.gradle owns them through dependencyResolutionManagement with
+// RepositoriesMode.PREFER_SETTINGS, which ignores any repository declared in a build script
+// (Gradle would log a warning about the duplicate). That block already lists google(),
+// mavenCentral() and https://jitpack.io - the last one is required by
+// com.github.QuadFlask:colorpicker:0.0.14, used by EditorActivity.
+// The buildscript block above is unaffected: plugin classpaths resolve separately.
 
-        maven { url 'https://maven.google.com' }
-
-    }
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
 }

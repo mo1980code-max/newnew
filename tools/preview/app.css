@@ -1,0 +1,400 @@
+/* Interactive mock of the Allah Clock app, built from the repository's real resources.
+   Sizes are 1:1 with the Android layouts (1px here = 1dp there) inside a 360x720 phone.
+   Colours are the app's own, read out of res/values/colors.xml by build_assets.py. */
+
+:root {
+  --display: 'Dela Gothic One', 'Noto Naskh Arabic', serif;
+  --arabic: 'Noto Naskh Arabic', 'Amiri', serif;
+  --ui: Roboto, 'Noto Sans Arabic', system-ui, -apple-system, sans-serif;
+
+  /* the athkar reader: classic paper, ink and warm greys, no colours */
+  --paper: #fbf8f2;
+  --ink: #1b1b1b;
+  --inkBody: #3d3a35;
+  --inkMuted: #6e6a63;
+  --inkSoft: #8c867c;
+  --hairline: #e3ddd1;
+
+  /* the rest of the app */
+  --gold: #d4af37;
+  --goldSoft: #e6d4af37;
+  --qiblaBg: #101820;
+  --adBg: #7e83ff;
+  --appColor: #4d52de;
+  --widgetBg: #80000000;
+  --tasbeehCircle: #b3101820;
+  --tasbeehReset: #ccd4af37;
+  --nativeAdCard: #f5f5fa;
+
+  --page: #0a0d12;
+  --pageText: #e7ecf3;
+  --pageMuted: #93a0b4;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 700px at 20% -10%, #1a2230 0%, var(--page) 60%);
+  color: var(--pageText);
+  font-family: var(--ui);
+  padding-bottom: 70px;
+}
+
+/* ─────────── page chrome ─────────── */
+header.page, footer.page { padding: 26px 24px 6px; max-width: 1560px; margin: 0 auto; }
+footer.page { padding-top: 10px; }
+header.page h1 { font-family: var(--display); font-size: 26px; margin: 0 0 8px; letter-spacing: .3px; }
+header.page p, footer.page p {
+  color: var(--pageMuted); font-size: 14px; line-height: 1.85; max-width: 1000px; margin: 4px 0;
+}
+code { font-size: 12px; color: #9fd0ff; direction: ltr; unicode-bidi: isolate; }
+header.page .warn {
+  margin-top: 12px; padding: 10px 14px; border-radius: 12px; font-size: 13px;
+  background: #2a1f10; border: 1px solid #5a431f; color: #ffd88a; max-width: 1000px;
+}
+
+.controls { display: flex; flex-wrap: wrap; gap: 12px 26px; margin: 18px 0 4px; align-items: center; }
+.ctl { display: flex; align-items: center; gap: 8px; }
+.ctl > span { font-size: 12px; color: var(--pageMuted); }
+.ctl em { font-size: 12px; color: #cfd8e6; font-style: normal; }
+.seg { display: inline-flex; background: #151b25; border: 1px solid #2a3342; border-radius: 12px; overflow: hidden; }
+.seg button {
+  background: none; border: 0; color: #b9c4d4; font-size: 13px; padding: 8px 14px;
+  cursor: pointer; font-family: var(--ui);
+}
+.seg button.on { background: var(--goldSoft); color: #101820; font-weight: 700; }
+.btn {
+  background: #151b25; border: 1px solid #2a3342; color: #dfe6f0; border-radius: 10px;
+  padding: 7px 12px; font-size: 13px; cursor: pointer; font-family: var(--ui);
+}
+.btn:hover { border-color: var(--gold); color: #ffe6a3; }
+
+.grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 30px 22px; max-width: 1560px; margin: 26px auto 0; padding: 0 24px;
+}
+figure.shot { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+figcaption { max-width: 380px; font-size: 13px; line-height: 1.85; color: var(--pageMuted); }
+figcaption b { display: block; color: #fff; font-size: 14px; margin-bottom: 4px; font-family: var(--display); }
+figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8ea6; }
+
+/* ─────────── the phone ─────────── */
+.phone {
+  position: relative; width: 360px; height: 720px; overflow: hidden; border-radius: 30px;
+  background: #000; box-shadow: 0 18px 44px #000a, 0 0 0 9px #171c25, 0 0 0 10px #2b323d;
+  font-family: var(--ui); user-select: none;
+}
+.phone .status {
+  position: absolute; top: 0; left: 0; right: 0; height: 26px; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; font-size: 11px; color: #fff; text-shadow: 0 1px 3px #0009;
+  pointer-events: none;
+}
+.phone .status .dots { letter-spacing: 2px; }
+.screen { position: absolute; inset: 0; padding-top: 26px; overflow: hidden; }
+.screen.ltr { direction: ltr; }
+
+.title { font-family: var(--display); font-size: 19px; color: #fff; }
+.icon { width: 24px; height: 24px; display: inline-block; vertical-align: middle; }
+.icon svg { width: 100%; height: 100%; display: block; }
+.hidden { display: none !important; }
+
+.topbar { display: flex; align-items: center; gap: 4px; padding: 6px; }
+.topbar .title { flex: 1; margin: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar .ic {
+  width: 44px; height: 44px; flex: none; display: grid; place-items: center;
+  border-radius: 12px; cursor: pointer; color: var(--adBg);
+}
+.topbar.dark { background: #0d1319; }
+.topbar.dark .ic { color: #fff; }
+
+/* ─────────── 1. home ─────────── */
+.home { background: #fff; height: 100%; display: flex; flex-direction: column; color: #101820; }
+.home .appName {
+  font-family: var(--display); font-size: 25px; text-align: center; color: var(--appColor);
+  margin: 16px 0 6px;
+}
+.home .tiles { flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 16px 20px; }
+.tile {
+  flex: 1; border-radius: 22px; position: relative; display: grid; place-items: center;
+  background: #eef0f6 url('assets/big_.png') center / cover no-repeat;
+  box-shadow: 0 10px 26px #10182022; cursor: pointer; overflow: hidden;
+}
+.tile img { width: 108px; filter: drop-shadow(0 8px 18px #0006); }
+.tile b {
+  position: absolute; bottom: 14px; left: 0; right: 0; text-align: center;
+  color: #fff; font-size: 15px; text-shadow: 0 2px 8px #000c; padding: 0 12px;
+}
+.badgeWrap { padding: 0 16px 18px; display: flex; }
+.athkar-badge {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  background: var(--goldSoft); color: #101820; font-weight: 700; font-size: 15px;
+  border-radius: 22px; padding: 10px 20px; box-shadow: 0 6px 18px #d4af3744;
+}
+
+/* ─────────── 2. live wallpaper ─────────── */
+.wall {
+  height: 100%; position: relative; background-size: cover; background-position: center;
+  background-color: #101820;
+}
+.wall .scrim { position: absolute; inset: 0; background: linear-gradient(#0007, #0000 32%, #0000 58%, #000a); }
+.clockFace { position: absolute; top: 92px; left: 0; right: 0; display: grid; place-items: center; }
+.clockFace img { width: 236px; filter: drop-shadow(0 14px 26px #0009); }
+.hijri {
+  position: absolute; top: 40px; left: 0; right: 0; text-align: center; color: #fff;
+  font-size: 21px; font-weight: 700; text-shadow: 0 2px 8px #000b; padding: 0 14px;
+}
+.wpBadge {
+  position: absolute; left: 16px; bottom: 96px; background: var(--goldSoft); color: #101820;
+  font-weight: 700; font-size: 15px; border-radius: 22px; padding: 10px 20px;
+  box-shadow: 0 6px 18px #d4af3744; cursor: pointer;
+}
+.dhikr {
+  position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; color: #fff;
+  font-family: var(--arabic); font-size: 19px; line-height: 1.9; text-shadow: 0 2px 10px #000c;
+  padding: 0 22px;
+}
+
+/* ─────────── 3. athkar reader: a classic paper page ─────────── */
+.athkarPage {
+  background: var(--paper); color: var(--ink); height: 100%;
+  display: flex; flex-direction: column;
+}
+.athkarTop { display: flex; align-items: center; height: 56px; padding: 0 6px; flex: none; }
+.athkarTop .x, .athkarTop .gear {
+  width: 48px; height: 48px; flex: none; display: grid; place-items: center;
+  color: var(--ink); cursor: pointer; border-radius: 12px;
+}
+.athkarTop .x:hover, .athkarTop .gear:hover { background: #1b1b1b0f; }
+.athkarTop .title {
+  flex: 1; margin: 0 8px; font-family: var(--display); font-size: 19px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.athkarTop .cnt { flex: none; font-size: 12px; color: var(--inkMuted); }
+.hairline { height: 1px; background: var(--hairline); flex: none; }
+.athkarList { overflow-y: auto; flex: 1; }
+.athkarList::-webkit-scrollbar { width: 4px; }
+.athkarList::-webkit-scrollbar-thumb { background: #1b1b1b22; border-radius: 4px; }
+/* the whole block is the tap target - there is no counter circle to aim at */
+.athkarBlock { padding: 13px 16px; cursor: pointer; transition: opacity .3s ease; }
+.athkarBlock:active { background: #1b1b1b0a; }
+.athkarBlock.done { opacity: .4; }
+.athkarHead { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--inkMuted); }
+.athkarHead .idx { flex: 1; font-weight: 700; }
+.athkarHead .prog { font-variant-numeric: tabular-nums; }
+.athkarHead .fin { font-weight: 700; }
+.athkarRow { display: flex; gap: 10px; margin-top: 9px; }
+.athkarRow .num {
+  min-width: 26px; text-align: center; font-size: 15px; font-weight: 700; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.athkarRow .ar {
+  flex: 1; font-family: var(--arabic); font-size: 20px; line-height: 2.1; color: var(--ink);
+  direction: rtl; text-align: right; white-space: pre-wrap;
+}
+.athkarBlock .tr {
+  font-size: 12px; font-style: italic; color: var(--inkSoft); margin-top: 8px;
+  direction: ltr; text-align: left; white-space: pre-wrap;
+}
+.athkarBlock .en {
+  font-size: 13px; line-height: 1.65; color: var(--inkBody); margin-top: 5px;
+  direction: ltr; text-align: left; white-space: pre-wrap;
+}
+.athkarBlock .virtue { font-size: 12px; line-height: 1.85; color: var(--inkMuted); margin-top: 9px; }
+.athkarBlock .ref { font-size: 11px; color: var(--inkSoft); margin-top: 6px; }
+.athkarEmpty { padding: 60px 26px; text-align: center; color: var(--inkMuted); font-size: 13px; line-height: 2; }
+/* dark status-bar glyphs on paper, exactly like windowLightStatusBar */
+#ph-athkar .status, #ph-settings .status { color: #1b1b1b; text-shadow: none; }
+
+/* ─────────── dialogs ─────────── */
+.dialogWrap { position: absolute; inset: 0; background: #000a; display: grid; place-items: center; padding: 20px; }
+.dialog {
+  width: 100%; max-height: 88%; overflow: auto; background: #1b2330; border-radius: 20px;
+  padding: 20px 22px 16px; color: #fff; box-shadow: 0 24px 60px #000a;
+}
+.dialog h3 { font-family: var(--display); font-size: 17px; margin: 0 0 14px; }
+.dialog .sec { font-size: 12px; color: var(--adBg); margin: 16px 0 6px; letter-spacing: .3px; }
+.dialog .hint { font-size: 12px; color: #ffffffb0; line-height: 1.85; margin-top: 12px; }
+.radio { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 13px; cursor: pointer; }
+.radio .dot {
+  width: 18px; height: 18px; border-radius: 50%; border: 2px solid #6d7a8f; flex: none;
+  display: grid; place-items: center;
+}
+.radio.on .dot { border-color: var(--adBg); }
+.radio.on .dot::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--adBg); }
+.slots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.slot { background: #232d3d; border-radius: 12px; padding: 10px 12px; font-size: 12px; cursor: pointer; }
+.slot b { display: block; font-size: 17px; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.dlgActions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.dlgActions button {
+  background: none; border: 0; color: var(--adBg); font-weight: 700; font-size: 14px;
+  padding: 9px 14px; border-radius: 10px; cursor: pointer; font-family: var(--ui);
+}
+.dlgActions button:hover { background: #7e83ff1f; }
+.switchRow { display: flex; align-items: center; gap: 12px; padding: 8px 0; font-size: 14px; }
+.sw {
+  width: 44px; height: 24px; border-radius: 999px; background: #4a5568; position: relative;
+  cursor: pointer; flex: none; transition: background .2s;
+}
+.sw::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  border-radius: 50%; background: #fff; transition: transform .2s;
+}
+.sw.on { background: var(--gold); }
+.sw.on::after { transform: translateX(20px); }
+
+/* the athkar timing dialog is a light AppCompat dialog: ink on white, hairline chips */
+.dialog.paper { background: #fff; color: var(--inkBody); border: 1px solid var(--hairline); box-shadow: 0 24px 60px #0006; }
+.dialog.paper h3 { color: var(--ink); }
+.dialog.paper .sec { color: var(--inkMuted); }
+.dialog.paper .radio .dot { border-color: #b4aea3; }
+.dialog.paper .radio.on .dot { border-color: #4d4d4d; }
+.dialog.paper .radio.on .dot::after { background: #4d4d4d; }
+.dialog.paper .slot { background: #fff; border: 1px solid var(--hairline); border-radius: 10px; color: var(--inkMuted); }
+.dialog.paper .slot b { color: var(--ink); }
+.dialog.paper .dlgActions button { color: var(--ink); }
+.dialog.paper .dlgActions button:hover { background: #1b1b1b0a; }
+
+/* rewarded unlock: the native-ad card palette */
+.dialog.reward { background: var(--nativeAdCard); color: #22222a; text-align: center; }
+.dialog.reward h3 { color: #22222a; margin-top: 10px; }
+.dialog.reward .hint { color: #6b6b78; }
+.premiumBadge {
+  width: 56px; height: 56px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center;
+  background: linear-gradient(145deg, #ffe9a8, var(--gold) 60%, #a97c12); color: #3a2a00;
+  box-shadow: 0 8px 22px #d4af3755;
+}
+.premiumBadge .icon { width: 28px; height: 28px; }
+.rewardBtn {
+  width: 100%; margin-top: 16px; padding: 13px; border: 0; border-radius: 12px; cursor: pointer;
+  background: linear-gradient(145deg, #ffe08a, var(--gold)); color: #2c2100; font-weight: 700;
+  font-size: 15px; font-family: var(--ui); box-shadow: 0 8px 20px #d4af3744;
+}
+.linkBtn {
+  width: 100%; margin-top: 6px; padding: 11px; border: 0; background: none; cursor: pointer;
+  color: #6b6b78; font-size: 14px; font-family: var(--ui);
+}
+.unlockState { margin-top: 12px; font-size: 12px; color: #6b6b78; }
+
+/* ─────────── 5. qibla ─────────── */
+.qibla { background: var(--qiblaBg); height: 100%; display: flex; flex-direction: column; }
+.compass { position: relative; width: 268px; height: 268px; margin: 26px auto 0; }
+.dial { position: absolute; inset: 0; }
+.dial .tick {
+  position: absolute; left: 50%; top: 50%; width: 2px; height: 134px; transform-origin: 50% 0;
+}
+.dial .tick::after {
+  content: ''; position: absolute; bottom: 0; left: 0; width: 2px; height: 9px;
+  background: #ffffff4d; border-radius: 2px;
+}
+.dial .tick.cardinal::after { height: 15px; width: 3px; background: #ffffffb3; }
+.dial .lab { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-origin: 0 0; }
+.dial .lab span {
+  position: absolute; left: 0; top: -116px; color: #fff; font-size: 13px; font-weight: 700;
+  white-space: nowrap;
+}
+.dial .ring { position: absolute; inset: 16px; border: 1px solid #ffffff26; border-radius: 50%; }
+.dial .ring2 { position: absolute; inset: 42px; border: 1px dashed #ffffff1a; border-radius: 50%; }
+.needle {
+  position: absolute; left: 50%; top: 50%; width: 4px; height: 118px; transform-origin: 50% 0;
+  background: linear-gradient(#ffd76a, var(--gold)); border-radius: 3px;
+  transition: transform .6s cubic-bezier(.22,1,.36,1); box-shadow: 0 0 18px #d4af3766;
+}
+.kaaba {
+  position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+  width: 26px; height: 26px; background: #14100c; border-radius: 5px; border: 1px solid #d4af37;
+}
+.kaaba .band { position: absolute; top: 8px; left: 0; right: 0; height: 4px; background: var(--gold); }
+.pivot {
+  position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px;
+  border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px #ffffff22;
+}
+.qiblaInfo { margin-top: 26px; padding: 0 22px; color: #fff; text-align: center; }
+.cityRow { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; color: #ffffffb3; }
+.cityRow b { color: #fff; font-size: 16px; }
+.qiblaInfo > div + div { margin-top: 10px; font-size: 13px; color: #ffffffcc; }
+
+/* ─────────── 6/11. pickers (clock designs, wallpapers) ─────────── */
+.picker { background: #12181f; height: 100%; display: flex; flex-direction: column; }
+.pickerBody { flex: 1; overflow-y: auto; padding: 12px; }
+.pickerBody::-webkit-scrollbar { width: 4px; }
+.pickerBody::-webkit-scrollbar-thumb { background: #ffffff22; border-radius: 4px; }
+.listTitle { font-size: 13px; color: var(--goldSoft); font-weight: 700; margin: 10px 4px 8px; }
+.thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.thumb {
+  position: relative; border-radius: 14px; overflow: hidden; cursor: pointer;
+  background: #1c242e; border: 2px solid transparent; aspect-ratio: 1 / 1;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb.sel { border-color: var(--gold); }
+.thumb .lock {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: linear-gradient(180deg, #10182066, #101820cc); color: #ffe08a;
+}
+.thumb .lock .icon { width: 30px; height: 30px; }
+.thumb .lock small { display: block; text-align: center; font-size: 10px; color: #ffe08acc; margin-top: 2px; }
+.thumb.unlocked .lock { background: #d4af3722; }
+.cats { display: flex; gap: 8px; padding: 10px 12px 0; overflow-x: auto; }
+.cat {
+  flex: none; padding: 7px 13px; border-radius: 999px; font-size: 12px; cursor: pointer;
+  background: #1c242e; color: #c8d2e0; border: 1px solid #2b3543;
+}
+.cat.on { background: var(--goldSoft); color: #101820; font-weight: 700; border-color: transparent; }
+.gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.gallery .thumb { aspect-ratio: 9 / 16; }
+.gallery .cap {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 8px 7px; font-size: 11px;
+  color: #fff; background: linear-gradient(#0000, #000c); text-align: center;
+}
+
+/* ─────────── 7. editor ─────────── */
+.editor { background: #0b0f14 url('assets/wp_kaaba_1.jpg') center / cover no-repeat; height: 100%; display: flex; flex-direction: column; }
+.editorStage { flex: 1; display: grid; place-items: center; }
+.editorStage img { width: 260px; filter: drop-shadow(0 16px 30px #000a); }
+.editorBar { display: flex; justify-content: center; gap: 6px; padding: 10px; background: #0d131988; }
+.editorBar .ic {
+  width: 44px; height: 44px; display: grid; place-items: center; color: #fff; cursor: pointer;
+  border-radius: 12px; background: #ffffff14;
+}
+.editorActions { display: flex; gap: 10px; padding: 12px 16px 18px; background: #0d1319; }
+.editorActions button {
+  flex: 1; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer;
+  font-family: var(--ui); border: 0;
+}
+.editorActions .ghost { background: #ffffff14; color: #fff; }
+.editorActions .solid { background: var(--gold); color: #1a1400; }
+
+/* ─────────── 9. floating tasbeeh ─────────── */
+.tasbeeh { position: absolute; right: 18px; bottom: 120px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.tasbeehCircle {
+  width: 108px; height: 108px; border-radius: 50%; background: var(--tasbeehCircle);
+  border: 2px solid #ffffff33; display: grid; place-items: center; cursor: pointer;
+  position: relative; backdrop-filter: blur(3px); box-shadow: 0 10px 30px #0009;
+  transition: transform .09s ease;
+}
+.tasbeehCircle:active { transform: scale(.94); }
+.tasbeehCount { color: #fff; font-size: 38px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tasbeehLock { position: absolute; top: 8px; font-size: 13px; color: #ffe08a; }
+.tasbeehReset {
+  width: 44px; height: 44px; border-radius: 50%; background: var(--tasbeehReset); color: #1a1400;
+  display: grid; place-items: center; cursor: pointer; box-shadow: 0 6px 18px #d4af3755;
+}
+.tasbeehHint {
+  position: absolute; left: 14px; right: 14px; bottom: 16px; text-align: center; color: #ffffffcc;
+  font-size: 11px; line-height: 1.8; text-shadow: 0 1px 6px #000;
+}
+
+/* ─────────── 10. widgets ─────────── */
+.widgetStrip { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; }
+.widget {
+  background: var(--widgetBg); border-radius: 20px; display: grid; place-items: center;
+  box-shadow: 0 10px 26px #0008; backdrop-filter: blur(2px); overflow: hidden;
+}
+.widget.w22 { width: 132px; height: 132px; }
+.widget.w42 { width: 292px; height: 132px; grid-template-columns: 124px 1fr; gap: 10px; padding: 10px 14px 10px 8px; place-items: center stretch; }
+.widget img { width: 118px; height: 118px; object-fit: contain; }
+.wCol { display: flex; flex-direction: column; justify-content: center; gap: 8px; color: #fff; }
+.wHijri { font-size: 14px; font-weight: 700; }
+.wDhikr { font-family: var(--arabic); font-size: 14px; line-height: 1.7; color: #ffffffd9; }
+.widgetNames { position: absolute; left: 0; right: 0; bottom: 18px; display: flex; justify-content: space-around; color: #ffffffb3; font-size: 11px; }

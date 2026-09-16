@@ -7,3 +7,24 @@
 /build
 /captures
 .externalNativeBuild
+/app/build
+/.kotlin
+*.hprof
+
+# generated mock assets (3.5 MB of copied wallpapers/thumbnails) - tools/preview/build_assets.py
+tools/preview/assets/
+
+# python bytecode (tools/athkar generator)
+__pycache__/
+*.py[cod]
+
+# agent sandbox helpers (static verifier)
+.arena/
+
+# NOTE: the downloadable Android Studio package (Allah-Clock-Live-Wallpaper-android-studio.zip)
+# at the repository root IS tracked on purpose - this sandbox cannot reach uploads.github.com,
+# so a release asset is impossible and the archive is the delivery channel. Rebuild it with
+# tools/build_package.py after any source change.
+
+# served copy of the root package, for the live mock server: cp Allah-Clock-*.zip tools/preview/
+tools/preview/*.zip

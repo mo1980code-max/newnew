@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- مفردات التاريخ التي ترسمها وجوه الساعات. الفهرس 0 = الأحد و0 = يناير، مطابقة لـ java.util.Calendar. ص/م بدلًا من AM/PM. -->
+    <string-array name="clock_days">
+        <item>أحد</item>
+        <item>إثنين</item>
+        <item>ثلاثاء</item>
+        <item>أربعاء</item>
+        <item>خميس</item>
+        <item>جمعة</item>
+        <item>سبت</item>
+    </string-array>
+
+    <string-array name="clock_months">
+        <item>يناير</item>
+        <item>فبراير</item>
+        <item>مارس</item>
+        <item>أبريل</item>
+        <item>مايو</item>
+        <item>يونيو</item>
+        <item>يوليو</item>
+        <item>أغسطس</item>
+        <item>سبتمبر</item>
+        <item>أكتوبر</item>
+        <item>نوفمبر</item>
+        <item>ديسمبر</item>
+    </string-array>
+
+    <string name="clock_am">ص</string>
+    <string name="clock_pm">م</string>
+    <string name="clock_day_date_format">%2$s %1$d</string>
+
+    <!-- أسماء الأيام لصندوق التاريخ في الساعة التناظرية (الوجوه الرقمية تستخدم المصفوفة أعلاه). -->
+    <string-array name="clock_days_short">
+        <item>أحد</item>
+        <item>إثنين</item>
+        <item>ثلاثاء</item>
+        <item>أربعاء</item>
+        <item>خميس</item>
+        <item>جمعة</item>
+        <item>سبت</item>
+    </string-array>
+
+</resources>

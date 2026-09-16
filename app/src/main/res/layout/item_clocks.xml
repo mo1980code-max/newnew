@@ -1,23 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.clock.livewallpaper.viewUtils.SquareRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<org.Allah_Clock_Live_Wallpaper.viewUtils.SquareRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layoutBackground"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center"
     android:layout_margin="10dp"
-    android:paddingLeft="5dp"
+    android:paddingStart="5dp"
     android:paddingTop="3dp"
-    android:paddingRight="5dp"
+    android:paddingEnd="5dp"
 
     android:paddingBottom="3dp"
     app:cardBackgroundColor="@color/themeDarkColor"
     app:cardCornerRadius="15dp"
     app:cardUseCompatPadding="true">
 
-    <com.clock.livewallpaper.viewUtils.AnalogClock
+    <org.Allah_Clock_Live_Wallpaper.viewUtils.AnalogClock
         android:id="@+id/iv_clock"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center" />
-</com.clock.livewallpaper.viewUtils.SquareRelativeLayout>
+
+    <!-- Premium (golden) clock markers – hidden for free entries -->
+    <View
+        android:id="@+id/premiumOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/premiumOverlay"
+        android:clickable="false"
+        android:focusable="false"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/premiumLock"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="10dp"
+        android:background="@drawable/bg_premium_badge"
+        android:contentDescription="@string/premium_lock_content_description"
+        android:padding="7dp"
+        android:src="@drawable/ic_lock_gold"
+        android:visibility="gone" />
+</org.Allah_Clock_Live_Wallpaper.viewUtils.SquareRelativeLayout>
