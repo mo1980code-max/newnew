@@ -21,5 +21,7 @@ __pycache__/
 # agent sandbox helpers (static verifier)
 .arena/
 
-# Downloadable packages produced for the user (regenerable, not tracked)
-download/
+# NOTE: the downloadable Android Studio package (Allah-Clock-Live-Wallpaper-android-studio.zip)
+# at the repository root IS tracked on purpose - this sandbox cannot reach uploads.github.com,
+# so a release asset is impossible and the archive is the delivery channel. Rebuild it with
+# tools/build_package.py after any source change.

@@ -23,7 +23,20 @@
 
 ## 2) الحصول على المشروع
 
-**الطريقة أ — ملف ZIP** (الأسهل): فك ضغط الملف في أي مجلد، ثم افتح المجلد الناتج.
+**الطريقة أ — تنزيل ZIP مباشرة من المستودع** (الأسهل، 9.2 م.ب):
+```
+https://github.com/mo1980code-max/newnew/raw/refs/heads/arena/01a0970d-newnew/Allah-Clock-Live-Wallpaper-android-studio.zip
+```
+أو من واجهة GitHub: افتح المستودع على الفرع `arena/01a0970d-newnew` → اضغط الملف
+`Allah-Clock-Live-Wallpaper-android-studio.zip` → **Download raw file**. ثم فك الضغط وافتح المجلد الناتج.
+
+> الحزمة محفوظة داخل المستودع نفسه (وليست مرفقًا في Releases) لأن بيئة البناء لا تصل إلى
+> `uploads.github.com`. تُعاد بنائها في أي وقت بالأمر:
+> ```bash
+> python3 tools/build_package.py        # تُنشئ الحزمة في جذر المستودع
+> ```
+> وهي تستثني تلقائيًا: `.git`، كل `build/` و`.gradle/`، `local.properties`،
+> وأصول المعاينة المولَّدة `tools/preview/assets/`. وتحفظ صلاحية التنفيذ لـ `gradlew`.
 
 **الطريقة ب — git**:
 ```bash
