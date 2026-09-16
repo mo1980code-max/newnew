@@ -8,6 +8,8 @@ import androidx.annotation.Nullable;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
+import org.Allah_Clock_Live_Wallpaper.model.QuranJuz;
+import org.Allah_Clock_Live_Wallpaper.model.QuranPage;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSearchResult;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSurah;
 
@@ -36,6 +38,11 @@ import java.util.regex.Pattern;
  */
 public final class QuranRepository {
 
+    public static final int SURAH_COUNT = 114;
+    public static final int AYAH_COUNT = 6236;
+    public static final int PAGE_COUNT = 604;
+    public static final int JUZ_COUNT = 30;
+
     private static final Pattern REFERENCE = Pattern.compile(
             "^\\s*(\\d{1,3})\\s*[:：]\\s*(\\d{1,3})\\s*$");
     private static volatile QuranRepository instance;
@@ -43,11 +50,19 @@ public final class QuranRepository {
     private final List<QuranSurah> surahs = new ArrayList<>();
     private final Map<Integer, QuranSurah> surahsByNumber = new HashMap<>();
     private final Map<Integer, List<QuranAyah>> ayahsBySurah = new HashMap<>();
+    private final List<QuranAyah> allAyahs = new ArrayList<>();
+    private final Map<String, Integer> globalAyahIndexes = new HashMap<>();
+    private final List<QuranPage> pages = new ArrayList<>();
+    private final Map<String, Integer> pageByAyah = new HashMap<>();
+    private final List<QuranJuz> juzs = new ArrayList<>();
+    private final Map<String, Integer> juzByAyah = new HashMap<>();
 
     private QuranRepository(@NonNull Context context) throws IOException {
         Resources resources = context.getResources();
         loadSurahs(resources);
         loadAyahs(resources);
+        loadPages(resources);
+        loadJuzs(resources);
         validate();
     }
 
@@ -131,13 +146,111 @@ public final class QuranRepository {
                     throw new IOException("Unexpected Quran ayah order");
                 }
                 String text = line.substring(second + 1);
-                ayahs.add(new QuranAyah(surahNumber, ayahNumber, text, normalizeForSearch(text)));
+                QuranAyah ayah = new QuranAyah(surahNumber, ayahNumber, text,
+                        normalizeForSearch(text));
+                ayahs.add(ayah);
+                globalAyahIndexes.put(ayah.getKey(), allAyahs.size());
+                allAyahs.add(ayah);
+            }
+        }
+    }
+
+    /**
+     * Reads the 604 traditional Madani-page starts. Tanzil puts a [115, 1] sentinel after its
+     * JavaScript list; the generated TSV intentionally excludes that one-past-the-end marker.
+     */
+    private void loadPages(@NonNull Resources resources) throws IOException {
+        List<Integer> startIndexes = new ArrayList<>();
+        try (InputStream input = resources.openRawResource(R.raw.quran_pages);
+             BufferedReader reader = new BufferedReader(
+                     new InputStreamReader(input, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.isEmpty() || line.startsWith("#")) {
+                    continue;
+                }
+                String[] fields = line.split("\\|", -1);
+                if (fields.length != 3) {
+                    throw new IOException("Invalid Quran page metadata row");
+                }
+                int page = positiveInt(fields[0], "page number");
+                int surah = positiveInt(fields[1], "page surah number");
+                int ayah = positiveInt(fields[2], "page ayah number");
+                Integer index = globalAyahIndexes.get(surah + ":" + ayah);
+                if (page != startIndexes.size() + 1 || index == null
+                        || (!startIndexes.isEmpty() && index <= startIndexes.get(startIndexes.size() - 1))) {
+                    throw new IOException("Invalid Quran page metadata order");
+                }
+                startIndexes.add(index);
+            }
+        }
+        if (startIndexes.size() != PAGE_COUNT || startIndexes.get(0) != 0) {
+            throw new IOException("Quran page metadata must contain 604 ordered pages");
+        }
+        for (int pageIndex = 0; pageIndex < startIndexes.size(); pageIndex++) {
+            int start = startIndexes.get(pageIndex);
+            int end = pageIndex + 1 < startIndexes.size()
+                    ? startIndexes.get(pageIndex + 1) - 1 : allAyahs.size() - 1;
+            if (end < start) {
+                throw new IOException("Empty Quran page metadata range");
+            }
+            QuranPage page = new QuranPage(pageIndex + 1, start, end,
+                    allAyahs.get(start), allAyahs.get(end));
+            pages.add(page);
+            for (int ayahIndex = start; ayahIndex <= end; ayahIndex++) {
+                pageByAyah.put(allAyahs.get(ayahIndex).getKey(), page.getNumber());
+            }
+        }
+    }
+
+    /** Reads the thirty traditional juz starts used for fast local navigation. */
+    private void loadJuzs(@NonNull Resources resources) throws IOException {
+        List<Integer> startIndexes = new ArrayList<>();
+        try (InputStream input = resources.openRawResource(R.raw.quran_juz);
+             BufferedReader reader = new BufferedReader(
+                     new InputStreamReader(input, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.isEmpty() || line.startsWith("#")) {
+                    continue;
+                }
+                String[] fields = line.split("\\|", -1);
+                if (fields.length != 3) {
+                    throw new IOException("Invalid Quran juz metadata row");
+                }
+                int juz = positiveInt(fields[0], "juz number");
+                int surah = positiveInt(fields[1], "juz surah number");
+                int ayah = positiveInt(fields[2], "juz ayah number");
+                Integer index = globalAyahIndexes.get(surah + ":" + ayah);
+                if (juz != startIndexes.size() + 1 || index == null
+                        || (!startIndexes.isEmpty() && index <= startIndexes.get(startIndexes.size() - 1))) {
+                    throw new IOException("Invalid Quran juz metadata order");
+                }
+                startIndexes.add(index);
+            }
+        }
+        if (startIndexes.size() != JUZ_COUNT || startIndexes.get(0) != 0) {
+            throw new IOException("Quran juz metadata must contain 30 ordered juzs");
+        }
+        for (int juzIndex = 0; juzIndex < startIndexes.size(); juzIndex++) {
+            int start = startIndexes.get(juzIndex);
+            int end = juzIndex + 1 < startIndexes.size()
+                    ? startIndexes.get(juzIndex + 1) - 1 : allAyahs.size() - 1;
+            QuranAyah first = allAyahs.get(start);
+            Integer pageNumber = pageByAyah.get(first.getKey());
+            if (end < start || pageNumber == null) {
+                throw new IOException("Invalid Quran juz metadata range");
+            }
+            QuranJuz juz = new QuranJuz(juzIndex + 1, pageNumber, first);
+            juzs.add(juz);
+            for (int ayahIndex = start; ayahIndex <= end; ayahIndex++) {
+                juzByAyah.put(allAyahs.get(ayahIndex).getKey(), juz.getNumber());
             }
         }
     }
 
     private void validate() throws IOException {
-        if (surahs.size() != 114) {
+        if (surahs.size() != SURAH_COUNT) {
             throw new IOException("Quran index must contain 114 surahs");
         }
         int total = 0;
@@ -149,8 +262,14 @@ public final class QuranRepository {
             total += list.size();
             ayahsBySurah.put(surah.getNumber(), Collections.unmodifiableList(list));
         }
-        if (total != 6236) {
+        if (total != AYAH_COUNT) {
             throw new IOException("Quran text must contain 6236 ayahs");
+        }
+        if (pages.size() != PAGE_COUNT || pageByAyah.size() != total) {
+            throw new IOException("Quran page metadata does not cover every ayah");
+        }
+        if (juzs.size() != JUZ_COUNT || juzByAyah.size() != total) {
+            throw new IOException("Quran juz metadata does not cover every ayah");
         }
     }
 
@@ -190,6 +309,52 @@ public final class QuranRepository {
             return null;
         }
         return ayahs.get(ayahNumber - 1);
+    }
+
+    @Nullable
+    public QuranPage getPage(int pageNumber) {
+        if (pageNumber < 1 || pageNumber > pages.size()) {
+            return null;
+        }
+        return pages.get(pageNumber - 1);
+    }
+
+    /** Returns the canonical Madani-page number for a valid ayah, or -1 when unknown. */
+    public int getPageForAyah(int surahNumber, int ayahNumber) {
+        Integer page = pageByAyah.get(surahNumber + ":" + ayahNumber);
+        return page == null ? -1 : page;
+    }
+
+    /** A read-only, compact list of the ayahs falling within one canonical page boundary. */
+    @NonNull
+    public List<QuranAyah> getAyahsForPage(int pageNumber) {
+        QuranPage page = getPage(pageNumber);
+        if (page == null) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableList(new ArrayList<>(allAyahs.subList(
+                page.getStartIndex(), page.getEndIndex() + 1)));
+    }
+
+    @Nullable
+    public QuranJuz getJuz(int juzNumber) {
+        if (juzNumber < 1 || juzNumber > juzs.size()) {
+            return null;
+        }
+        return juzs.get(juzNumber - 1);
+    }
+
+    /** Returns the traditional juz containing a valid ayah, or -1 when unknown. */
+    public int getJuzForAyah(int surahNumber, int ayahNumber) {
+        Integer juz = juzByAyah.get(surahNumber + ":" + ayahNumber);
+        return juz == null ? -1 : juz;
+    }
+
+    /** Returns the juz in which the first ayah of this page falls. */
+    public int getJuzForPage(int pageNumber) {
+        QuranPage page = getPage(pageNumber);
+        return page == null ? -1 : getJuzForAyah(page.getFirstAyah().getSurahNumber(),
+                page.getFirstAyah().getAyahNumber());
     }
 
     /**

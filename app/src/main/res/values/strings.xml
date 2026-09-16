@@ -167,7 +167,7 @@
     <string name="quran_open_surah">Open %1$s</string>
     <string name="quran_text_source_short">Quran text: Tanzil Project · tanzil.net</string>
     <string name="quran_text_source_title">Quran text source</string>
-    <string name="quran_text_source_message">This app bundles the verbatim Uthmani Quran text from the Tanzil Project, Version 1.1, under Creative Commons Attribution 3.0. The complete notice is included with the app source. Visit tanzil.net for updates.</string>
+    <string name="quran_text_source_message">This app bundles the verbatim Uthmani Quran text from the Tanzil Project, Version 1.1, under Creative Commons Attribution 3.0. The page reader groups this text by the 604 Madani page boundaries and reflows it for the screen; it is not a scanned or PDF Mushaf layout. The complete notice is included with the app source. Visit tanzil.net for updates.</string>
     <string name="quran_text_source_link">Open Tanzil.net</string>
     <string name="quran_load_failed">The Quran text could not be opened. Please reinstall the app.</string>
     <string name="cd_quran">Open the Holy Quran reader</string>
@@ -175,5 +175,29 @@
     <string name="cd_quran_bookmarks">Open saved Quran bookmarks</string>
     <string name="cd_quran_text_source">Show Quran text source and license</string>
     <string name="cd_quran_search_input">Search Quran text</string>
+
+    <string name="title_quran_mushaf">Mushaf</string>
+    <string name="quran_read_by_page">Read Mushaf by page</string>
+    <string name="quran_read_by_page_hint">Browse 604 Madani page divisions in reflowed text</string>
+    <string name="quran_page_number">Page %1$d of %2$d</string>
+    <string name="quran_page_range">%1$s, ayah %2$d — %3$s, ayah %4$d</string>
+    <string name="quran_previous_page">Previous</string>
+    <string name="quran_next_page">Next</string>
+    <string name="quran_choose_page">Go to page</string>
+    <string name="cd_quran_mushaf">Open page-by-page Mushaf reading</string>
+    <string name="cd_quran_choose_page">Choose a Mushaf page</string>
+
+    <string name="quran_text_size">Quran text size</string>
+    <string name="cd_quran_text_size">Change Quran text size</string>
+
+    <string name="quran_ayah_reference_page">Surah %1$d · %2$s · Ayah %3$d · Page %4$d</string>
+
+    <string name="quran_continue_position_page">%1$s · Ayah %2$d · Page %3$d</string>
+
+    <string name="quran_juz_number">Juz %1$d</string>
+    <string name="quran_choose_juz">Go to juz</string>
+    <string name="cd_quran_choose_juz">Choose a Quran juz</string>
+
+    <string name="quran_juz_range">Juz %1$d–%2$d</string>
 
 </resources>
