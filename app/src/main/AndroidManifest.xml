@@ -77,14 +77,23 @@
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
         <!--
-          Home-screen clock widgets (2×2 and 4×2). No permissions needed: they render the
-          user's selected clock design from local resources and refresh once per minute with
-          a single non-waking alarm, plus instant refreshes on screen-on / time changes.
-          "keyguard" is declared so OEMs that still offer lock-screen placement can use it.
+          Floating digital tasbeeh. Started only when the user switches it on from the home
+          screen (SYSTEM_ALERT_WINDOW is requested at that moment, never silently), and it
+          stops itself when the user switches it off or swipes it away.
         -->
         <service
             android:name=".service.FloatingTasbeehService"
             android:exported="false" />
+
+        <!--
+          Home-screen clock widgets (2x2 and 4x2). No permissions needed: they render the
+          user's selected clock design from local resources and refresh through a single
+          non-waking AlarmManager tick, so they keep time on every supported API level.
+          TIME_SET / TIMEZONE_CHANGED / MY_PACKAGE_REPLACED are exempt from the Android 8
+          implicit-broadcast restriction and always reach a manifest receiver. SCREEN_ON is
+          not exempt: it is kept for API 23-25 devices, where it still fires, and on newer
+          ones the alarm above covers the refresh instead.
+        -->
 
         <!--
           Persists the in-app language choice on API 32 and below (the platform handles it

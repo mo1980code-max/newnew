@@ -20,3 +20,6 @@ __pycache__/
 
 # agent sandbox helpers (static verifier)
 .arena/
+
+# Downloadable packages produced for the user (regenerable, not tracked)
+download/

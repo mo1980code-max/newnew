@@ -36,7 +36,11 @@ android {
             enableSplit true
         }
         language {
-            enableSplit true
+            // Must stay false: the app ships an in-app language switcher (English / Arabic).
+            // With language splits on, Play delivers only the device's own languages, so an
+            // English-only phone would install without values-ar and the switch to Arabic
+            // would silently fall back to English. Density and ABI splits are still safe.
+            enableSplit false
         }
     }
 
