@@ -16,11 +16,14 @@ catch - and that a hand-edited bilingual app makes often:
   4. every R.something referenced from Java is actually declared somewhere;
   5. every @type/name referenced from a layout or drawable resolves;
   6. every findViewById(R.id.x) has a matching @+id/x in some layout;
-  7. Java braces balance (a crude syntax sniff, but it catches a bad edit fast).
+  7. Java braces balance (a crude syntax sniff, but it catches a bad edit fast);
+  8. the bundled Quran asset has all 114 surahs / 6,236 ayahs, its required Tanzil
+     attribution, and the expected unmodified source checksum.
 
 Exit code is non-zero when anything fails, so it can gate a commit.
 """
 import glob
+import hashlib
 import os
 import re
 import sys
@@ -251,6 +254,75 @@ for path in java_files:
     for name in FIND.findall(src):
         if name not in declared['id']:
             err('findViewById(R.id.%s) in %s has no @+id/%s in any layout' % (name, rel, name))
+
+# ══════════════════════════ 8. Quran reader asset integrity ══════════════════════════
+# The reader displays Tanzil Uthmani text verbatim.  A checksum deliberately catches an
+# accidental edit to the sacred text; intentional upstream updates must update this value and
+# docs/QURAN_TEXT_ATTRIBUTION.md together after independent review.
+QURAN_TEXT = os.path.join(RES, 'raw', 'quran_uthmani.txt')
+QURAN_META = os.path.join(RES, 'raw', 'quran_surahs.tsv')
+QURAN_LICENSE = os.path.join(RES, 'raw', 'quran_uthmani_license.txt')
+QURAN_SHA256 = 'f64fe7657dbe2e185e9995e14f7a67ee6cf1a30773f39184883d7a763d70fb19'
+try:
+    raw_bytes = open(QURAN_TEXT, 'rb').read()
+    actual_sha = hashlib.sha256(raw_bytes).hexdigest()
+    if actual_sha != QURAN_SHA256:
+        err('quran_uthmani.txt checksum differs from the reviewed Tanzil source')
+    quran_rows = []
+    for line_no, line in enumerate(raw_bytes.decode('utf-8').splitlines(), 1):
+        if not line or line.startswith('#'):
+            continue
+        pieces = line.split('|', 2)
+        if len(pieces) != 3 or not pieces[2]:
+            err('invalid Quran row at line %d' % line_no)
+            continue
+        try:
+            quran_rows.append((int(pieces[0]), int(pieces[1])))
+        except ValueError:
+            err('non-numeric Quran reference at line %d' % line_no)
+
+    metadata = {}
+    for line_no, line in enumerate(open(QURAN_META, encoding='utf-8'), 1):
+        line = line.rstrip('\n')
+        if not line or line.startswith('#'):
+            continue
+        pieces = line.split('|')
+        if len(pieces) != 7:
+            err('invalid Quran metadata row at line %d' % line_no)
+            continue
+        try:
+            number, ayah_count = int(pieces[0]), int(pieces[2])
+        except ValueError:
+            err('non-numeric Quran metadata at line %d' % line_no)
+            continue
+        metadata[number] = ayah_count
+
+    if len(metadata) != 114:
+        err('Quran metadata must contain 114 surahs, found %d' % len(metadata))
+    if len(quran_rows) != 6236:
+        err('Quran text must contain 6236 ayahs, found %d' % len(quran_rows))
+    seen_counts = {}
+    for surah, ayah in quran_rows:
+        seen_counts[surah] = seen_counts.get(surah, 0) + 1
+        if ayah != seen_counts[surah]:
+            err('Quran ayah sequence breaks at %d:%d' % (surah, ayah))
+            break
+    if set(seen_counts) != set(range(1, 115)):
+        err('Quran text must cover surahs 1 through 114')
+    for number, expected in metadata.items():
+        if seen_counts.get(number) != expected:
+            err('Quran surah %d expected %d ayahs, found %d'
+                % (number, expected, seen_counts.get(number, 0)))
+    license = open(QURAN_LICENSE, encoding='utf-8').read()
+    text = raw_bytes.decode('utf-8')
+    if 'Tanzil Quran Text (Uthmani, Version 1.1)' not in license:
+        err('Quran license asset is missing the Tanzil notice')
+    if 'Tanzil Project' not in text or 'tanzil.net' not in text:
+        err('Quran text asset is missing its required Tanzil attribution')
+    print('quran data: %d surahs, %d ayahs, Tanzil checksum %s…'
+          % (len(metadata), len(quran_rows), actual_sha[:12]))
+except (OSError, UnicodeDecodeError) as exc:
+    err('could not verify Quran reader data: %s' % exc)
 
 # ══════════════════════════ report ══════════════════════════
 for note in notes:

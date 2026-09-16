@@ -53,4 +53,18 @@
     <color name="goldDark">#E0A100</color>
     <color name="goldVeryDark">#6E4A00</color>
     <color name="premiumOverlay">#26FFD86B</color>
+
+
+    <!-- ── Quran reader: quiet paper, dark green ink, no advertising ───────── -->
+    <color name="quranPaper">#FFFCF5</color>
+    <color name="quranSurface">#FFFFFFFF</color>
+    <color name="quranInk">#1D2A24</color>
+    <color name="quranBody">#445149</color>
+    <color name="quranMuted">#6E7A72</color>
+    <color name="quranLine">#DCE6DC</color>
+    <color name="quranGreen">#246149</color>
+    <color name="quranGreenDark">#173E30</color>
+    <color name="quranSoftGreen">#E8F1E9</color>
+    <color name="quranGold">#BA8B36</color>
+
 </resources>

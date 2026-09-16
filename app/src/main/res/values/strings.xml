@@ -134,4 +134,46 @@
     <string name="privacy_settings">Privacy settings</string>
     <string name="privacy_settings_content_description">Change your advertising and privacy choices</string>
 
+
+
+    <!-- ── Holy Quran: offline reading, search and restored bookmarks ─────── -->
+    <string name="title_quran">Holy Quran</string>
+    <string name="tile_quran">Holy Quran</string>
+    <string name="quran_index_intro">Read the complete Quran offline</string>
+    <string name="quran_continue_title">Continue reading</string>
+    <string name="quran_continue_position">%1$s · Ayah %2$d</string>
+    <string name="quran_search">Search Quran</string>
+    <string name="quran_search_hint">Search an ayah, surah, or reference such as 2:255</string>
+    <string name="quran_search_prompt">Type a word, a surah name, or a reference to search the Quran.</string>
+    <string name="quran_search_no_results">No results found</string>
+    <string name="quran_search_results">%1$d results</string>
+    <string name="quran_search_results_limited">Showing the first %1$d of %2$d results</string>
+    <string name="quran_search_type_surah">SURAH</string>
+    <string name="quran_search_type_ayah">AYAH</string>
+    <string name="quran_bookmarks">Bookmarks</string>
+    <string name="quran_bookmarks_title">Saved bookmarks</string>
+    <string name="quran_no_bookmarks">No saved bookmarks yet</string>
+    <string name="quran_no_bookmarks_hint">Tap the bookmark icon beside any ayah to save it here.</string>
+    <string name="quran_bookmark_added">Bookmark saved</string>
+    <string name="quran_bookmark_removed">Bookmark removed</string>
+    <string name="quran_add_bookmark">Save bookmark at ayah %1$d</string>
+    <string name="quran_remove_bookmark">Remove bookmark at ayah %1$d</string>
+    <string name="quran_reader_hint">Tap an ayah to save your reading place. Use its bookmark icon to save it.</string>
+    <string name="quran_surah_title">Surah %1$d · %2$s</string>
+    <string name="quran_ayah_reference">Surah %1$d · %2$s · Ayah %3$d</string>
+    <string name="quran_surah_metadata">%1$d verses · %2$s</string>
+    <string name="quran_meccan">Meccan</string>
+    <string name="quran_medinan">Medinan</string>
+    <string name="quran_open_surah">Open %1$s</string>
+    <string name="quran_text_source_short">Quran text: Tanzil Project · tanzil.net</string>
+    <string name="quran_text_source_title">Quran text source</string>
+    <string name="quran_text_source_message">This app bundles the verbatim Uthmani Quran text from the Tanzil Project, Version 1.1, under Creative Commons Attribution 3.0. The complete notice is included with the app source. Visit tanzil.net for updates.</string>
+    <string name="quran_text_source_link">Open Tanzil.net</string>
+    <string name="quran_load_failed">The Quran text could not be opened. Please reinstall the app.</string>
+    <string name="cd_quran">Open the Holy Quran reader</string>
+    <string name="cd_quran_search">Search the Quran text</string>
+    <string name="cd_quran_bookmarks">Open saved Quran bookmarks</string>
+    <string name="cd_quran_text_source">Show Quran text source and license</string>
+    <string name="cd_quran_search_input">Search Quran text</string>
+
 </resources>
