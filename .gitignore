@@ -25,3 +25,6 @@ __pycache__/
 # at the repository root IS tracked on purpose - this sandbox cannot reach uploads.github.com,
 # so a release asset is impossible and the archive is the delivery channel. Rebuild it with
 # tools/build_package.py after any source change.
+
+# served copy of the root package, for the live mock server: cp Allah-Clock-*.zip tools/preview/
+tools/preview/*.zip
