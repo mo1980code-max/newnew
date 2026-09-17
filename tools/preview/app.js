@@ -229,11 +229,14 @@ function renderQuran() {
   const open = quranPage();
   const range = document.getElementById('quranRange');
   if (range && open) range.textContent = fmt(t('quran_screen_ayahs'), open.first, open.last);
-  const indicator = document.getElementById('quranPageIndicator');
-  if (indicator) {
-    indicator.textContent = cap('page') + ' ' + arabicIndic(state.page + 1) + ' '
-      + cap('of') + ' ' + arabicIndic(count);
-  }
+  // The chip inside the page footer and the read-out beside the demo's page stepper show the
+  // same numbers; both are updated from the one place.
+  const label = cap('page') + ' ' + arabicIndic(state.page + 1) + ' ' + cap('of') + ' '
+    + arabicIndic(count);
+  ['quranPageChip', 'quranPageIndicator'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
   const prev = document.getElementById('quranPrev'), next = document.getElementById('quranNext');
   if (prev) { prev.disabled = state.page === 0; prev.classList.toggle('off', state.page === 0); }
   if (next) {
