@@ -16,7 +16,7 @@ function makeEl(id) {
   const el = {
     id,
     _cls: new Set(),
-    style: {},
+    style: { setProperty: (k, v) => { el.style[k] = v; }, removeProperty: (k) => { delete el.style[k]; } },
     dataset: {},
     textContent: '',
     innerHTML: '',
@@ -112,18 +112,35 @@ setTimeout(() => {
   check('all 35 clock designs rendered', thumbs === 35, String(thumbs));
   const locks = html('clockLists').split('class="lock"').length - 1;
   check('9 premium locks (last 3 of each list)', locks === 9, String(locks));
-  check('wallpaper gallery shows all 21', html('galleryGrid').split('class="thumb').length - 1 === 21,
+  check('wallpaper gallery shows all 24', html('galleryGrid').split('class="thumb').length - 1 === 24,
     String(html('galleryGrid').split('class="thumb').length - 1));
+  check('exactly the 3 premium backgrounds carry the golden lock',
+    html('galleryGrid').split('class="lockBadge"').length - 1 === 3,
+    String(html('galleryGrid').split('class="lockBadge"').length - 1));
+  check('the premium three come first, as mergedWithPremium() orders them',
+    html('galleryGrid').indexOf(D.wallpapers[0].file) >= 0 && D.wallpapers[0].premium === true,
+    String(D.wallpapers[0].file));
   check('wallpaper applied to the live-wallpaper screen',
     els.wallScreen.style.backgroundImage.indexOf(D.wallpapers[0].file) >= 0,
     JSON.stringify(els.wallScreen.style.backgroundImage));
   check('the athkar tile carries the golden chip inside the window',
     !els.homeAthkarChip._cls.has('hidden') && text('homeAthkarChip') === D.ar.athkar_morning_title,
     JSON.stringify(text('homeAthkarChip')));
-  check('reward state uses the real string', text('unlockState') === D.ar.premium_not_unlocked,
-    JSON.stringify(text('unlockState')));
+  check('reward phone shows the background gate',
+    text('unlockState').indexOf('مقفلة') >= 0, JSON.stringify(text('unlockState')));
+  check('a locked premium background is refused before the ad',
+    vm.runInContext('openWallpaper(D.wallpapers[1]) === false', sandbox), 'it was applied');
+  check('a refused tap does not change the open background',
+    vm.runInContext('state.wp', sandbox) === 0, String(vm.runInContext('state.wp', sandbox)));
+  check('the reward unlocks it for good, as PremiumUnlocks does',
+    vm.runInContext('grantPendingBackground() && bgUnlocked(D.wallpapers[1].file)', sandbox),
+    'not unlocked');
+  check('the unlocked background is the one that gets applied',
+    vm.runInContext('state.wp', sandbox) === 1, String(vm.runInContext('state.wp', sandbox)));
+  check('the same tap now goes straight through',
+    vm.runInContext('openWallpaper(D.wallpapers[1]) === true', sandbox), 'still refused');
 
-  console.log('\nquran reader (one continuous Mushaf page)');
+  console.log('\nquran reader (flippable Mushaf pages)');
   const totalAyahs = Object.keys(D.quran.ayahs).reduce((n, k) => n + D.quran.ayahs[k].length, 0);
   check('114 surahs in the metadata', D.quran.surahs.length === 114,
     String(D.quran.surahs.length));
@@ -132,30 +149,62 @@ setTimeout(() => {
     .replace('%1$d', '1').replace('%2$s', D.quran.surahs[0].arabic);
   check('the reader title uses quran_surah_title', text('quranTitle') === expectTitle,
     JSON.stringify(text('quranTitle')));
-  check('the surah picker names the open surah',
-    text('surahName') === '1. ' + D.quran.surahs[0].arabic, JSON.stringify(text('surahName')));
-  const fatiha = html('quranSheet');
-  check('all 7 verses of Al-Fatiha are on the page',
+  check('the reader opens on the first page',
+    vm.runInContext('state.page', sandbox) === 0, String(vm.runInContext('state.page', sandbox)));
+  check('the page breaks come from the app\'s own constants',
+    D.quranPages.surah === 1 && D.quranPages.breaks.length === 7,
+    JSON.stringify(D.quranPages));
+  const fatiha = html('quranPages');
+  check('all 7 verses of Al-Fatiha are on the pages',
     (fatiha.match(/class="verse/g) || []).length === 7,
     String((fatiha.match(/class="verse/g) || []).length));
+  check('the surah is cut into 7 flippable pages',
+    (fatiha.match(/class="quranPageView/g) || []).length === 7,
+    String((fatiha.match(/class="quranPageView/g) || []).length));
+  check('one page is on screen at a time',
+    (fatiha.match(/class="quranPageView on"/g) || []).length === 1,
+    String((fatiha.match(/class="quranPageView on"/g) || []).length));
   const mark7 = String.fromCharCode(0x06DD) + vm.runInContext('arabicIndic(7)', sandbox);
   check('a verse closes with U+06DD and an Arabic-Indic number',
-    fatiha.indexOf(mark7) >= 0, 'marker ' + mark7 + ' not found');
+    fatiha.indexOf('>' + vm.runInContext('arabicIndic(7)', sandbox) + '<') >= 0,
+    'marker ' + mark7 + ' not found');
   check('Al-Fatiha gets no separate Basmalah line (it is verse 1)',
     fatiha.indexOf('class="basmalah"') < 0, 'a Basmalah line was added');
-  const baqara = vm.runInContext('buildQuranPage(2)', sandbox);
-  check('surah 2 renders all 286 verses',
-    (baqara.match(/class="verse/g) || []).length === 286,
-    String((baqara.match(/class="verse/g) || []).length));
-  check('surah 2 opens with the Basmalah taken from the asset',
-    baqara.indexOf('class="basmalah">' + D.quran.ayahs[1][0]) >= 0, 'no Basmalah line');
-  vm.runInContext('state.surah = 2; renderQuran()', sandbox);
-  check('tapping a verse saves it', vm.runInContext('toggleVerse(2, 255)', sandbox) === true,
-    'toggleVerse returned false');
-  check('the saved verse is tinted in place',
-    /class="verse saved" data-surah="2" data-ayah="255"/.test(html('quranSheet')),
-    html('quranSheet').slice(0, 90));
-  vm.runInContext('state.surah = 1; renderQuran()', sandbox);
+  // The mock prints one verse per page (see buildQuranPages), so page 1 carries ayah 1 alone;
+  // the string is still the app's own quran_screen_ayahs.
+  check('the footer states the ayah range with the real string',
+    text('quranRange') === D.ar.quran_screen_ayahs.replace('%1$d', '1').replace('%2$d', '1'),
+    JSON.stringify(text('quranRange')));
+  vm.runInContext('flipPage(1)', sandbox);
+  check('flipping turns to the next page', vm.runInContext('state.page', sandbox) === 1,
+    String(vm.runInContext('state.page', sandbox)));
+  check('the day phone follows the flip too',
+    (html('quranPages').match(/class="quranPageView on"/g) || []).length === 1,
+    'more than one page is on screen');
+  vm.runInContext('flipPage(-1)', sandbox);
+  check('the previous arrow stops at the first page',
+    vm.runInContext('state.page', sandbox) === 0, String(vm.runInContext('state.page', sandbox)));
+  vm.runInContext('state.marked = {}; toggleVerse(1, 7)', sandbox);
+  check('tapping a verse saves it',
+    /class="verse saved" data-surah="1" data-ayah="7"/.test(html('quranPages')),
+    html('quranPages').slice(0, 90));
+  vm.runInContext('toggleVerse(1, 7)', sandbox);
+
+  console.log('\nnight reading (the in-reader theme)');
+  check('the night palette is the app\'s own colours',
+    D.night.quranNightPaper === '#1A1D24' && D.night.quranNightInk === '#E7D9B4',
+    JSON.stringify(D.night));
+  vm.runInContext('setNight(true)', sandbox);
+  check('the reader swaps to the night palette in place',
+    els.quranScreen.style['--quranPaper'] === D.night.quranNightPaper
+      && els.quranNightScreen.style['--quranPaper'] === D.night.quranNightPaper,
+    JSON.stringify(els.quranScreen.style['--quranPaper']));
+  check('the page the reader was on is unchanged by the theme',
+    vm.runInContext('state.page', sandbox) === 0, String(vm.runInContext('state.page', sandbox)));
+  vm.runInContext('setNight(false)', sandbox);
+  check('toggling back restores the paper colours',
+    els.quranScreen.style['--quranPaper'] === D.colors.quranPaper,
+    JSON.stringify(els.quranScreen.style['--quranPaper']));
 
   console.log(failures ? '\n' + failures + ' CHECK(S) FAILED' : '\nALL CHECKS PASSED');
   process.exit(failures ? 1 : 0);

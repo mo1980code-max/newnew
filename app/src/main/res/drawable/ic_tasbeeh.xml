@@ -1,11 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Misbaha (prayer beads), refined: a full ring of strung beads with a slightly larger imam bead
+  and the tassel below it.
+
+  Drawn on the same 24 dp grid as the rest of the icon set, with the beads as filled discs and the
+  cord as a thin stroke, so it stays crisp at the bar's 46 dp and at any density. The two colours
+  are deliberate and are NOT overridden with android:tint at the call site: the beads are warm
+  ivory and the imam bead, cord and tassel are gold, which is what gives the bar its metallic
+  accent.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <!-- a ring of misbaha beads -->
+
+    <!-- the ring of beads -->
     <path
-        android:fillColor="#FF000000"
-        android:pathData="M12,2.2 a2.3,2.3 0 1,0 0.01,0 z M6,5 a2.3,2.3 0 1,0 0.01,0 z M18,5 a2.3,2.3 0 1,0 0.01,0 z M3.2,10.5 a2.3,2.3 0 1,0 0.01,0 z M20.8,10.5 a2.3,2.3 0 1,0 0.01,0 z M4.5,16.5 a2.3,2.3 0 1,0 0.01,0 z M19.5,16.5 a2.3,2.3 0 1,0 0.01,0 z M9,20.5 a2.3,2.3 0 1,0 0.01,0 z M15,20.5 a2.3,2.3 0 1,0 0.01,0 z M12,10 a2.6,2.6 0 1,0 0.01,0 z" />
+        android:fillColor="#FFF3E7CB"
+        android:pathData="M12,3.1 a1.85,1.85 0 1,0 0.01,0 z
+            M16.79,4.59 a1.85,1.85 0 1,0 0.01,0 z
+            M20.13,8.42 a1.85,1.85 0 1,0 0.01,0 z
+            M20.62,13.35 a1.85,1.85 0 1,0 0.01,0 z
+            M18.46,17.76 a1.85,1.85 0 1,0 0.01,0 z
+            M14.36,20.4 a1.85,1.85 0 1,0 0.01,0 z
+            M9.48,20.4 a1.85,1.85 0 1,0 0.01,0 z
+            M5.39,17.76 a1.85,1.85 0 1,0 0.01,0 z
+            M3.23,13.35 a1.85,1.85 0 1,0 0.01,0 z
+            M3.72,8.42 a1.85,1.85 0 1,0 0.01,0 z
+            M7.06,4.59 a1.85,1.85 0 1,0 0.01,0 z" />
+
+    <!-- the cord the beads are strung on -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M12,5 a7,7 0 1,1 -0.01,0 z"
+        android:strokeColor="#FFE9CE8A"
+        android:strokeWidth="0.7" />
+
+    <!-- the imam bead, in gold -->
+    <path
+        android:fillColor="#FFE9CE8A"
+        android:pathData="M12,9.4 a2.6,2.6 0 1,0 0.01,0 z" />
+
+    <!-- the tassel -->
+    <path
+        android:fillColor="#FFE9CE8A"
+        android:pathData="M12,15.1 l1.3,1.9 h-2.6 z" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M12,17.2 v2.1 M10.4,19.5 h3.2"
+        android:strokeColor="#FFE9CE8A"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.1" />
 </vector>

@@ -24,6 +24,7 @@ public final class QuranStore {
     private static final String PREF_LAST_SURAH = "quranLastSurahV1";
     private static final String PREF_LAST_AYAH = "quranLastAyahV1";
     private static final String PREF_TEXT_SIZE = "quranTextSizeSpV1";
+    private static final String PREF_NIGHT_MODE = "quranNightModeV1";
 
     public static final int DEFAULT_TEXT_SIZE_SP = 23;
     public static final int MIN_TEXT_SIZE_SP = 18;
@@ -104,6 +105,21 @@ public final class QuranStore {
         if (textSizeSp >= MIN_TEXT_SIZE_SP && textSizeSp <= MAX_TEXT_SIZE_SP) {
             this.tinyDB.putInt(PREF_TEXT_SIZE, textSizeSp);
         }
+    }
+
+    /**
+     * The reader's own night setting.
+     *
+     * <p>It is read through the caller's {@link TinyDB} on purpose: the same preference file holds
+     * the rest of the app's settings, so this stays one place to look when the app's defaults
+     * change. The Quran reader passes its own instance in.</p>
+     */
+    public boolean isNightMode(@NonNull TinyDB preferences) {
+        return preferences.getBoolean(PREF_NIGHT_MODE, false);
+    }
+
+    public void saveNightMode(@NonNull TinyDB preferences, boolean night) {
+        preferences.putBoolean(PREF_NIGHT_MODE, night);
     }
 
     @NonNull

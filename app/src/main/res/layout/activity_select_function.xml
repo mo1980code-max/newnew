@@ -4,7 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/textColor"
+    android:background="@drawable/bg_home_backdrop"
+    android:clipToPadding="false"
     android:fillViewport="true">
 
     <LinearLayout
@@ -14,86 +15,95 @@
         android:orientation="vertical"
         android:paddingBottom="10dp">
 
+        <!--
+          The top action bar: six frosted-glass tiles over the gradient backdrop.
+
+          Each tile is one 46 dp pane with a 14 dp radius, a hairline gold highlight and a soft
+          elevation, holding a vector icon with a metallic accent. The bar scrolls with the
+          dashboard, so on a short screen the tiles never steal room from the four cards. Press
+          feedback (a scale dip) and the haptic tick are attached in MainActivity.
+        -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:layout_gravity="end"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:gravity="center_vertical|end"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp">
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp">
 
             <ImageView
                 android:id="@+id/language"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                style="@style/HomeGlassTile"
                 android:contentDescription="@string/cd_language"
-                android:padding="5dp"
-                android:src="@drawable/ic_language"
-                app:tint="@color/adBg" />
+                android:src="@drawable/ic_language" />
 
             <ImageView
                 android:id="@+id/tasbeeh"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="7dp"
+                style="@style/HomeGlassTile"
+                android:layout_marginStart="6dp"
                 android:contentDescription="@string/cd_tasbeeh"
-                android:padding="5dp"
-                android:src="@drawable/ic_tasbeeh"
-                app:tint="@color/adBg" />
+                android:src="@drawable/ic_tasbeeh" />
 
             <ImageView
                 android:id="@+id/qibla"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="7dp"
+                style="@style/HomeGlassTile"
+                android:layout_marginStart="6dp"
                 android:contentDescription="@string/cd_qibla"
-                android:padding="5dp"
-                android:src="@drawable/ic_qibla"
-                app:tint="@color/adBg" />
+                android:src="@drawable/ic_qibla" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
 
             <ImageView
                 android:id="@+id/privacy"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="7dp"
+                style="@style/HomeGlassTile"
                 android:contentDescription="@string/privacy_settings_content_description"
-                android:padding="5dp"
                 android:src="@drawable/ic_privacy_shield"
                 android:visibility="gone"
-                app:tint="@color/adBg" />
+                app:tint="@color/glassIconIvory" />
 
             <ImageView
                 android:id="@+id/rateus"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="7dp"
+                style="@style/HomeGlassTile"
+                android:layout_marginStart="6dp"
                 android:contentDescription="@string/cd_rate"
                 android:src="@drawable/star"
-                app:tint="@color/adBg" />
+                app:tint="@color/glassIconIvory" />
 
             <ImageView
                 android:id="@+id/share"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="7dp"
+                style="@style/HomeGlassTile"
+                android:layout_marginStart="6dp"
                 android:contentDescription="@string/share_application"
-                android:padding="5dp"
                 android:src="@drawable/ic_share"
-                app:tint="@color/adBg" />
+                app:tint="@color/glassIconIvory" />
         </LinearLayout>
 
         <TextView
+            android:id="@+id/homeTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="14dp"
             android:layout_marginEnd="20dp"
-            android:layout_marginBottom="10dp"
             android:fontFamily="@font/myfont"
             android:gravity="center"
             android:text="@string/app_name"
-            android:textColor="@color/appColor"
-            android:textSize="23sp" />
+            android:textColor="@color/tileTitleGold"
+            android:textSize="24sp" />
+
+        <!-- The same ornamental divider the Quran tile uses, so title and tile belong together. -->
+        <ImageView
+            android:layout_width="128dp"
+            android:layout_height="12dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="10dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_tile_divider"
+            app:tint="@color/tileFrameGoldSoft" />
 
         <FrameLayout
             android:id="@+id/frameClock"

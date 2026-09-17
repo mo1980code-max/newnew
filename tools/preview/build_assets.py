@@ -129,6 +129,33 @@ print('quran: %d surahs, %d ayahs (%d KB of text)'
          os.path.getsize(os.path.join(RES, 'raw', 'quran_uthmani.txt')) // 1024))
 
 
+# ══════════════════════════════ the reader's page breaks ══════════════════════════════
+# QuranPageBuilder closes every verse with " U+06DD<number> " and the paginator cuts the run into
+# pages at the line boxes the text engine reports. The mock mirrors those two rules using the
+# app's own constants, so it never has to guess where a page ends.
+qbuilder = open(os.path.join(JAVA, 'utils', 'QuranPageBuilder.java'), encoding='utf-8').read()
+assert "append('\\u06DD')" in qbuilder, 'QuranPageBuilder no longer marks verses with U+06DD'
+PAGE_SEPARATOR = chr(0x06DD)
+
+surah_by_number = {s['n']: s for s in surahs}
+TARGET_SURAH, TARGET_AYAH = 1, 1      # Al-Fatiha: its Basmalah is verse 1, so there is no opening
+run, page_breaks = '', []
+for index, text in enumerate(ayahs[TARGET_SURAH]):
+    mark = ' ' + PAGE_SEPARATOR + str(index + 1) + ' '
+    # Exactly the two appends of QuranPageBuilder.appendAyah().
+    run += text + mark
+    # The page may break right after the marker, never inside the verse that owns it. Searching
+    # from the previous break proves the string only occurs at the marker and not in the text.
+    found = run.find(mark, page_breaks[-1] if page_breaks else 0)
+    assert found == len(run) - len(mark), (
+        'the marker of verse %d is not where appendAyah() puts it' % (index + 1))
+    page_breaks.append(len(run))
+assert run.count(PAGE_SEPARATOR) == len(page_breaks) == surah_by_number[TARGET_SURAH]['ayahs']
+data['quranPages'] = {'surah': TARGET_SURAH, 'firstAyah': TARGET_AYAH, 'breaks': page_breaks}
+print('quran reader: surah %d, %d marked verses, breaks at %s'
+      % (TARGET_SURAH, len(page_breaks), page_breaks[:8]))
+
+
 # ══════════════════════════════════ qibla ══════════════════════════════════
 KAABA_LAT, KAABA_LON = 21.422487, 39.826206
 coords = re.search(r'CITY_COORDS\s*=\s*\{(.*?)\};',
@@ -160,12 +187,20 @@ print('qibla %s: %s' % (cities[0], data['qibla']))
 
 # ══════════════════════════════════ wallpapers ══════════════════════════════════
 CAPTIONS = {
+    'premium': ('Premium', 'حصري'),
     'kaaba': ('Kaaba, Makkah', 'الكعبة المشرّفة'),
     'aqsa': ('Al-Aqsa, Jerusalem', 'المسجد الأقصى'),
     'madina': ('Prophet\'s Mosque, Madinah', 'المسجد النبوي'),
     'mosque': ('Mosque', 'مسجد'),
     'min': ('Minaret', 'مئذنة'),
 }
+# Which backgrounds sit behind the rewarded ad. Read out of WallpaperCatalog so the mock can
+# never disagree with the app about what is locked.
+catalog = open(os.path.join(JAVA, 'utils', 'WallpaperCatalog.java'), encoding='utf-8').read()
+premium_block = re.search(r'PREMIUM\s*=\s*\{(.*?)\}', catalog, re.S).group(1)
+premium_names = set(re.findall(r'R\.drawable\.(wp_\w+)', premium_block))
+assert premium_names, 'WallpaperCatalog.PREMIUM is empty - the reward gate would be open'
+
 wallpapers = []
 for path in sorted(glob.glob(os.path.join(RES, 'drawable-nodpi', 'wp_*.jpg'))):
     name = os.path.basename(path)
@@ -173,9 +208,13 @@ for path in sorted(glob.glob(os.path.join(RES, 'drawable-nodpi', 'wp_*.jpg'))):
     parts = name[3:-4].rsplit('_', 1)
     key, index = parts[0], int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
     en, ar = CAPTIONS.get(key, (key.title(), key))
-    wallpapers.append({'file': name, 'en': '%s %d' % (en, index), 'ar': '%s %d' % (ar, index)})
+    wallpapers.append({'file': name, 'en': '%s %d' % (en, index), 'ar': '%s %d' % (ar, index),
+                       'premium': name[:-4] in premium_names})
 data['wallpapers'] = wallpapers
-print('wallpapers copied: %d' % len(wallpapers))
+# Premium first, exactly like WallpaperActivity.mergedWithPremium().
+data['wallpapers'].sort(key=lambda w: (not w['premium'], w['file']))
+print('wallpapers copied: %d (%d premium)'
+      % (len(wallpapers), sum(1 for w in wallpapers if w['premium'])))
 
 
 # ══════════════════════════════════ clock designs ══════════════════════════════════
@@ -276,6 +315,19 @@ for path in sorted(glob.glob(os.path.join(RES, 'drawable', 'bg_*.xml'))):
     }
 data['shapes'] = shapes
 print('shapes: %d' % len(shapes))
+
+# The night palette and the glass tokens, read from QuranTheme and the colour table so the mock's
+# dark page and frosted bar are the app's own values.
+data['night'] = {}
+# Explicit reads: QuranTheme resolves each field from exactly one R.color.
+for res in ('quranNightPaper', 'quranNightSurface', 'quranNightInk', 'quranNightBody',
+            'quranNightMuted', 'quranNightLine', 'quranNightGreen', 'quranNightGold'):
+    data['night'][res] = colors.get(res)
+assert all(data['night'].values()), 'a night colour is missing from values/colors.xml'
+data['glass'] = {k: colors.get(k) for k in (
+    'glassTileTop', 'glassTileBottom', 'glassTileRim', 'glassTileGold', 'glassIconIvory',
+    'homeBackdropTop', 'homeBackdropBottom')}
+print('night palette + glass tokens read from colors.xml')
 
 with open(os.path.join(ASSETS, 'data.js'), 'w', encoding='utf-8') as fh:
     fh.write('window.APP_DATA = ')

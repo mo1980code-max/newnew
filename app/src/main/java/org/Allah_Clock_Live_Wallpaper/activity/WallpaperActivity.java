@@ -2,22 +2,26 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.ads.BannerAdController;
 import org.Allah_Clock_Live_Wallpaper.ads.NativeAdListAdapter;
+import org.Allah_Clock_Live_Wallpaper.ads.PremiumBackgroundHelper;
 import org.Allah_Clock_Live_Wallpaper.adapter.WallpaperAdapter;
 import org.Allah_Clock_Live_Wallpaper.model.WallpaperCategory;
 import org.Allah_Clock_Live_Wallpaper.model.WallpaperItem;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 import org.Allah_Clock_Live_Wallpaper.utils.WallpaperCatalog;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** Wallpapers inside one category. Banner at the bottom, native card in the middle. */
@@ -62,7 +66,7 @@ public class WallpaperActivity extends AppCompatActivity {
         this.txtTitle.setText(category.getTitleRes());
         this.ivBack.setOnClickListener(view -> finish());
 
-        final List<WallpaperItem> images = category.getItems();
+        final List<WallpaperItem> images = mergedWithPremium(category);
         WallpaperAdapter adapter = new WallpaperAdapter(images);
         adapter.setClickListener(new WallpaperAdapter.ClickListener() {
             @Override
@@ -70,16 +74,39 @@ public class WallpaperActivity extends AppCompatActivity {
                 if (i < 0 || i >= images.size()) {
                     return;
                 }
-                Intent intent = new Intent(WallpaperActivity.this, SetWallpaperActivity.class);
-                intent.putExtra(SetWallpaperActivity.EXTRA_WALLPAPER_RES,
-                        images.get(i).getDrawableRes());
-                startActivity(intent);
+                final WallpaperItem item = images.get(i);
+                PremiumBackgroundHelper.onBackgroundClick(viewOf(i), item.getDrawableRes(),
+                        () -> openWallpaper(item), () -> adapter.notifyDataSetChanged());
             }
         });
 
         this.listAdapter = new NativeAdListAdapter(this, adapter, GRID_SPAN);
         this.listAdapter.attachTo(this.recyclerViewCategory);
         this.listAdapter.loadNativeAd();
+    }
+
+    /** The premium backgrounds first, then the category's own images. */
+    @NonNull
+    private List<WallpaperItem> mergedWithPremium(@NonNull WallpaperCategory category) {
+        List<WallpaperItem> images = new ArrayList<>();
+        for (int premiumRes : WallpaperCatalog.getPremiumBackgrounds()) {
+            images.add(new WallpaperItem(premiumRes));
+        }
+        images.addAll(category.getItems());
+        return images;
+    }
+
+    private void openWallpaper(@NonNull WallpaperItem item) {
+        Intent intent = new Intent(WallpaperActivity.this, SetWallpaperActivity.class);
+        intent.putExtra(SetWallpaperActivity.EXTRA_WALLPAPER_RES, item.getDrawableRes());
+        startActivity(intent);
+    }
+
+    /** The view of one grid position, so the rewarded helper can find its host Activity. */
+    private View viewOf(int position) {
+        View cell = this.recyclerViewCategory.getLayoutManager() == null ? null
+                : this.recyclerViewCategory.getLayoutManager().findViewByPosition(position);
+        return cell == null ? this.recyclerViewCategory : cell;
     }
 
     @Override
@@ -90,6 +117,11 @@ public class WallpaperActivity extends AppCompatActivity {
         }
         if (listAdapter != null) {
             listAdapter.loadNativeAd();
+        }
+        // Coming back from the rewarded video: refresh the badges so an earned background shows
+        // its real state straight away.
+        if (this.recyclerViewCategory != null && this.recyclerViewCategory.getAdapter() != null) {
+            this.recyclerViewCategory.getAdapter().notifyDataSetChanged();
         }
     }
 

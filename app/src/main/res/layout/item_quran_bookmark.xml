@@ -24,13 +24,27 @@
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/quranBookmarkTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/quranGreenDark"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/quranBookmarkTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/quranGreenDark"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <!-- The saved ayah's own number, printed inside the end-of-ayah ornament. -->
+            <include
+                layout="@layout/view_ayah_number_badge"
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/quranBookmarkText"

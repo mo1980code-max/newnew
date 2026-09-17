@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ayah_circle - the end-of-ayah ornament (the ۝ rosette) that closes every verse.
+
+  Drawn as a sixteen-petal rosette with an inner ring, exactly like the shape the Quran reader
+  paints inside the page (AyahBadgeSpan builds the same geometry in code so it scales with the
+  reader's text size). Nothing here is filled: the paper shows through, so the ayah number can sit
+  on top of it and stay legible in either palette. That is also why the ornament is a separate
+  layer from the number - see view_ayah_number_badge.xml, which stacks the two with identical
+  bounds so the digits are centred by construction instead of by an offset that has to be tuned
+  per screen density.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M23.00,12.00 L20.93,13.78 L22.16,16.21 L19.57,17.06 L19.78,19.78 L17.06,19.57 L16.21,22.16 L13.78,20.93 L12.00,23.00 L10.22,20.93 L7.79,22.16 L6.94,19.57 L4.22,19.78 L4.43,17.06 L1.84,16.21 L3.07,13.78 L1.00,12.00 L3.07,10.22 L1.84,7.79 L4.43,6.94 L4.22,4.22 L6.94,4.43 L7.79,1.84 L10.22,3.07 L12.00,1.00 L13.78,3.07 L16.21,1.84 L17.06,4.43 L19.78,4.22 L19.57,6.94 L22.16,7.79 L20.93,10.22 Z"
+        android:strokeColor="@color/ayahOrnamentGold"
+        android:strokeWidth="1.1" />
+
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M12,4.5 a7.5,7.5 0 1,0 0.01,0 z"
+        android:strokeColor="@color/ayahOrnamentGold"
+        android:strokeWidth="0.9" />
+</vector>

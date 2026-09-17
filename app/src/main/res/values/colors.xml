@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorAccent">#4d4d4d</color>
     <color name="colorPrimary">#646464</color>
@@ -67,6 +66,25 @@
     <color name="quranSoftGreen">#E8F1E9</color>
     <color name="quranGold">#BA8B36</color>
 
+    <!--
+      ── Quran night reading theme ──────────────────────────────────────────
+      Deliberately its own palette rather than values-night: the reader's night mode is an
+      in-app switch, so it must work whatever the system dark-mode setting is. Deep slate
+      surfaces (#1A1D24) with warm, low-contrast cream and gold type: nothing here is
+      pure white on pure black, which is what makes long night reading tiring.
+    -->
+    <color name="quranNightPaper">#1A1D24</color>
+    <color name="quranNightSurface">#20242C</color>
+    <color name="quranNightInk">#E7D9B4</color>
+    <color name="quranNightBody">#D2C49F</color>
+    <color name="quranNightMuted">#9A927E</color>
+    <color name="quranNightLine">#2E333D</color>
+    <color name="quranNightGreen">#8FBFA4</color>
+    <color name="quranNightGreenDark">#BFD8C7</color>
+    <color name="quranNightSoftGreen">#232A28</color>
+    <color name="quranNightGold">#D9B36A</color>
+    <color name="quranNightIconBar">#14161B</color>
+
     <!-- ── Home tiles: the Quran and the athkar get their own gold-framed, bigger tiles
       The clock/wallpaper tiles are 108dp rasters. These two are 140dp with a double gold
       frame, so the two "reading" entries stand apart from the two "design" entries. -->
@@ -79,5 +97,35 @@
     <color name="tileTitleGold">#F2D68C</color>
     <!-- Saved-verse tint inside the continuous reader page (soft, still readable ink on top). -->
     <color name="quranVerseHighlight">#33C9A227</color>
+
+    <!--
+      ── End-of-ayah ornament (the ۝ rosette drawn behind the ayah number) ────
+      Two palettes because the badge is drawn, not tinted: AyahBadgeSpan takes the values of
+      the active QuranTheme.
+    -->
+    <color name="ayahOrnamentGold">#BA8B36</color>
+    <color name="ayahOrnamentFill">#F3EFE2</color>
+    <color name="ayahOrnamentNumber">#173E30</color>
+    <color name="ayahOrnamentGoldNight">#D9B36A</color>
+    <color name="ayahOrnamentFillNight">#262B34</color>
+    <color name="ayahOrnamentNumberNight">#E7D9B4</color>
+
+    <!-- ── Glassmorphism top action bar (home dashboard) ──────────────────
+      Frosted tiles with a hairline gold rim over the app's deep violet backdrop.
+    -->
+    <color name="glassTileTop">#4DFFFFFF</color>
+    <color name="glassTileBottom">#1FFFFFFF</color>
+    <color name="glassTileRim">#33FFFFFF</color>
+    <color name="glassTileGold">#59E6C36A</color>
+    <color name="glassIconGold">#E9CE8A</color>
+    <color name="glassIconIvory">#EDE7D9</color>
+    <color name="glassIconGoldSoft">#B99A55</color>
+    <color name="glassPressedOverlay">#1AE6C36A</color>
+    <color name="homeBackdropTop">#3B3F8F</color>
+    <color name="homeBackdropBottom">#23264F</color>
+
+    <!-- ── Premium background lock badge ──────────────────────────────── -->
+    <color name="premiumLockScrim">#8C101820</color>
+    <color name="premiumLockGold">#F2D68C</color>
 
 </resources>

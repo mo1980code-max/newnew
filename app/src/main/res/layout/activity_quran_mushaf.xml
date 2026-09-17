@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Reflowed text grouped by the canonical 604 Madani Mushaf page boundaries. -->
+<!--
+  Mushaf mode: the canonical 604 pages, flipped sideways by a ViewPager2 instead of a scrolling
+  list. Each page is drawn by QuranPageView from QuranTheme, so the night reading switch and the
+  text-size picker affect the whole screen without changing the printed page boundaries.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/quranMushafRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/quranPaper"
@@ -15,8 +20,8 @@
 
         <ImageButton
             android:id="@+id/quranMushafBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
             android:background="@drawable/bg_quran_icon_button"
             android:contentDescription="@string/cd_back"
             android:padding="12dp"
@@ -24,6 +29,7 @@
             app:tint="@color/quranInk" />
 
         <TextView
+            android:id="@+id/quranMushafTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -35,9 +41,19 @@
             android:textSize="20sp" />
 
         <ImageButton
+            android:id="@+id/quranMushafNight"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="@drawable/bg_quran_icon_button"
+            android:contentDescription="@string/cd_quran_night_mode"
+            android:padding="12dp"
+            android:src="@drawable/ic_quran_night"
+            app:tint="@color/quranGreen" />
+
+        <ImageButton
             android:id="@+id/quranMushafTextSize"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
             android:background="@drawable/bg_quran_icon_button"
             android:contentDescription="@string/cd_quran_text_size"
             android:padding="12dp"
@@ -46,8 +62,8 @@
 
         <ImageButton
             android:id="@+id/quranMushafBookmarks"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
             android:background="@drawable/bg_quran_icon_button"
             android:contentDescription="@string/cd_quran_bookmarks"
             android:padding="12dp"
@@ -56,6 +72,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/quranMushafHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -81,6 +98,7 @@
                 android:layout_height="42dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_quran_page_button"
+                android:contentDescription="@string/cd_quran_previous_page"
                 android:text="@string/quran_previous_page"
                 android:textAllCaps="false"
                 android:textColor="@color/quranGreenDark"
@@ -92,13 +110,13 @@
                 android:layout_height="42dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
+                android:layout_weight="1.25"
                 android:background="@drawable/bg_quran_tag"
                 android:clickable="true"
                 android:contentDescription="@string/cd_quran_choose_page"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
                 android:gravity="center"
-                android:layout_weight="1.25"
                 android:textColor="@color/quranGreenDark"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -109,6 +127,7 @@
                 android:layout_height="42dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_quran_page_button"
+                android:contentDescription="@string/cd_quran_next_page"
                 android:text="@string/quran_next_page"
                 android:textAllCaps="false"
                 android:textColor="@color/quranGreenDark"
@@ -158,12 +177,10 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/quranMushafAyahList"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/quranMushafPager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingBottom="8dp" />
+            android:layout_height="match_parent" />
 
         <LinearLayout
             android:id="@+id/quranMushafLoading"
@@ -192,6 +209,7 @@
     </FrameLayout>
 
     <TextView
+        android:id="@+id/quranMushafSource"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"

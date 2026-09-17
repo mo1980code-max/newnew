@@ -7,7 +7,7 @@
     <string name="title_digital_clock">ساعة رقمية</string>
     <string name="title_smart_clock">ساعة ذكية</string>
     <string name="title_wallpaper">الخلفيات</string>
-    <string name="tile_android_clock">ساعة أندرويد 12</string>
+    <string name="tile_android_clock">ساعة أندرويد</string>
     <string name="tile_analog_clock">ساعة\nتناظرية</string>
     <string name="tile_digital_clock">ساعة\nرقمية</string>
     <string name="tile_smart_clock">ساعة\nذكية</string>
@@ -160,7 +160,7 @@
     <string name="quran_bookmark_removed">تمت إزالة العلامة</string>
     <string name="quran_add_bookmark">حفظ علامة عند الآية %1$d</string>
     <string name="quran_remove_bookmark">إزالة علامة الآية %1$d</string>
-    <string name="quran_reader_hint">صفحة مصحف واحدة متصلة: الآيات متتابعة، وتُختم كل آية برقمها. انقر أي آية لحفظها، وانقرها مرة أخرى لإزالة الحفظ.</string>
+    <string name="quran_reader_hint">الصفحات تُقلب جانبيًا كمصحف مطبوع: اسحب، أو استخدم السهمين بالأسفل. انقر أي آية لحفظها، وانقرها مرة أخرى لإزالة الحفظ.</string>
     <string name="quran_surah_title">سورة %1$d · %2$s</string>
     <string name="quran_ayah_reference">سورة %1$d · %2$s · الآية %3$d</string>
     <string name="quran_surah_metadata">%1$d آيات · %2$s</string>
@@ -201,5 +201,35 @@
     <string name="cd_quran_choose_juz">اختيار جزء من القرآن</string>
 
     <string name="quran_juz_range">الجزء %1$d–%2$d</string>
+
+
+    <!-- ── وضع القراءة الليلية للقرآن (داخل التطبيق، مستقل عن وضع النظام الداكن) ── -->
+    <string name="quran_night_mode">القراءة الليلية</string>
+    <string name="quran_day_mode">القراءة النهارية</string>
+    <string name="cd_quran_night_mode">تشغيل أو إيقاف وضع القراءة الليلية للقرآن</string>
+    <string name="quran_night_enabled">تم تشغيل القراءة الليلية — حبر ناعم على خلفية داكنة</string>
+    <string name="quran_day_enabled">تم تشغيل القراءة النهارية — حبر على ورق</string>
+    <string name="quran_flip_hint">اسحب جانبًا لتقليب الصفحة، تمامًا كمصحف مطبوع</string>
+    <string name="quran_screen_ayahs">الآيات %1$d–%2$d</string>
+    <string name="cd_quran_previous_page">الانتقال إلى الصفحة السابقة</string>
+    <string name="cd_quran_next_page">الانتقال إلى الصفحة التالية</string>
+    <string name="quran_surah_header">سورة %1$s</string>
+    <string name="quran_page_number_short">الصفحة %1$d</string>
+
+    <!-- ── لغة عرض الأذكار (لغة واحدة صارمة، أو لغتان عند الطلب) ── -->
+    <string name="athkar_bilingual">إظهار النص العربي مع الترجمة</string>
+    <string name="cd_athkar_bilingual">تشغيل أو إيقاف عرض الأذكار بلغتين</string>
+    <string name="athkar_bilingual_on">لغتان: العربية والإنجليزية</string>
+    <string name="athkar_bilingual_off">لغة واحدة حسب لغة التطبيق</string>
+
+    <!-- ── الخلفيات المميزة (فتح بإعلان بمكافأة) ──────────────────── -->
+    <string name="cat_premium">خلفيات مميزة</string>
+    <string name="premium_bg_badge">مميز</string>
+    <string name="premium_bg_lock_cd">خلفية مميزة مقفلة. شاهد إعلانًا بمكافأة لفتحها نهائيًا</string>
+    <string name="premium_bg_open_cd">خلفية مميزة مفتوحة</string>
+    <string name="premium_bg_title">الخلفية مقفلة</string>
+    <string name="premium_bg_message">شاهد فيديو قصيرًا لفتح هذه الخلفية نهائيًا. يُحفظ الفتح على هذا الجهاز، فتبقى ملكك بعد إغلاق التطبيق.</string>
+    <string name="premium_bg_unlocked">تم فتح الخلفية — أصبحت ملكك دائمًا</string>
+    <string name="premium_bg_not_unlocked">الخلفية ما زالت مقفلة</string>
 
 </resources>

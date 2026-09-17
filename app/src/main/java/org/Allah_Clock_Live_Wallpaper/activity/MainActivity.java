@@ -2,6 +2,7 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.provider.Settings;
 import android.os.Bundle;
@@ -13,7 +14,9 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.ads.AdManager;
@@ -22,6 +25,7 @@ import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.utils.PrayerWindow;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
+import org.Allah_Clock_Live_Wallpaper.utils.UiMotion;
 
 /**
  * Home screen.
@@ -36,6 +40,11 @@ import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
  *
  * <p>This is also where the UMP consent flow runs, before the ads SDK is initialised, so
  * every later screen can simply ask {@link AdManager#canRequestAds()}.</p>
+ *
+ * <p>The top action bar (misbaha, language, qibla - plus privacy, rate and share) is a row of
+ * frosted-glass tiles. Each one is wired here through {@link #bindGlassAction(int, Runnable)},
+ * which attaches the press micro-interaction and the haptic tick in a single place, so a new
+ * button on the bar cannot arrive without either.</p>
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -43,12 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout frameWallpaper;
     private FrameLayout frameQuran;
     private FrameLayout frameAthkar;
-    private ImageView rate;
-    private ImageView share;
     private ImageView privacy;
-    private ImageView qibla;
-    private ImageView tasbeeh;
-    private ImageView language;
     private TextView athkarWindowChip;
     private TinyDB tinyDB;
 
@@ -66,7 +70,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(bundle);
         setContentView(R.layout.activity_select_function);
         UiCompat.applyEdgeToEdge(this);
+        // The dashboard is a gradient, so the strip the system bars are drawn over has to be the
+        // same tone as its top: applyEdgeToEdge() paints that area white for the list screens.
+        getWindow().setBackgroundDrawable(
+                new ColorDrawable(ContextCompat.getColor(this, R.color.homeBackdropTop)));
         initView();
+        playEntryAnimation();
 
         AdManager.requestConsentAndInitialize(this, this::refreshPrivacyEntry);
     }
@@ -129,23 +138,17 @@ public class MainActivity extends AppCompatActivity {
         this.frameWallpaper = findViewById(R.id.frameWallpaper);
         this.frameQuran = findViewById(R.id.frameQuran);
         this.frameAthkar = findViewById(R.id.frameAthkar);
-        this.rate = findViewById(R.id.rateus);
-        this.share = findViewById(R.id.share);
         this.privacy = findViewById(R.id.privacy);
-        this.qibla = findViewById(R.id.qibla);
-        this.tasbeeh = findViewById(R.id.tasbeeh);
-        this.language = findViewById(R.id.language);
         this.athkarWindowChip = findViewById(R.id.athkarWindowChip);
         this.tinyDB = new TinyDB(this);
 
-        this.privacy.setOnClickListener(v -> AdManager.showPrivacyOptions(MainActivity.this));
-
-        this.qibla.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, QiblaActivity.class)));
-
-        this.tasbeeh.setOnClickListener(v -> toggleTasbeeh());
-
-        this.language.setOnClickListener(v -> showLanguageDialog());
+        bindGlassAction(R.id.privacy, () -> AdManager.showPrivacyOptions(MainActivity.this));
+        bindGlassAction(R.id.qibla,
+                () -> startActivity(new Intent(MainActivity.this, QiblaActivity.class)));
+        bindGlassAction(R.id.tasbeeh, this::toggleTasbeeh);
+        bindGlassAction(R.id.language, this::showLanguageDialog);
+        bindGlassAction(R.id.rateus, this::openStorePage);
+        bindGlassAction(R.id.share, this::shareApplication);
 
         // Outside both windows the reader opens on the closest set and says so, instead of
         // closing the screen the user just asked for.
@@ -153,31 +156,6 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this,
                 PrayerWindow.windowOrUpcoming(MainActivity.this, this.tinyDB,
                         System.currentTimeMillis()))));
-
-        this.rate.setOnClickListener(v -> {
-            String packageName = getPackageName();
-            try {
-                startActivity(new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("market://details?id=" + packageName)));
-            } catch (ActivityNotFoundException unused) {
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(
-                            "https://play.google.com/store/apps/details?id=" + packageName)));
-                } catch (ActivityNotFoundException ignored) {
-                    Toast.makeText(MainActivity.this, R.string.rate_unavailable,
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        this.share.setOnClickListener(v -> {
-            String message = getString(R.string.app_name)
-                    + "\n\nhttps://play.google.com/store/apps/details?id=" + getPackageName();
-            Intent send = new Intent(Intent.ACTION_SEND);
-            send.setType("text/plain");
-            send.putExtra(Intent.EXTRA_TEXT, message);
-            startActivity(Intent.createChooser(send, getString(R.string.share_application)));
-        });
 
         this.frameClock.setOnClickListener(view ->
                 startActivity(new Intent(MainActivity.this, ClockFuntionActivity.class)));
@@ -187,6 +165,62 @@ public class MainActivity extends AppCompatActivity {
 
         this.frameQuran.setOnClickListener(view ->
                 startActivity(new Intent(MainActivity.this, QuranIndexActivity.class)));
+    }
+
+    /**
+     * Wires one tile of the glass action bar: the press micro-interaction (a scale dip while the
+     * finger is down), the haptic tick on the tap and the action itself. One helper for the whole
+     * bar keeps the six tiles behaving identically.
+     */
+    private void bindGlassAction(int viewId, @NonNull Runnable action) {
+        View tile = findViewById(viewId);
+        UiMotion.pressable(tile);
+        tile.setOnClickListener(view -> {
+            UiMotion.tick(view);
+            action.run();
+        });
+    }
+
+    /** A short, quiet entrance: the title fades up and the glass bar follows it. */
+    private void playEntryAnimation() {
+        View title = findViewById(R.id.homeTitle);
+        View bar = findViewById(R.id.language);
+        View parent = bar == null ? null : (View) bar.getParent();
+        long duration = getResources().getInteger(android.R.integer.config_mediumAnimTime);
+        if (parent != null) {
+            parent.setAlpha(0f);
+            parent.setTranslationY(-UiCompat.dp(this, 8));
+            parent.animate().alpha(1f).translationY(0f).setStartDelay(80L)
+                    .setDuration(duration).start();
+        }
+        title.setAlpha(0f);
+        title.setTranslationY(UiCompat.dp(this, 10));
+        title.animate().alpha(1f).translationY(0f).setDuration(duration).start();
+    }
+
+    private void openStorePage() {
+        String packageName = getPackageName();
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("market://details?id=" + packageName)));
+        } catch (ActivityNotFoundException unused) {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(
+                        "https://play.google.com/store/apps/details?id=" + packageName)));
+            } catch (ActivityNotFoundException ignored) {
+                Toast.makeText(MainActivity.this, R.string.rate_unavailable,
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void shareApplication() {
+        String message = getString(R.string.app_name)
+                + "\n\nhttps://play.google.com/store/apps/details?id=" + getPackageName();
+        Intent send = new Intent(Intent.ACTION_SEND);
+        send.setType("text/plain");
+        send.putExtra(Intent.EXTRA_TEXT, message);
+        startActivity(Intent.createChooser(send, getString(R.string.share_application)));
     }
 
     /**

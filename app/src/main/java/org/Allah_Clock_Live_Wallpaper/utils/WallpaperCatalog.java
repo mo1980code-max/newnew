@@ -52,6 +52,18 @@ public final class WallpaperCatalog {
             R.drawable.wp_mosque_4, R.drawable.wp_mosque_5,
     };
 
+    /**
+     * The premium backgrounds: three wallpapers that ship inside the APK like every other image
+     * but stay behind a rewarded video until the user watches one for them.
+     *
+     * <p>They are listed here rather than inside a category because their unlock is per image and
+     * permanent; the wallpaper screen shows them as their own section, tagged with a lock badge.
+     * Adding a fourth is one line here plus the image itself.</p>
+     */
+    private static final int[] PREMIUM = {
+            R.drawable.wp_premium_1, R.drawable.wp_premium_2, R.drawable.wp_premium_3,
+    };
+
     /** Gradient / abstract backgrounds that shipped with the first releases. */
     private static final int[] CLASSIC = {
             R.drawable.bg2, R.drawable.wp_min_1, R.drawable.bg, R.drawable.bg1,
@@ -83,6 +95,15 @@ public final class WallpaperCatalog {
     @NonNull
     public static List<WallpaperCategory> getCategories() {
         return CATEGORIES;
+    }
+
+    /**
+     * The premium backgrounds, in display order. Never null; empty only if the app is built
+     * without them, in which case the wallpaper screen simply shows no premium section.
+     */
+    @NonNull
+    public static int[] getPremiumBackgrounds() {
+        return PREMIUM.clone();
     }
 
     /** @return the category at {@code index}, or {@code null} when out of range. */

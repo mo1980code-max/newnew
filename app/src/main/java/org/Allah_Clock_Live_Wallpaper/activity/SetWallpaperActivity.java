@@ -24,6 +24,7 @@ import androidx.core.content.FileProvider;
 import org.Allah_Clock_Live_Wallpaper.CustomWallpaper;
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.ads.AdManager;
+import org.Allah_Clock_Live_Wallpaper.ads.PremiumBackgroundHelper;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 import org.Allah_Clock_Live_Wallpaper.utils.WallpaperHelper;
@@ -90,6 +91,13 @@ public class SetWallpaperActivity extends AppCompatActivity {
 
         this.wallpaperRes = getIntent().getIntExtra(EXTRA_WALLPAPER_RES, 0);
         if (this.wallpaperRes == 0) {
+            finish();
+            return;
+        }
+        // Defence in depth: the grid gates the premium images, and so does this screen, so a
+        // stale intent (or a restored task) can never hand out a background nobody unlocked.
+        if (PremiumBackgroundHelper.isLocked(this, this.wallpaperRes)) {
+            Toast.makeText(this, R.string.premium_bg_not_unlocked, Toast.LENGTH_SHORT).show();
             finish();
             return;
         }

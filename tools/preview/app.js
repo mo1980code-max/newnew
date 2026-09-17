@@ -8,6 +8,7 @@ const state = {
   lang: 'ar',            // 'ar' | 'en'  - the app itself defaults to English
   win: 'morning',        // 'morning' | 'evening' | 'none'  (PrayerWindow simulator)
   wp: 0,                 // index into D.wallpapers
+  bgUnlocked: {},        // premium background file -> unlocked for good (PremiumUnlocks)
   clock: { analog: 0, digital: 0, smart: 0 },
   kind: 'analog',
   unlocked: false,       // rewarded unlock, session only - exactly like the app
@@ -16,7 +17,8 @@ const state = {
   sw: { hijri: true, dhikr: true, power: false, badge: true },
   counters: {},          // athkar id -> taps left
   cat: 'all',
-  surah: 1,              // surah open in the Quran reader
+  page: 0,               // Mushaf page open in the Quran reader (ViewPager2 currentItem)
+  night: false,          // the reader's own night theme, not the system one
   marked: {},            // "surah:ayah" -> saved, the mock's QuranStore bookmark
 };
 
@@ -38,6 +40,9 @@ const CAP = {
     tasbeehHint: 'انقر الدائرة للعدّ · اضغط مطوّلًا 1.5ث للقفل · صفّر بضغط مطوّل 0.7ث على الزر الذهبي',
     noWindow: 'خارج نافذة الأذكار: الشارة مخفية والقارئ لا يُفتح (كما في التطبيق).',
     all: 'الكل', locked: 'مقفلة', watchToUnlock: 'شاهد إعلانًا لفتحها',
+    page: 'صفحة', of: 'من', night: 'وضع القراءة الليلية', day: 'وضع القراءة النهارية',
+    premiumBg: 'خلفيات حصرية (مكافأة)', unlockPermanent: 'فتح دائم بعد الإعلان',
+    backdrop: 'الشريط العلوي الزجاجي والخلفية المتدرجة',
   },
   en: {
     home: 'Home screen', quran: 'Quran reader - one continuous page',
@@ -50,6 +55,9 @@ const CAP = {
     tasbeehHint: 'Tap the circle to count · hold 1.5s to lock · hold the golden button 0.7s to reset',
     noWindow: 'Outside the athkar window: the badge is hidden and the reader does not open, as in the app.',
     all: 'All', locked: 'Locked', watchToUnlock: 'Watch an ad to unlock',
+    page: 'Page', of: 'of', night: 'Night reading theme', day: 'Day reading theme',
+    premiumBg: 'Premium backgrounds (rewarded)', unlockPermanent: 'Permanent unlock after the ad',
+    backdrop: 'The frosted top bar and the gradient backdrop',
   },
 };
 const cap = (k) => CAP[state.lang][k] || k;
@@ -103,10 +111,11 @@ function clockImage() { return 'assets/' + D.clocks[state.kind][state.clock[stat
 function badgeOn() { return state.win !== 'none' && state.sw.badge; }
 function badgeLabel() { return t(state.win === 'evening' ? 'athkar_evening_title' : 'athkar_morning_title'); }
 
-/* ─────────── the Quran reader: one continuous page, verse by verse ───────────
-   buildQuranPage mirrors QuranReaderActivity.buildPage(): every verse of the surah in a
-   single run, each closed by U+06DD plus its number in Arabic-Indic digits. The Basmalah
-   opening is the text of 1:1 straight out of the bundled asset - never typed by hand. */
+/* ─────────── the Quran reader: a surah cut into flippable Mushaf pages ───────────
+   buildQuranPages() mirrors QuranPageBuilder.appendAyah() - the verse, then " U+06DD<number> " -
+   and cuts the run at D.quranPages.breaks, which build_assets.py took straight out of the app's
+   own builder. Flipping therefore shows the same page breaks the app's ViewPager2 makes. The
+   verses of Al-Fatiha are long enough that one lands per page; the app packs as many as fit. */
 function arabicIndic(value) {
   return String(value).replace(/[0-9]/g, (d) => String.fromCharCode(0x0660 + Number(d)));
 }
@@ -115,19 +124,88 @@ function ayahsOf(n) { return D.quran.ayahs[n] || []; }
 function markKey(n, a) { return n + ':' + a; }
 function isMarked(n, a) { return state.marked[markKey(n, a)] === true; }
 
-function buildQuranPage(surahNumber) {
-  const ayahs = ayahsOf(surahNumber);
-  const parts = [];
-  if (surahNumber !== 1 && surahNumber !== 9) {
-    parts.push('<span class="basmalah">' + ayahsOf(1)[0] + '</span>');
-  }
-  ayahs.forEach((text, i) => {
-    const saved = isMarked(surahNumber, i + 1) ? ' saved' : '';
-    parts.push('<span class="verse' + saved + '" data-surah="' + surahNumber
-      + '" data-ayah="' + (i + 1) + '">' + text + ' <span class="ayahMark">۝'
-      + arabicIndic(i + 1) + '</span></span> ');
+/* The reader appears on two phones (day and night) and both show the same surah, so the page
+   HTML is written into both pagers and the palette into both screens. */
+const QURAN_PAGERS = ['quranPages', 'quranNightPage'];
+const QURAN_SCREENS = ['quranScreen', 'quranNightScreen'];
+
+/* The reader's palette, in both themes, taken from colors.xml (and the quranNight* tokens added
+   for the in-reader toggle). Setting them as CSS variables is what makes one class flip the whole
+   page - sheet, ink, ornaments, footer - exactly like QuranTheme.apply() does in the app. */
+function applyQuranPalette(el, night) {
+  const C = D.colors, N = D.night;
+  const pairs = [
+    ['--quranPaper', night ? N.quranNightPaper : C.quranPaper],
+    ['--quranInk', night ? N.quranNightInk : C.quranInk],
+    ['--quranBody', night ? N.quranNightBody : C.quranBody],
+    ['--quranMuted', night ? N.quranNightMuted : C.quranMuted],
+    ['--quranLine', night ? N.quranNightLine : C.quranLine],
+    ['--quranGreen', night ? N.quranNightGreen : C.quranGreen],
+    ['--quranGold', night ? N.quranNightGold : C.quranGold],
+  ];
+  pairs.forEach((p) => el.style.setProperty(p[0], p[1]));
+}
+
+/* @return one entry per page: its markup plus the ayah range it carries, which is what the
+   footer prints (the app's Screen carries the same two numbers). */
+function buildQuranPages() {
+  const n = D.quranPages.surah;
+  const breaks = D.quranPages.breaks;
+  const pages = [];
+  let html = '', first = 1;
+  ayahsOf(n).forEach((text, i) => {
+    const ayah = i + 1;
+    const saved = isMarked(n, ayah) ? ' saved' : '';
+    html += '<span class="verse' + saved + '" data-surah="' + n + '" data-ayah="' + ayah + '">'
+      + text + ' <span class="ayahBadge"><i>' + arabicIndic(ayah) + '</i></span></span> ';
+    if (breaks[i] !== undefined) {
+      pages.push({ html: html, first: first, last: ayah });
+      html = '';
+      first = ayah + 1;
+    }
   });
-  return parts.join('');
+  if (html) pages.push({ html: html, first: first, last: ayahsOf(n).length });
+  return pages;
+}
+
+function renderQuranPages() {
+  const pages = buildQuranPages();
+  const html = pages.map((page, i) => '<div class="quranPageView' + (i === state.page ? ' on' : '')
+    + '" data-page="' + i + '"><div class="quranSheet"><p>' + page.html
+    + '</p></div></div>').join('');
+  QURAN_PAGERS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = html;
+    el.dir = 'rtl';           // a Mushaf page always reads right to left, in both languages
+  });
+}
+
+function quranPageCount() { return D.quranPages.breaks.length; }
+function quranPage() { return buildQuranPages()[state.page]; }
+
+function flipPage(delta) {
+  const count = quranPageCount();
+  state.page = Math.max(0, Math.min(state.page + delta, count - 1));
+  renderQuran();
+}
+
+function setNight(on) {
+  state.night = on;
+  QURAN_SCREENS.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // Only the second phone is the night-reading figure, so it stays dark whatever the toggle
+    // says; the reader's own screen follows the toggle.
+    const dark = on || i > 0;
+    el.classList.toggle('night', dark);
+    applyQuranPalette(el, dark);
+  });
+  document.querySelectorAll('[data-icon="ic_quran_night"]').forEach((el, i) => {
+    el.classList.toggle('nightOn', on || i > 0);
+  });
+  const label = document.getElementById('quranNightState');
+  if (label) label.textContent = on ? cap('night') : cap('day');
 }
 
 function toggleVerse(surahNumber, ayahNumber) {
@@ -138,18 +216,55 @@ function toggleVerse(surahNumber, ayahNumber) {
 }
 
 function renderQuran() {
-  const surah = surahOf(state.surah) || D.quran.surahs[0];
+  const surah = surahOf(D.quranPages.surah);
   document.getElementById('quranTitle').textContent =
     fmt(t('quran_surah_title'), surah.n, state.lang === 'ar' ? surah.arabic : surah.translit);
   const revelation = t(surah.meccan ? 'quran_meccan' : 'quran_medinan');
   document.getElementById('quranMeta').textContent =
     fmt(t('quran_surah_metadata'), surah.ayahs, revelation);
-  document.getElementById('quranSheet').innerHTML = buildQuranPage(surah.n);
-  const el = document.getElementById('surahName');
-  if (el) el.textContent = surah.n + '. ' + (state.lang === 'ar' ? surah.arabic : surah.translit);
+  renderQuranPages();
+
+  const count = quranPageCount();
+  state.page = Math.max(0, Math.min(state.page, count - 1));
+  const open = quranPage();
+  const range = document.getElementById('quranRange');
+  if (range && open) range.textContent = fmt(t('quran_screen_ayahs'), open.first, open.last);
+  // The chip inside the page footer and the read-out beside the demo's page stepper show the
+  // same numbers; both are updated from the one place.
+  const label = cap('page') + ' ' + arabicIndic(state.page + 1) + ' ' + cap('of') + ' '
+    + arabicIndic(count);
+  ['quranPageChip', 'quranPageIndicator'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+  const prev = document.getElementById('quranPrev'), next = document.getElementById('quranNext');
+  if (prev) { prev.disabled = state.page === 0; prev.classList.toggle('off', state.page === 0); }
+  if (next) {
+    next.disabled = state.page >= count - 1;
+    next.classList.toggle('off', state.page >= count - 1);
+  }
+  setNight(state.night);
 }
 
 /* ─────────── rendering ─────────── */
+/* The top bar: the same six tiles the layout declares, frosted with the colours the app's
+   bg_glass_tile.xml uses, so the mock shows the real translucency rather than a flat grey. */
+function renderGlassBar() {
+  const G = D.glass;
+  document.querySelectorAll('.glassTile').forEach((tile) => {
+    tile.style.background = 'linear-gradient(' + G.glassTileTop + ', ' + G.glassTileBottom + ')';
+    tile.style.borderColor = G.glassTileRim;
+    tile.style.color = G.glassIconIvory;
+    tile.style.boxShadow = '0 6px 14px #0006, 0 1px 0 #ffffff1f inset, 0 1px 0 '
+      + G.glassTileGold + ' inset';
+  });
+  const home = document.getElementById('homeScreen');
+  if (home) {
+    home.style.background = 'radial-gradient(120% 60% at 50% 0%, ' + G.homeBackdropTop
+      + ', ' + G.homeBackdropBottom + ')';
+  }
+}
+
 function renderChrome() {
   document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-cap]').forEach((el) => { el.textContent = cap(el.dataset.cap); });
@@ -315,8 +430,8 @@ function renderClocks() {
 
 function renderGallery() {
   const groups = [
-    ['all', cap('all')], ['kaaba', t('cat_kaaba')], ['madina', t('cat_madina')],
-    ['aqsa', t('cat_aqsa')], ['mosque', t('cat_mosques')],
+    ['all', cap('all')], ['premium', t('cat_premium')], ['kaaba', t('cat_kaaba')],
+    ['madina', t('cat_madina')], ['aqsa', t('cat_aqsa')], ['mosque', t('cat_mosques')],
   ];
   const cats = document.getElementById('galleryCats');
   cats.innerHTML = groups.map((g) => '<div class="cat' + (state.cat === g[0] ? ' on' : '') + '" data-cat="' + g[0] + '">' + g[1] + '</div>').join('');
@@ -326,21 +441,65 @@ function renderGallery() {
 
   const shown = D.wallpapers
     .map((w, i) => ({ w, i }))
-    .filter((o) => state.cat === 'all' || o.w.file.indexOf('wp_' + state.cat) === 0
+    .filter((o) => state.cat === 'all' || (o.w.premium && state.cat === 'premium')
+      || o.w.file.indexOf('wp_' + state.cat) === 0
       || (state.cat === 'mosque' && o.w.file.indexOf('wp_min') === 0));
   const grid = document.getElementById('galleryGrid');
-  grid.innerHTML = shown.map((o) => '<div class="thumb' + (o.i === state.wp ? ' sel' : '') + '" data-wp="' + o.i + '">'
-    + '<img src="assets/' + o.w.file + '" alt="">'
-    + '<div class="cap">' + o.w[state.lang] + '</div></div>').join('');
+  grid.innerHTML = shown.map((o) => {
+    const locked = o.w.premium && !bgUnlocked(o.w.file);
+    return '<div class="thumb' + (o.i === state.wp ? ' sel' : '')
+      + (o.w.premium ? ' premium' : '') + (locked ? ' locked' : '') + '" data-wp="' + o.i + '">'
+      + '<img src="assets/' + o.w.file + '" alt="">'
+      + '<div class="cap">' + o.w[state.lang] + '</div>'
+      + (locked ? '<div class="lockBadge">' + icon('ic_lock_gold')
+          + '<small>' + t('premium_bg_badge') + '</small></div>' : '')
+      + '</div>';
+  }).join('');
+  applyIcons(grid);
   grid.querySelectorAll('.thumb').forEach((th) => {
-    th.addEventListener('click', () => {
-      state.wp = parseInt(th.dataset.wp, 10);
-      renderGallery();
-      renderChrome();
-      renderWallpaper();
-    });
+    th.addEventListener('click', () => { openWallpaper(D.wallpapers[parseInt(th.dataset.wp, 10)]); });
   });
 }
+
+function bgUnlocked(file) { return state.bgUnlocked[file] === true; }
+
+/* The tap on a wallpaper tile, exactly as WallpaperActivity routes it through
+   PremiumBackgroundHelper.onBackgroundClick(): a locked premium item opens the rewarded
+   explanation and changes nothing else; anything else is applied straight away.
+   @return true when the background was applied. */
+function openWallpaper(item) {
+  if (item.premium && !bgUnlocked(item.file)) {
+    pendingBackground = item.file;
+    renderReward();
+    const phone = document.getElementById('ph-reward');
+    if (phone && phone.scrollIntoView) {
+      phone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return false;
+  }
+  applyBackground(item);
+  return true;
+}
+
+/* The reward callback: the only place a background is ever unlocked, in the mock as in the app,
+   where PremiumUnlocks.unlock() runs inside AdMob's onRewardEarned(). */
+function grantPendingBackground() {
+  if (!pendingBackground) return false;
+  state.bgUnlocked[pendingBackground] = true;
+  const item = D.wallpapers.filter((w) => w.file === pendingBackground)[0];
+  if (item) applyBackground(item); else renderGallery();
+  renderReward();
+  return true;
+}
+
+function applyBackground(item) {
+  state.wp = D.wallpapers.indexOf(item);
+  renderGallery();
+  renderChrome();
+  renderWallpaper();
+}
+
+let pendingBackground = null;
 
 function renderOptions() {
   document.querySelectorAll('.sw').forEach((sw) => {
@@ -361,11 +520,20 @@ function renderTasbeeh() {
 }
 
 function renderReward() {
-  document.getElementById('unlockState').textContent =
-    state.unlocked ? t('premium_unlocked') : t('premium_not_unlocked');
+  // The reward phone shows the background gate, which is the flow this release adds: the dialog
+  // is dialog_reward_unlock.xml, its copy comes from the premium_bg_* strings, and #rewardWatch
+  // is the rewarded ad itself.
+  const state_ = document.getElementById('unlockState');
+  if (pendingBackground) {
+    state_.textContent = (bgUnlocked(pendingBackground) ? t('premium_bg_unlocked') + ' · ' : '')
+      + cap('unlockPermanent');
+  } else {
+    state_.textContent = cap('locked') + ' — ' + cap('watchToUnlock');
+  }
 }
 
 function renderAll() {
+  renderGlassBar();
   renderChrome();
   renderBadges();
   renderWallpaper();
@@ -398,7 +566,6 @@ function wire() {
       state.lang = b.dataset.lang;
       document.querySelectorAll('#langSeg button').forEach((x) => x.classList.toggle('on', x === b));
       document.getElementById('athkarList').scrollTop = 0;
-      document.getElementById('quranScroll').scrollTop = 0;
       renderAll();
     });
   });
@@ -428,6 +595,9 @@ function wire() {
     renderReward();
   });
   document.getElementById('rewardWatch').addEventListener('click', () => {
+    if (grantPendingBackground()) {
+      return;
+    }
     state.unlocked = true;
     renderChrome();
     renderClocks();
@@ -447,18 +617,27 @@ function wire() {
     renderTasbeeh();
   });
 
-  const step_surah = (d) => {
-    state.surah = ((state.surah - 1 + d + D.quran.surahs.length) % D.quran.surahs.length) + 1;
-    renderQuran();
-    document.getElementById('quranScroll').scrollTop = 0;
-  };
-  document.getElementById('prevSurah').addEventListener('click', () => step_surah(1));
-  document.getElementById('nextSurah').addEventListener('click', () => step_surah(-1));
+  // Turning the page: the same two actions as the app's arrows and the ViewPager2 swipe.
+  document.getElementById('prevPage').addEventListener('click', () => flipPage(-1));
+  document.getElementById('nextPage').addEventListener('click', () => flipPage(1));
+  const inPagePrev = document.getElementById('quranPrev');
+  const inPageNext = document.getElementById('quranNext');
+  if (inPagePrev) inPagePrev.addEventListener('click', () => flipPage(-1));
+  if (inPageNext) inPageNext.addEventListener('click', () => flipPage(1));
+  document.querySelectorAll('[data-icon="ic_quran_night"]').forEach((el) => {
+    el.addEventListener('click', () => setNight(!state.night));
+  });
+  const nightBtn = document.getElementById('nightToggle');
+  if (nightBtn) nightBtn.addEventListener('click', () => setNight(!state.night));
 
-  document.getElementById('quranSheet').addEventListener('click', (e) => {
-    const verse = e.target.closest('.verse');
-    if (!verse) return;
-    toggleVerse(Number(verse.dataset.surah), Number(verse.dataset.ayah));
+  QURAN_PAGERS.forEach((id) => {
+    const host = document.getElementById(id);
+    if (!host) return;
+    host.addEventListener('click', (e) => {
+      const verse = e.target.closest('.verse');
+      if (!verse) return;
+      toggleVerse(Number(verse.dataset.surah), Number(verse.dataset.ayah));
+    });
   });
   document.getElementById('quranBack').addEventListener('click', () => {
     document.getElementById('ph-home').scrollIntoView({ behavior: 'smooth', block: 'center' });

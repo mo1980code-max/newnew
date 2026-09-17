@@ -88,6 +88,9 @@ dependencies {
     // material / constraintlayout / spinKit were removed: nothing in res/ or java/ uses them.
     implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
+    // The Quran reader turns pages with a ViewPager2: horizontal, RTL aware, and built on the
+    // RecyclerView above so its pages are recycled instead of held.
+    implementation 'androidx.viewpager2:viewpager2:1.1.0'
     implementation 'androidx.cardview:cardview:1.0.0'
 
     // ---- Ads (AdMob + mandatory UMP consent) --------------------------------------

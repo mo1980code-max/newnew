@@ -1,10 +1,6 @@
 package org.Allah_Clock_Live_Wallpaper.adapter;
 
 import android.content.Context;
-import android.os.Build;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
-import android.os.VibratorManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.model.AthkarItem;
+import org.Allah_Clock_Live_Wallpaper.utils.UiMotion;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,26 +29,56 @@ import java.util.Map;
  * the list and the remaining/total count on a small header line, then the dhikr with its count
  * beside it, the translation, the reward note ("من قالها حين يصبح ...") and the source. Some
  * athkar repeat 100 times, so the count is data-driven everywhere and never assumed small.</p>
+ *
+ * <p><b>One language at a time.</b> The dhikr content ships with its Arabic, its transliteration
+ * and its English translation side by side, so the adapter is the one place that decides which of
+ * them a row is allowed to show, and it follows the app locale: an Arabic UI reads Arabic text
+ * with Arabic labels only, and an English UI reads the transliteration and translation instead of
+ * the Arabic script - never both at once. Only the explicit dual-language switch in the reader's
+ * settings (`athkarBilingual`) asks for the two together. Both flags are read per binding, and
+ * {@link #setDualLanguage(boolean)} re-binds the list in place, so the counters the reader has
+ * already worked through survive the switch.</p>
  */
 public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder> {
 
     private final List<AthkarItem> items;
     private final Map<Integer, Integer> remaining = new HashMap<>();
+    /** The app's language, read once per adapter: it decides the whole row. */
     private final boolean arabicUi;
-    private final Vibrator vibrator;
+    /** The reader asked for both languages at the same time; off unless they said so. */
+    private boolean dualLanguage;
 
-    public AthkarAdapter(List<AthkarItem> items, boolean arabicUi, Context context) {
+    public AthkarAdapter(List<AthkarItem> items, boolean arabicUi, boolean dualLanguage) {
         this.items = items;
         this.arabicUi = arabicUi;
-        if (Build.VERSION.SDK_INT >= 31) {
-            VibratorManager manager =
-                    (VibratorManager) context.getApplicationContext()
-                            .getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
-            this.vibrator = manager != null ? manager.getDefaultVibrator() : null;
-        } else {
-            this.vibrator = (Vibrator) context.getApplicationContext()
-                    .getSystemService(Context.VIBRATOR_SERVICE);
+        this.dualLanguage = dualLanguage;
+    }
+
+    /**
+     * Turns the dual-language display on or off and re-binds the rows in place. The in-memory
+     * repeat counters are deliberately kept: a reader who switches language mid-session must not
+     * lose the dhikr they have already counted.
+     */
+    public void setDualLanguage(boolean dualLanguage) {
+        if (this.dualLanguage == dualLanguage) {
+            return;
         }
+        this.dualLanguage = dualLanguage;
+        notifyItemRangeChanged(0, getItemCount());
+    }
+
+    public boolean isDualLanguage() {
+        return this.dualLanguage;
+    }
+
+    /** The Arabic script is shown in an Arabic UI, or when both languages were asked for. */
+    boolean showsArabic() {
+        return this.arabicUi || this.dualLanguage;
+    }
+
+    /** The transliteration and the translation are shown in an English UI, or in dual mode. */
+    boolean showsEnglish() {
+        return !this.arabicUi || this.dualLanguage;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -93,12 +120,18 @@ public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder
         final AthkarItem item = this.items.get(position);
         holder.index.setText(holder.index.getContext()
                 .getString(R.string.athkar_position, position + 1, getItemCount()));
+        // Strict language separation: the Arabic script and the English row never share the page
+        // unless the reader explicitly asked for both.
         holder.arabic.setText(item.getArabicText());
-        // A transliteration only helps a reader who cannot read Arabic script, so an Arabic UI
-        // drops it and keeps the English translation (the reader is bilingual by design).
-        holder.transliteration.setText(item.getTransliteration());
-        holder.transliteration.setVisibility(this.arabicUi ? View.GONE : View.VISIBLE);
+        holder.arabic.setVisibility(showsArabic() ? View.VISIBLE : View.GONE);
+
+        String transliteration = item.getTransliteration();
+        holder.transliteration.setText(transliteration);
+        holder.transliteration.setVisibility(
+                showsEnglish() && !transliteration.isEmpty() ? View.VISIBLE : View.GONE);
+
         holder.english.setText(item.getEnglishText());
+        holder.english.setVisibility(showsEnglish() ? View.VISIBLE : View.GONE);
         String virtue = item.getVirtue(this.arabicUi);
         holder.virtue.setText(virtue);
         holder.virtue.setVisibility(virtue.isEmpty() ? View.GONE : View.VISIBLE);
@@ -116,7 +149,7 @@ public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder
             }
             current--;
             this.remaining.put(item.getId(), current);
-            tick();
+            tick(view);
             paint(holder, item, current);
         });
     }
@@ -137,18 +170,9 @@ public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder
         holder.done.setVisibility(finished ? View.VISIBLE : View.GONE);
     }
 
-    /** The same very short, gentle tick the floating tasbeeh uses. */
-    private void tick() {
-        if (this.vibrator == null || !this.vibrator.hasVibrator()) {
-            return;
-        }
-        if (Build.VERSION.SDK_INT >= 29) {
-            this.vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK));
-        } else if (Build.VERSION.SDK_INT >= 26) {
-            this.vibrator.vibrate(VibrationEffect.createOneShot(15L, 80));
-        } else {
-            this.vibrator.vibrate(15L);
-        }
+    /** The same very short, gentle tick the floating tasbeeh uses; one implementation, in UiMotion. */
+    private void tick(View source) {
+        UiMotion.tick(source);
     }
 
     @Override

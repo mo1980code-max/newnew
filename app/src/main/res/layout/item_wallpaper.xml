@@ -10,11 +10,47 @@
     app:cardCornerRadius="5dp"
     app:cardUseCompatPadding="true">
 
-    <ImageView
-        android:id="@+id/iv_clock"
-        android:layout_width="wrap_content"
-        android:layout_height="260dp"
-        android:layout_gravity="center"
-        android:adjustViewBounds="true"
-        android:scaleType="centerCrop" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="260dp">
+
+        <ImageView
+            android:id="@+id/iv_clock"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop" />
+
+        <!--
+          The premium marker: a gold "Premium" chip in the corner, plus the padlock that is only
+          on screen while the background still needs its rewarded video. Both are painted from the
+          persisted unlock state every time the cell is bound.
+        -->
+        <TextView
+            android:id="@+id/wallpaperPremiumBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="7dp"
+            android:background="@drawable/bg_premium_bg_badge"
+            android:paddingStart="8dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="3dp"
+            android:text="@string/premium_bg_badge"
+            android:textColor="@color/premiumLockGold"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/wallpaperLock"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/premiumLockScrim"
+            android:contentDescription="@string/premium_bg_lock_cd"
+            android:padding="52dp"
+            android:src="@drawable/ic_lock_gold"
+            android:visibility="gone" />
+    </FrameLayout>
 </androidx.cardview.widget.CardView>
