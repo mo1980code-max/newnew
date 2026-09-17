@@ -49,7 +49,11 @@ android {
             debuggable false
             minifyEnabled true
             shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // proguard-android-optimize.txt (not plain proguard-android.txt): the same platform
+            // keep rules plus R8's optimiser. No class in this app is loaded by name and no
+            // resource is looked up with getIdentifier(), so nothing needs the blanket
+            // "keep everything" rule that made minifyEnabled/shrinkResources a no-op before.
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
 
         debug {

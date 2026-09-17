@@ -29,7 +29,7 @@ DEFAULT_NAME = 'Allah-Clock-Live-Wallpaper-android-studio.zip'
 INCLUDE_DIRS = ('app', 'gradle', 'tools', 'docs')
 # Root-level files included as-is.
 INCLUDE_FILES = ('build.gradle', 'settings.gradle', 'gradle.properties', 'gradlew', 'gradlew.bat',
-                 'UPGRADE_NOTES.md', '.gitignore')
+                 'README.md', 'UPGRADE_NOTES.md', '.gitignore')
 # Directory names never packaged.
 SKIP_DIRS = ('build', '.gradle', '.git', '__pycache__', 'node_modules')
 # Generated preview assets live under tools/preview/assets.

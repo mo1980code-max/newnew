@@ -56,8 +56,14 @@ public final class AppOpenAdController {
         }
         loadInProgress = true;
         try {
+            // The orientation argument is mandatory: the four-argument
+            // load(Context, String, AdRequest, AppOpenAdLoadCallback) overload was deprecated in
+            // Google Mobile Ads SDK 21 and removed in the next major release, which is what made
+            // this file fail to compile with "cannot find symbol: method load" on play-services-ads
+            // 25.x. The app's home screen is portrait, so the ad is asked for in portrait.
             AppOpenAd.load(context.getApplicationContext(), AdConfig.APP_OPEN_UNIT_ID,
-                    new AdRequest.Builder().build(), new AppOpenAdLoadCallback() {
+                    new AdRequest.Builder().build(), AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT,
+                    new AppOpenAdLoadCallback() {
                         @Override
                         public void onAdLoaded(@NonNull AppOpenAd appOpenAd) {
                             loadInProgress = false;

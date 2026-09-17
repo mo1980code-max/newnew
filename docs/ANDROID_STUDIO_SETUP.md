@@ -23,12 +23,16 @@
 
 ## 2) الحصول على المشروع
 
-**الطريقة أ — تنزيل ZIP مباشرة من المستودع** (الأسهل، 9.2 م.ب):
+**الطريقة أ — تنزيل ZIP مباشرة من المستودع** (الأسهل، 9.8 م.ب):
 ```
-https://github.com/mo1980code-max/newnew/raw/refs/heads/arena/01a0970d-newnew/Allah-Clock-Live-Wallpaper-android-studio.zip
+https://github.com/mo1980code-max/newnew/raw/refs/heads/main/Allah-Clock-Live-Wallpaper-android-studio.zip
 ```
-أو من واجهة GitHub: افتح المستودع على الفرع `arena/01a0970d-newnew` → اضغط الملف
+أو من واجهة GitHub: افتح المستودع على فرع **`main`** → اضغط الملف
 `Allah-Clock-Live-Wallpaper-android-studio.zip` → **Download raw file**. ثم فك الضغط وافتح المجلد الناتج.
+
+> ⚠ **لا تنزّل الحزمة من فرع جلسة قديم** (`arena/…`): تلك الفروع قديمة وقد تحمل نسخة سابقة من
+> التطبيق — أيقونات وقارئ أقدم، وبلا الشريط الزجاجي ولا الخلفيات الحصرية. فرع `main` هو المدمج
+> والحديث دائمًا.
 
 > الحزمة محفوظة داخل المستودع نفسه (وليست مرفقًا في Releases) لأن بيئة البناء لا تصل إلى
 > `uploads.github.com`. تُعاد بنائها في أي وقت بالأمر:
@@ -40,7 +44,7 @@ https://github.com/mo1980code-max/newnew/raw/refs/heads/arena/01a0970d-newnew/Al
 
 **الطريقة ب — git**:
 ```bash
-git clone -b arena/01a0970d-newnew https://github.com/mo1980code-max/newnew.git
+git clone https://github.com/mo1980code-max/newnew.git      # فرع main الافتراضي
 ```
 
 ---
@@ -65,8 +69,11 @@ git clone -b arena/01a0970d-newnew https://github.com/mo1980code-max/newnew.git
 | APK من سطر الأوامر | `./gradlew assembleDebug` (ويندوز: `gradlew.bat assembleDebug`) |
 | AAB موقّع للنشر | **Build → Generate Signed App Bundle / APK** → أنشئ keystore → `release` |
 
-بناء `release` يفعّل **R8 + تقليص الموارد** (`minifyEnabled true` و`shrinkResources true`)،
-وقواعد الحفظ في `app/proguard-rules.pro` تمنع كسر Gson والتخطيطات.
+بناء `release` يفعّل **R8 + تقليص الموارد** (`minifyEnabled true` و`shrinkResources true`) مع
+الملف الافتراضي **`proguard-android-optimize.txt`**، وقواعد الحفظ في `app/proguard-rules.pro`
+مستهدَفة: نماذج Gson، والأصناف المسمّاة من `AndroidManifest.xml` والتخطيطات، ومكتبة colorpicker
+(الوحيدة بلا قواعد مستهلك). لا قاعدة «احفظ كل شيء» بعد الآن — التطبيق بلا انعكاس
+(لا `Class.forName` ولا `getIdentifier`)، فالتقليص آمن. `debug` لا يمرّ بـ R8 إطلاقًا.
 
 ---
 
@@ -124,10 +131,13 @@ git clone -b arena/01a0970d-newnew https://github.com/mo1980code-max/newnew.git
 
 ```bash
 python3 tools/verify_resources.py        # مدقّق الموارد: 8 فحوص — يُفترض «NO ERRORS»
+python3 tools/verify_java_symbols.py     # مدقّق رموز جافا + حارس تواقيع SDK — «NO ERRORS»
+python3 tools/verify_java_symbols.py --self-test   # يزرع خطأين متوقعين ويتأكد أنه يمسكهما
 python3 tools/athkar/build_athkar.py     # إعادة بناء res/raw/athkar.json (61 ذكرًا) مع فحوصه
 python3 tools/preview/build_assets.py    # توليد أصول المعاينة من res/
-node tools/preview/server.js 8080        # معاينة التطبيق في المتصفح (12 شاشة)
-node tools/preview/smoke.js              # 22 فحصًا لمنطق المعاينة بلا متصفح
+node tools/preview/server.js 8080        # معاينة التطبيق في المتصفح (14 إطار هاتف)
+node tools/preview/smoke.js              # 48 فحصًا لمنطق المعاينة بلا متصفح
+python3 tools/build_package.py           # إعادة بناء حزمة Android Studio (410 ملفًا)
 ```
 
 ---
