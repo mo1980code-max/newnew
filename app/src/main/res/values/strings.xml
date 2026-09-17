@@ -137,6 +137,10 @@
 
 
     <!-- ── Holy Quran: offline reading, search and restored bookmarks ─────── -->
+    <!-- Home tiles for the two reading entries (Quran + athkar). -->
+    <string name="tile_athkar">Athkar</string>
+    <string name="cd_athkar_tile">Open the athkar reader</string>
+    <string name="athkar_outside_window">Outside the athkar window. Showing %1$s.</string>
     <string name="title_quran">Holy Quran</string>
     <string name="tile_quran">Holy Quran</string>
     <string name="quran_index_intro">Read the complete Quran offline</string>
@@ -158,7 +162,7 @@
     <string name="quran_bookmark_removed">Bookmark removed</string>
     <string name="quran_add_bookmark">Save bookmark at ayah %1$d</string>
     <string name="quran_remove_bookmark">Remove bookmark at ayah %1$d</string>
-    <string name="quran_reader_hint">Tap an ayah to save your reading place. Use its bookmark icon to save it.</string>
+    <string name="quran_reader_hint">One continuous Mushaf page: the ayahs run one after another, each closed by its number. Tap a verse to save it, tap it again to remove the save.</string>
     <string name="quran_surah_title">Surah %1$d · %2$s</string>
     <string name="quran_ayah_reference">Surah %1$d · %2$s · Ayah %3$d</string>
     <string name="quran_surah_metadata">%1$d verses · %2$s</string>

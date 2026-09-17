@@ -67,4 +67,17 @@
     <color name="quranSoftGreen">#E8F1E9</color>
     <color name="quranGold">#BA8B36</color>
 
+    <!-- ── Home tiles: the Quran and the athkar get their own gold-framed, bigger tiles
+      The clock/wallpaper tiles are 108dp rasters. These two are 140dp with a double gold
+      frame, so the two "reading" entries stand apart from the two "design" entries. -->
+    <color name="tileFrameGold">#C9A227</color>
+    <color name="tileFrameGoldSoft">#8CC9A227</color>
+    <color name="tileQuranTop">#0F3527</color>
+    <color name="tileQuranBottom">#1F5E46</color>
+    <color name="tileAthkarTop">#3A1A26</color>
+    <color name="tileAthkarBottom">#74303F</color>
+    <color name="tileTitleGold">#F2D68C</color>
+    <!-- Saved-verse tint inside the continuous reader page (soft, still readable ink on top). -->
+    <color name="quranVerseHighlight">#33C9A227</color>
+
 </resources>

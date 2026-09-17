@@ -26,6 +26,16 @@
   --tasbeehReset: #ccd4af37;
   --nativeAdCard: #f5f5fa;
 
+  /* the Quran reader and the two gold home tiles, straight from colors.xml */
+  --quranPaper: #FFFCF5;
+  --quranInk: #1D2A24;
+  --quranBody: #445149;
+  --quranMuted: #6E7A72;
+  --quranLine: #DCE6DC;
+  --quranGreen: #246149;
+  --quranGold: #BA8B36;
+  --tileTitleGold: #F2D68C;
+
   --page: #0a0d12;
   --pageText: #e7ecf3;
   --pageMuted: #93a0b4;
@@ -115,9 +125,9 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
   font-family: var(--display); font-size: 25px; text-align: center; color: var(--appColor);
   margin: 16px 0 6px;
 }
-.home .tiles { flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 16px 20px; }
+.home .tiles { display: flex; flex-direction: column; gap: 8px; padding: 10px 20px 4px; }
 .tile {
-  flex: 1; border-radius: 22px; position: relative; display: grid; place-items: center;
+  height: 108px; border-radius: 22px; position: relative; display: grid; place-items: center;
   background: #eef0f6 url('assets/big_.png') center / cover no-repeat;
   box-shadow: 0 10px 26px #10182022; cursor: pointer; overflow: hidden;
 }
@@ -126,11 +136,32 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
   position: absolute; bottom: 14px; left: 0; right: 0; text-align: center;
   color: #fff; font-size: 15px; text-shadow: 0 2px 8px #000c; padding: 0 12px;
 }
-.badgeWrap { padding: 0 16px 18px; display: flex; }
-.athkar-badge {
-  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
-  background: var(--goldSoft); color: #101820; font-weight: 700; font-size: 15px;
-  border-radius: 22px; padding: 10px 20px; box-shadow: 0 6px 18px #d4af3744;
+/* The two reading entries: 140dp, double gold frame, Naskh title - exactly the new
+   activity_select_function.xml. Only the Quran carries the ornamental divider. */
+.tile.gold {
+  height: 140px; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 6px; border-radius: 24px; box-shadow: 0 10px 26px #1018202e;
+}
+.tile.gold::after {
+  content: ''; position: absolute; inset: 6px; border-radius: 18px;
+  border: 1px solid rgba(201, 162, 39, 0.55); pointer-events: none;
+}
+.tile.gold .ic { width: 38px; height: 38px; color: var(--tileTitleGold); }
+.tile.gold .ic svg { width: 100%; height: 100%; display: block; }
+.tile.gold b {
+  position: static; padding: 0; font-family: var(--arabic); font-size: 26px; font-weight: 700;
+  color: var(--tileTitleGold); text-shadow: none; line-height: 1.35;
+}
+.tile.gold.athkar b { font-size: 24px; }
+.tile.gold.athkar .ic { width: 40px; height: 40px; }
+.tile.quran { background: linear-gradient(#0F3527, #1F5E46); border: 2px solid #C9A227; }
+.tile.athkar { background: linear-gradient(#3A1A26, #74303F); border: 2px solid #C9A227; }
+.tile .rule { display: flex; align-items: center; gap: 6px; width: 108px; }
+.tile .rule i { flex: 1; height: 1px; background: rgba(201, 162, 39, 0.55); }
+.tile .rule s { width: 7px; height: 7px; background: #C9A227; transform: rotate(45deg); }
+.tile .chip {
+  margin-top: 1px; background: var(--goldSoft); color: #101820; font-weight: 700;
+  font-size: 11px; border-radius: 22px; padding: 3px 14px;
 }
 
 /* ─────────── 2. live wallpaper ─────────── */
@@ -398,3 +429,35 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
 .wHijri { font-size: 14px; font-weight: 700; }
 .wDhikr { font-family: var(--arabic); font-size: 14px; line-height: 1.7; color: #ffffffd9; }
 .widgetNames { position: absolute; left: 0; right: 0; bottom: 18px; display: flex; justify-content: space-around; color: #ffffffb3; font-size: 11px; }
+
+/* ─────────── 13. quran reader: one continuous Mushaf page ─────────── */
+.quranPage { background: var(--quranPaper); height: 100%; display: flex; flex-direction: column; }
+.quranPage .topbar .ic { color: var(--quranGreen); }
+.quranPage .topbar .ic.back { color: var(--quranInk); }
+.quranHeader {
+  margin: 0 16px 8px; background: #fff; border: 1px solid var(--quranLine);
+  border-radius: 18px; padding: 9px 16px;
+}
+.quranHeader .meta { font-size: 12px; color: var(--quranMuted); }
+.quranHeader .hint { margin-top: 4px; font-size: 12px; line-height: 1.8; color: var(--quranBody); }
+.quranScroll { flex: 1; overflow-y: auto; padding: 0 16px; }
+.quranSheet {
+  background: #fff; border: 1px solid var(--quranGold); border-radius: 18px;
+  padding: 16px 18px; position: relative;
+}
+.quranSheet::after {
+  content: ''; position: absolute; inset: 4px; border-radius: 14px;
+  border: 1px solid var(--quranLine); pointer-events: none;
+}
+.quranSheet p {
+  margin: 0; font-family: var(--arabic); font-size: 23px; line-height: 2.05;
+  color: var(--quranInk); text-align: justify; text-align-last: right;
+}
+.quranSheet .basmalah { text-align: center; color: var(--quranGold); margin-bottom: 10px; }
+.verse { cursor: pointer; border-radius: 6px; }
+.verse.saved { background: rgba(201, 162, 39, 0.2); }
+.ayahMark { color: var(--quranGold); font-size: 0.8em; }
+.quranSource {
+  padding: 6px 20px 10px; text-align: center; font-size: 10px;
+  color: var(--quranMuted);
+}

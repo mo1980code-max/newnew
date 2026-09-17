@@ -1,6 +1,8 @@
 package org.Allah_Clock_Live_Wallpaper.activity;
 
 import android.app.TimePickerDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -8,6 +10,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -27,9 +30,12 @@ import java.util.List;
 /**
  * Reader for the morning / evening athkar, as a classic paper page.
  *
- * <p>It can only be opened while the matching window is active (the badge that leads here is
- * hidden otherwise), and it recomputes the window on entry so a stale badge can never show
- * the wrong list.</p>
+ * <p>It recomputes the window on entry so a stale badge can never show the wrong list. The
+ * wallpaper badge and the athkar chip only appear inside the matching window, so they always
+ * land on the right set. The home screen's athkar tile is permanent, though, so it passes the
+ * window it wants: outside both windows the closest set is opened with a short note saying so
+ * (see {@link PrayerWindow#windowOrUpcoming}), and a caller that passes nothing still closes
+ * the screen instead.</p>
  *
  * <p>An opaque page rather than a sheet floating over the live wallpaper: the wallpaper is a
  * mosque photograph, and behind 31 athkar of dense vowel-marked text it competed with the
@@ -38,7 +44,25 @@ import java.util.List;
  */
 public class AthkarActivity extends AppCompatActivity {
 
+    /** The window the caller wants opened when "now" is outside both windows. */
+    private static final String EXTRA_WINDOW = "athkar_window";
+
     private TinyDB tinyDB;
+
+    /** Opens the reader for the window that is active now, or closes it when there is none. */
+    @NonNull
+    public static Intent createIntent(@NonNull Context context) {
+        return new Intent(context, AthkarActivity.class);
+    }
+
+    /**
+     * Opens the reader, falling back to {@code windowWhenOutside} when "now" is outside both
+     * windows. Pass {@link PrayerWindow#windowOrUpcoming} to always show something.
+     */
+    @NonNull
+    public static Intent createIntent(@NonNull Context context, int windowWhenOutside) {
+        return new Intent(context, AthkarActivity.class).putExtra(EXTRA_WINDOW, windowWhenOutside);
+    }
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -46,9 +70,14 @@ public class AthkarActivity extends AppCompatActivity {
         this.tinyDB = new TinyDB(this);
 
         int window = PrayerWindow.currentWindow(this, this.tinyDB, System.currentTimeMillis());
-        if (window == PrayerWindow.NONE) {
-            finish();
-            return;
+        boolean outsideWindow = window == PrayerWindow.NONE;
+        int requested = getIntent().getIntExtra(EXTRA_WINDOW, PrayerWindow.NONE);
+        if (outsideWindow) {
+            if (requested == PrayerWindow.NONE) {
+                finish();
+                return;
+            }
+            window = requested;
         }
         List<AthkarItem> items = AthkarRepository.forWindow(this, window);
         if (items.isEmpty()) {
@@ -73,6 +102,15 @@ public class AthkarActivity extends AppCompatActivity {
         findViewById(R.id.athkarClose).setOnClickListener(view -> finish());
         ImageView settings = findViewById(R.id.athkarSettings);
         settings.setOnClickListener(view -> showSettingsDialog());
+
+        TextView outsideNote = findViewById(R.id.athkarOutsideNote);
+        if (outsideWindow) {
+            outsideNote.setText(getString(R.string.athkar_outside_window,
+                    getString(window == PrayerWindow.MORNING
+                            ? R.string.athkar_morning_title
+                            : R.string.athkar_evening_title)));
+            outsideNote.setVisibility(View.VISIBLE);
+        }
 
         RecyclerView list = findViewById(R.id.athkarList);
         list.setLayoutManager(new LinearLayoutManager(this));

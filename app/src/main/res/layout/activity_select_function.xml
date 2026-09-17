@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Home dashboard. A ScrollView keeps all three primary tools reachable on small phones. -->
+<!-- Home dashboard. A ScrollView keeps all four primary tools reachable on small phones. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -187,15 +187,20 @@
             </LinearLayout>
         </FrameLayout>
 
+        <!--
+          The Quran tile: taller than the two above, framed in double gold, with the title set
+          large in the serif (Naskh) face and an ornamental divider underneath. It is the one
+          entry that is a reading surface rather than a design picker, and it now looks like it.
+        -->
         <FrameLayout
             android:id="@+id/frameQuran"
             android:layout_width="match_parent"
-            android:layout_height="108dp"
+            android:layout_height="140dp"
             android:layout_marginStart="28dp"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="8dp"
             android:layout_marginEnd="28dp"
             android:layout_marginBottom="6dp"
-            android:background="@drawable/bg_quran_home_tile"
+            android:background="@drawable/bg_home_tile_quran"
             android:clickable="true"
             android:contentDescription="@string/cd_quran"
             android:focusable="true"
@@ -204,50 +209,103 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="18dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
                 android:paddingEnd="16dp">
 
+                <ImageView
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_quran"
+                    app:tint="@color/tileTitleGold" />
+
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_marginTop="6dp"
                     android:fontFamily="serif"
                     android:gravity="center"
                     android:text="@string/tile_quran"
-                    android:textColor="@color/colorWhite"
-                    android:textSize="22sp"
+                    android:textColor="@color/tileTitleGold"
+                    android:textDirection="rtl"
+                    android:textSize="26sp"
                     android:textStyle="bold" />
 
                 <ImageView
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
+                    android:layout_width="108dp"
+                    android:layout_height="10dp"
+                    android:layout_marginTop="6dp"
                     android:contentDescription="@null"
-                    android:padding="14dp"
-                    android:src="@drawable/ic_quran"
-                    app:tint="@color/quranGold" />
+                    android:src="@drawable/ic_tile_divider"
+                    app:tint="@color/tileFrameGoldSoft" />
             </LinearLayout>
         </FrameLayout>
 
-        <TextView
-            android:id="@+id/athkarBadge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/bg_athkar_badge"
-            android:contentDescription="@string/cd_athkar_badge"
-            android:paddingStart="20dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="10dp"
-            android:text="@string/athkar_morning_title"
-            android:textColor="#FF101820"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+        <!--
+          The athkar tile: same size and gold framing as the Quran tile ("big, like the Quran"),
+          in burgundy so the two never blur together. The chip inside it is the old golden badge,
+          moved out of the page background and into the card it belongs to: it is visible only
+          inside the morning / evening window, exactly as before.
+        -->
+        <FrameLayout
+            android:id="@+id/frameAthkar"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_marginStart="28dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="28dp"
+            android:layout_marginBottom="6dp"
+            android:background="@drawable/bg_home_tile_athkar"
+            android:clickable="true"
+            android:contentDescription="@string/cd_athkar_tile"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_athkar"
+                    app:tint="@color/tileTitleGold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fontFamily="serif"
+                    android:gravity="center"
+                    android:text="@string/tile_athkar"
+                    android:textColor="@color/tileTitleGold"
+                    android:textDirection="rtl"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/athkarWindowChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:background="@drawable/bg_athkar_badge"
+                    android:paddingStart="14dp"
+                    android:paddingTop="3dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="3dp"
+                    android:text="@string/athkar_morning_title"
+                    android:textColor="#FF101820"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </FrameLayout>
     </LinearLayout>
 </ScrollView>

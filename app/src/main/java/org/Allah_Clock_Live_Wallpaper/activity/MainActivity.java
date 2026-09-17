@@ -26,8 +26,13 @@ import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 /**
  * Home screen.
  *
- * <p>Deliberately carries <b>no</b> banner: it is the entry point of the app and the two
+ * <p>Deliberately carries <b>no</b> banner: it is the entry point of the app and the four
  * big tiles are the primary action. Banners live only on the sub-screens.</p>
+ *
+ * <p>The Quran and the athkar each own a gold-framed, taller tile rather than the rasters the
+ * clock and the wallpapers use: they open reading surfaces, not design pickers. The athkar tile
+ * stays visible at all hours - the golden chip inside it is what appears only inside the
+ * morning / evening window.</p>
  *
  * <p>This is also where the UMP consent flow runs, before the ads SDK is initialised, so
  * every later screen can simply ask {@link AdManager#canRequestAds()}.</p>
@@ -37,13 +42,14 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout frameClock;
     private FrameLayout frameWallpaper;
     private FrameLayout frameQuran;
+    private FrameLayout frameAthkar;
     private ImageView rate;
     private ImageView share;
     private ImageView privacy;
     private ImageView qibla;
     private ImageView tasbeeh;
     private ImageView language;
-    private TextView athkarBadge;
+    private TextView athkarWindowChip;
     private TinyDB tinyDB;
 
     /** Returns from the “display over other apps” settings screen. */
@@ -69,23 +75,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         refreshPrivacyEntry();
-        refreshAthkarBadge();
+        refreshAthkarTile();
     }
 
     /**
-     * The badge appears only inside the morning / evening athkar window and hides completely
-     * outside it; the window is evaluated right here, lazily, with no scheduler involved.
+     * The golden chip inside the athkar tile appears only inside the morning / evening window
+     * and hides completely outside it; the window is evaluated right here, lazily, with no
+     * scheduler involved. The tile itself never disappears: it is the way into the reader.
      */
-    private void refreshAthkarBadge() {
-        if (this.athkarBadge == null) {
+    private void refreshAthkarTile() {
+        if (this.athkarWindowChip == null) {
             return;
         }
         int window = PrayerWindow.currentWindow(this, this.tinyDB, System.currentTimeMillis());
         boolean visible = window != PrayerWindow.NONE
                 && this.tinyDB.getBoolean("showAthkarBadge", true);
-        this.athkarBadge.setVisibility(visible ? View.VISIBLE : View.GONE);
+        this.athkarWindowChip.setVisibility(visible ? View.VISIBLE : View.GONE);
         if (visible) {
-            this.athkarBadge.setText(window == PrayerWindow.MORNING
+            this.athkarWindowChip.setText(window == PrayerWindow.MORNING
                     ? R.string.athkar_morning_title
                     : R.string.athkar_evening_title);
         }
@@ -121,13 +128,14 @@ public class MainActivity extends AppCompatActivity {
         this.frameClock = findViewById(R.id.frameClock);
         this.frameWallpaper = findViewById(R.id.frameWallpaper);
         this.frameQuran = findViewById(R.id.frameQuran);
+        this.frameAthkar = findViewById(R.id.frameAthkar);
         this.rate = findViewById(R.id.rateus);
         this.share = findViewById(R.id.share);
         this.privacy = findViewById(R.id.privacy);
         this.qibla = findViewById(R.id.qibla);
         this.tasbeeh = findViewById(R.id.tasbeeh);
         this.language = findViewById(R.id.language);
-        this.athkarBadge = findViewById(R.id.athkarBadge);
+        this.athkarWindowChip = findViewById(R.id.athkarWindowChip);
         this.tinyDB = new TinyDB(this);
 
         this.privacy.setOnClickListener(v -> AdManager.showPrivacyOptions(MainActivity.this));
@@ -139,8 +147,12 @@ public class MainActivity extends AppCompatActivity {
 
         this.language.setOnClickListener(v -> showLanguageDialog());
 
-        this.athkarBadge.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, AthkarActivity.class)));
+        // Outside both windows the reader opens on the closest set and says so, instead of
+        // closing the screen the user just asked for.
+        this.frameAthkar.setOnClickListener(v -> startActivity(AthkarActivity.createIntent(
+                MainActivity.this,
+                PrayerWindow.windowOrUpcoming(MainActivity.this, this.tinyDB,
+                        System.currentTimeMillis()))));
 
         this.rate.setOnClickListener(v -> {
             String packageName = getPackageName();

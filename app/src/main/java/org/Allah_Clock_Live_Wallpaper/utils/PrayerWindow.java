@@ -86,6 +86,30 @@ public final class PrayerWindow {
         return NONE;
     }
 
+    /**
+     * The window to open when the reader is asked for outside both windows.
+     *
+     * <p>The home screen carries a permanent athkar tile, so tapping it at 22:00 must not land
+     * on a closing screen. Before the evening window opens (including the small hours after
+     * midnight) the morning set is the one ahead; afterwards the evening set is the closest.</p>
+     *
+     * @return {@link #MORNING} or {@link #EVENING}, never {@link #NONE}
+     */
+    public static int windowOrUpcoming(Context context, TinyDB prefs, long millis) {
+        int current = currentWindow(context, prefs, millis);
+        if (current != NONE) {
+            return current;
+        }
+        int eveningStart;
+        if (prefs.getBoolean("athkarFixedTimes", false)) {
+            eveningStart = prefs.getInt("eveningStartMin", 960);
+        } else {
+            double asr = computeSolarTimes(context, prefs, millis)[2];
+            eveningStart = Double.isNaN(asr) ? 960 : (int) Math.round(asr * 60.0);
+        }
+        return minuteOfDay(millis) < eveningStart ? MORNING : EVENING;
+    }
+
     /** @return hours-of-day of {fajr, sunrise, asr, maghrib, isha}; isha may be NaN. */
     private static double[] computeSolarTimes(Context context, TinyDB prefs, long millis) {
         int city = prefs.getInt("qiblaCityIndex", 0);

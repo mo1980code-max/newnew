@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Home tile for the athkar. Same geometry and gold framing as the Quran tile - the two sit
+  together as the app's "reading" pair - but in a deep burgundy instead of green, so the two
+  entries are never confused at a glance.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:endColor="@color/tileAthkarBottom"
+                android:startColor="@color/tileAthkarTop" />
+            <corners android:radius="24dp" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/tileFrameGold" />
+        </shape>
+    </item>
+
+    <item
+        android:bottom="6dp"
+        android:left="6dp"
+        android:right="6dp"
+        android:top="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/transparent" />
+            <corners android:radius="18dp" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/tileFrameGoldSoft" />
+        </shape>
+    </item>
+</layer-list>
