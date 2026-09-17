@@ -889,3 +889,65 @@ python3 tools/build_package.py      # الحزمة أُعيد بناؤها لت�
 
 > **للتجربة العملية**: `python3 tools/preview/build_assets.py && node tools/preview/server.js 8080`
 > ثم افتح الصفحة — الشاشة الثانية هي قارئ القرآن الجديد، والسورة تُبدَّل من أعلى الصفحة.
+
+---
+
+## 20) إيصال التغييرات إلى GitHub + تنظيف موارد قديمة (17 سبتمبر 2026)
+
+الجلسة السابقة أنهت القسم 19 كاملًا (بطاقتا القرآن والأذكار بالتصميم الذهبي + قارئ
+السورة بنص متصل) لكنها لم تستطع الدفع إلى GitHub — بيئة العمل كانت تضع
+`GH_TOKEN=arena-egress-dummy-token` ففشل `git push` و`gh pr create`. لذلك هذه الجلسة
+هي **جلسة إيصال**: إعادة تطبيق نفس التغييرات الموثقة في القسم 19 (وهي موجودة أصلًا
+في `main` بعد دمج PR #5) ثم دفع الفرع الجديد `arena/01a0affd-newnew` وفتح PR.
+
+### تنظيف إضافي
+
+أثناء المراجعة وُجدت 14 ملف drawable قديم غير مستخدم إطلاقًا (بقايا من نسخ أولية
+قبل إعادة التصميم):
+
+- `bg_quran_home_tile.xml` — النسخة القديمة من بطاقة القرآن (تدرج بسيط بلا إطار)،
+  حلّت محلها `bg_home_tile_quran.xml` ذات الإطار الذهبي المزدوج في القسم 19.
+- `ic_clock_black_24dp.xml` · `ic_gift.xml` · `icon_ad.xml` ·
+  `material_ic_calendar_black_24dp.xml` · `rounded_ad.xml` · `rounded_blue.xml` ·
+  `test_custom_background.xml` — أيقونات وخلفيات تجريبية لم تعد مرجعية.
+- `state_selected.xml` + `disablr.xml` + `ic_enble.xml` — سلسلة selector قديمة.
+- `tab_layout_selector.xml` + `tab_background_selected.xml` + `tab_backgrounds.xml` —
+  سلسلة تبويب قديمة.
+
+كلها حُذفت. `rounded_btn.xml` بقي لأنه مستخدم في `activity_qibla.xml` و
+`activity_set_wallpaper.xml`. المدقق يؤكد:
+
+```bash
+python3 tools/verify_resources.py   # NO ERRORS — 103 ملف XML، 219 drawable، 165 نص
+```
+
+العدد نزل من 233 إلى 219 drawable (14 ملفًا محذوفًا) بلا أي مرجع مكسور.
+
+### الحزمة
+
+```bash
+python3 tools/build_package.py
+```
+
+أُعيد بناء `Allah-Clock-Live-Wallpaper-android-studio.zip` ليطابق الشجرة بعد الحذف
+(198 drawable بدل 212 في العدّ القديم، لكن الأرشيف يستثني `build/` و`assets/`).
+
+### الدفع وفتح PR
+
+```bash
+git push origin arena/01a0affd-newnew
+gh pr create --base main --head arena/01a0affd-newnew \
+  --title "القسم 20: إيصال القسم 19 إلى GitHub + تنظيف موارد قديمة" \
+  --body "القسم 19 كان مدموجًا في main عبر PR #5 لكن الفرع الجديد يوثق الإيصال وينظف 14 ملف drawable قديم غير مستخدم. المدقق NO ERRORS."
+```
+
+الفرع الحالي `arena/01a0affd-newnew` مطابق لـ `main` بعد التنظيف، وجاهز للدمج.
+
+### الفحص النهائي
+
+```bash
+python3 tools/verify_resources.py   # NO ERRORS
+```
+
+لا توجد أي إعلانات في شاشات القرآن، وبطاقتا الرئيسية الجديدتان تعملان بنفس
+المنطق الموثق في القسم 19، والشارة الذهبية داخل بطاقة الأذكار تظهر فقط في نافذتها.
