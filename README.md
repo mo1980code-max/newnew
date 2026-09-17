@@ -28,15 +28,36 @@ gradle wrapper --gradle-version 8.13 --distribution-type bin
 
 التفاصيل الكاملة خطوة بخطوة في [`docs/ANDROID_STUDIO_SETUP.md`](docs/ANDROID_STUDIO_SETUP.md).
 
+### الحزمة الجاهزة للتنزيل
+
+`Allah-Clock-Live-Wallpaper-android-studio.zip` في جذر المستودع هي المشروع كاملًا كما يريده
+Android Studio (بلا `.git` وبلا مجلدات `build/`). تُعاد بناؤها بعد أي تعديل مصدر:
+
+```bash
+python3 tools/build_package.py     # 410 ملفًا — يجب أن تطابق الشجرة حرفيًا
+```
+
+> إن نزّلت الحزمة قديمًا فستبني **نسخة قديمة** من التطبيق؛ تحقّق دائمًا من أنها حديثة
+> (`unzip -l` يعرض تاريخ البناء) أو نزّلها من فرع `main` مباشرة.
+
 ## الفحص قبل أي Pull Request
 
 ```bash
-python3 tools/verify_resources.py
+python3 tools/verify_resources.py                  # الموارد والنصوص وبيانات القرآن
+python3 tools/verify_java_symbols.py               # رموز جافا: أصناف، أعضاء، Manifest، تواقيع SDK
+python3 tools/verify_java_symbols.py --self-test   # تأكيد أن المدقق يمسك الأخطاء فعلًا
+node tools/preview/smoke.js                        # منطق الواجهة (48 فحصًا)
+python3 tools/build_package.py                     # إعادة بناء الحزمة بعد أي تعديل مصدر
 ```
 
-المدقق يفحص: صحة كل XML، كل مرجع `@string/@drawable/...` و`R.*`، تطابق
-العربية/الإنجليزية (نصوص + مصفوفات)، وسلامة بيانات القرآن (114 سورة، 6236 آية،
-604 صفحة، 30 جزءًا + بصمات SHA-256). **النتيجة المطلوبة: `NO ERRORS`.**
+- **مدقق الموارد** يفحص: صحة كل XML، كل مرجع `@string/@drawable/...` و`R.*`، تطابق
+  العربية/الإنجليزية (نصوص + مصفوفات)، وسلامة بيانات القرآن (114 سورة، 6236 آية،
+  604 صفحة، 30 جزءًا + بصمات SHA-256).
+- **مدقق الرموز** يفحص ما يمنع البناء فعلًا: كل `import`، كل `Type.member` على أصناف التطبيق،
+  كل `extends/implements`، كل مكوّن في `AndroidManifest.xml`، وتواقيع SDK التي تغيّرت في
+  إصدارات جديدة (`AppOpenAd.load` مثلًا).
+
+**النتيجة المطلوبة في كليهما: `NO ERRORS`.**
 
 ## قبل النشر على Google Play
 
@@ -79,9 +100,11 @@ app/src/main/java/org/Allah_Clock_Live_Wallpaper/
 ├── viewUtils/    عناصر الرسم (الساعات، البوصلة، طبقة الخلفية)
 └── widget/       ودجت الشاشة الرئيسية
 tools/
-├── verify_resources.py   المدقق الثابت (شغّله قبل كل PR)
-├── athkar/               مولّد محتوى الأذكار من المصدر
-└── preview/              معاينة ويب تفاعلية للتصميم
+├── verify_resources.py     مدقق الموارد (شغّله قبل كل PR)
+├── verify_java_symbols.py  مدقق رموز جافا + حارس تواقيع SDK (شغّله قبل كل PR)
+├── build_package.py         يبني حزمة Android Studio القابلة للتنزيل
+├── athkar/                 مولّد محتوى الأذكار من المصدر
+└── preview/                معاينة ويب تفاعلية للتصميم
 docs/
 ├── ANDROID_STUDIO_SETUP.md
 ├── QURAN_TEXT_ATTRIBUTION.md

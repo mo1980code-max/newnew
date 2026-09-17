@@ -1027,3 +1027,161 @@ python3 tools/verify_resources.py       # NO ERRORS
 المدقق الذاتي `check_java_symbols.py` (أداة مراجعة خارج المستودع) صار يستثني
 الدوال الموروثة ويعدّ الوسائط بعمق أقواس صحيح: 183 ملاحظة بقيت كلها من الفئات
 المعروفة كإيجابيات كاذبة (أدوات parse للتعليقات التوضيحية والأنواع المدمجة).
+
+---
+
+## 22) ست نقاط: الحزمة القديمة (ملفات القرآن) · ProGuard في `build.gradle` · رمز `AppOpenAd` · أيقونات الشريط · الأذكار · خلفيات المكافأة (17 سبتمبر 2026)
+
+جاء الطلب على ست نقاط. المراجعة كشفت أن **أكثرها مشكلة توصيل لا مشكلة كود**: النسخة التي
+يُنزّلها المستخدم من المستودع (`Allah-Clock-Live-Wallpaper-android-studio.zip`) كانت قديمة —
+بُنيت في القسم 20 قبل القسم 21 — فما زالت تحمل قارئ الآيات القديم ولا تحمل الشريط الزجاجي ولا
+الخلفيات الحصرية. ومعها **خطآن حقيقيان يمنعان البناء**، لم يكن ممكنًا اكتشافهما هنا لأن بيئة
+العمل بلا JDK. هذا القسم يوثّق الستة واحدًا واحدًا.
+
+### 1) الملفات القديمة المحذوفة — وفيها ملفات قارئ القرآن القديم
+
+| ما كان | أين | لماذا حُذف |
+|---|---|---|
+| `adapter/QuranAyahAdapter.java` | **داخل الحزمة المسلَّمة** | محذوف من الشجرة في القسم 21 (القارئ صار `ViewPager2`)، لكن الأرشيف بقي يحمله |
+| `layout/item_quran_ayah.xml` | **داخل الحزمة المسلَّمة** | بطاقة الآية الواحدة التي استُبدلت بصفحة مصحف متصلة |
+| `drawable/bg_quran_ayah_number.xml` | **داخل الحزمة المسلَّمة** | خلفية رقم الآية القديمة، حلّت محلها `view_ayah_number_badge.xml` + `AyahBadgeSpan` |
+
+وإلى جانبها 11 موردًا ميتًا لا يشير إليه أي ملف في المستودع (فُحص: كل جافا + XML + أدوات + وثائق):
+`base_13.png` · `base_14.png` · `base_16.png` · `black_gradient.png` · `ic_bookmark.xml` ·
+`ic_bookmark_border.xml` · `placeholder.png` · `splash_logo.png` · `star_item_start_1.png` ·
+`thank.png` · `top_bg.png`. حُذفت من الشجرة، فصار عدّ الرسومات **217** بدل 228.
+
+ثم أُعيد بناء الحزمة، ونتيجة المقارنة الشاملة (SHA-256 لكل ملف، بين الأرشيف والشجرة):
+
+```
+zip entries: 410 | identical to tree: 410
+missing from zip (0) · content differs (0) · stale in zip (0)
+old Quran files still inside: []
+```
+
+أي أن **الأرشيف صار صورة طبق الأصل من الشجرة**، ولم يبق فيه أثر لملفات القارئ القديمة.
+وأُضيف إلى الحزمة `README.md` (كان مستثنى من `INCLUDE_FILES`)، وأصبحت تضمّ المدقق الجديد.
+
+### 2) `app/build.gradle` السطر 52 — قواعد ProGuard
+
+كان السطر:
+
+```gradle
+proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+```
+
+ومع أن `minifyEnabled true` و`shrinkResources true` مفعّلان، كان آخر سطر في
+`app/proguard-rules.pro`:
+
+```proguard
+-keep class * { public private *; }
+```
+
+وهذا يجعل R8 يحفظ **كل صنف في كل مكتبة**، أي أن البناء الربحي كان اسمًا بلا أثر. صار الآن:
+
+```gradle
+proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+```
+
+مع قواعد **مستهدَفة** بدل الحفظ الشامل: نماذج Gson (يقرأ الحقول بأسمائها)، الأصناف المسمّاة من
+`AndroidManifest.xml` والتخطيطات (`AppClass` · الخلفيتان الحيتان · `activity.**` · `service.**`
+· `widget.**` · `viewUtils.**`)، ومكتبة colorpicker (الوحيدة بلا قواعد مستهلك)، مع بقاء
+`-dontwarn` لـ Ads/UMP/Glide. والحفظ الشامل تُرك **معلَّقًا بسطر واحد** للرجوع الفوري عند الحاجة.
+
+دليل أن التقليص آمن هنا: المشروع **بلا أي انعكاس** — لا `Class.forName`، ولا `getMethod`،
+ولا `Resources.getIdentifier` (فُحص بالمستودع كله)؛ كل ما يصل إليه R8 بالاسم مذكور في القواعد.
+وبقيت `-ignorewarnings` لكن موثّقة: صنف اختياري ناقص في مكتبة مغلقة المصدر يجب ألّا يوقف
+بناء الإصدار، والمُدقّق الجديد هو ما يمسك أخطاء رموز التطبيق نفسه. `debug` لم يتغيّر.
+
+### 3) `AppOpenAdController.java` — «cannot find symbol»
+
+النداء كان بالصيغة الرباعية:
+
+```java
+AppOpenAd.load(context, AdConfig.APP_OPEN_UNIT_ID, request, callback)   // خطأ بناء
+```
+
+وهذه الصيغة **أُهلكت (deprecated) في SDK 21 وأُزيلت في إصدار رئيسي لاحق**، والمشروع على
+`play-services-ads:25.4.0` — فهي خطأ بناء فعلي في Android Studio. البيئة هنا بلا JDK، ولذلك
+لم تكتشفه الجلسات السابقة. صار النداء بالصيغة الحالية، والاتجاه صريح (الرئيسية عمودية):
+
+```java
+AppOpenAd.load(context, AdConfig.APP_OPEN_UNIT_ID, request,
+        AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT, callback)
+```
+
+ولمنع تكرار الصنف نفسه من الأخطاء أُضيف إلى المستودع مدقّق رموز جافا (البند التالي) فيه **حارس
+تواقيع SDK** على `AppOpenAd.load` و`InterstitialAd.load` و`RewardedAd.load`: أي تغيير في
+إصدار المكتبة يصطدم بالمدقّق، لا بالبناء.
+
+### 4) أيقونات الشريط العلوي — السبحة · اللغة · القبلة
+
+الأيقونات في الشجرة هي المتجهات المصقولة من القسم 21 (`ic_tasbeeh` بحبّة إمام ذهبية،
+`ic_language` بكرة وقوس ذهبي، `ic_qibla` ببوصلة وإبرة ذهبية) مع بلاطات `HomeGlassTile` 46dp
+و`contentDescription` لكل زر (`cd_tasbeeh` · `cd_language` · `cd_qibla`) وربط
+`UiMotion.pressable/tick` داخل `bindGlassAction`. المشكلة كانت أن **الحزمة القديمة كانت لا تزال
+تحمل نسخ ما قبل القسم 21 من الأيقونات الثلاث**؛ إعادة البناء حدّثتها (ضمن 36 ملفًا تغيّر).
+
+### 5) الأذكار
+
+الحزمة كانت تحمل نسخًا أقدم من `AthkarActivity` و`AthkarAdapter` و`dialog_athkar_settings.xml`.
+النسخة الحالية (القسم 21) تفرض **لغة واحدة صارمة**: عربي = نص عربي بلا ترجمة، إنجليزي =
+نقل حرفي وترجمة بلا نص عربي، ولا خلط إلا بمفتاح «اعرض النص العربي مع الترجمة»
+(`athkarBilingual`)، والتبديل يعيد الربط في مكانه فلا تُفقد أعداد التكرار. كاملة الآن في
+الحزمة. ومحتوى القارئ محروس بفحوص المعاينة: 31 ذكرًا صباحيًا، العدّ، «1 / 1»، ذكر التكرار 100،
+سطر الفضل، والمرجع.
+
+### 6) الخلفيات والإعلان المكافئ — فئة «مساجد ومآذن»
+
+كانت الحزمة **بلا بوابة المكافأة بالكامل**: لا `wp_premium_1/2/3.jpg`، ولا `PremiumUnlocks`،
+ولا `PremiumBackgroundHelper`، ولا `dialog_reward_unlock.xml`، ولا شارة القفل في `item_wallpaper`.
+بعد إعادة البناء صارت الفئة كاملة كما في الشجرة: `wp_mosque_1..5` تحت `cat_mosques`
+(«مساجد ومآذن»)، والثلاث الحصرية تُعرض **أول** كل تصنيف بشارة ذهبية وقفل، والنقر يفتح حوار
+التوضيح ثم الإعلان، و**لا تُمنح المكافأة إلا داخل `onRewardEarned`**، والفتح يُكتب فورًا في
+`PremiumUnlocks` فيبقى دائمًا، و`SetWallpaperActivity` ترى القفل فترفض أي Intent قديم لخلفية مقفلة.
+
+### 7) أداة جديدة داخل المستودع: `tools/verify_java_symbols.py`
+
+لأن البيئة بلا JDK، صار عند المستودع مدقّق رموز ثابت يبني **جدول رموز** من 88 ملف جافا ويتحقق من:
+
+1. كل `import org.Allah_Clock_Live_Wallpaper.…` يشير إلى صنف موجود (علوي أو متداخل) — وهو
+   السبب الأول لـ «cannot find symbol: class X»؛
+2. كل إشارة `Type.member` إلى صنف من أصناف التطبيق تُحلّ إلى حقل/ثابت/صنف متداخل/دالة معلنة،
+   أو موروثة من صنف **داخل المشروع** (وما قد يأتي من مكتبة يُذكر كملاحظة لا كخطأ، فلا
+   إيجابيات كاذبة)؛
+3. كل `extends`/`implements` لصنف من المشروع؛
+4. كل مكوّن مُسمّى في `AndroidManifest.xml` له ملف جافا مقابل؛
+5. حارس تواقيع SDK (البند 3).
+
+وله **اختبار ذاتي** يزرع الخطأين اللذين وُجدا في هذه الجلسة (رمز مُعاد تسميته، وصيغة
+`AppOpenAd.load` الرباعية) في نسخة مؤقتة ويتأكد أنهما يُبلَّغان:
+
+```bash
+python3 tools/verify_java_symbols.py --self-test   # SELF-TEST PASSED
+python3 tools/verify_java_symbols.py               # NO ERRORS
+```
+
+### الملفات
+
+| المجموعة | الملفات |
+|---|---|
+| البناء | `app/build.gradle` · `app/proguard-rules.pro` (إعادة كتابة) |
+| الإعلانات | `ads/AppOpenAdController.java` |
+| حذف موارد ميتة | 11 ملفًا في `res/drawable` (القائمة أعلاه) |
+| الأدوات | `tools/verify_java_symbols.py` (جديد) · `tools/build_package.py` (ضمّ `README.md`) |
+| التوثيق | `UPGRADE_NOTES.md` · `README.md` · `docs/ANDROID_STUDIO_SETUP.md` · `tools/preview/README.md` |
+| الحزمة | `Allah-Clock-Live-Wallpaper-android-studio.zip` (أُعيد بناؤها: 410 مدخلًا) |
+
+### الفحص
+
+```bash
+python3 tools/verify_resources.py                  # NO ERRORS — 217 drawable · 188 نصًا · 108 XML
+python3 tools/verify_java_symbols.py               # NO ERRORS — 88 ملفًا · 122 نوعًا · 3 تواقيع SDK
+python3 tools/verify_java_symbols.py --self-test   # SELF-TEST PASSED
+python3 tools/preview/build_assets.py              # 24 خلفية (3 حصرية) · 28 أيقونة
+node tools/preview/smoke.js                        # ALL CHECKS PASSED — 48 فحصًا
+python3 tools/build_package.py                     # 410 ملفًا · 9.84 م.ب — مطابقة تامة للشجرة
+```
+
+> **للتجربة العملية بعد التنزيل**: افتح المجلد في Android Studio (JDK 17 مدمج) → Sync → Run.
+> الإصدار `release` هو وحده الذي يمرّ بـ R8، فأي فرق في الحجم يظهر هناك.
