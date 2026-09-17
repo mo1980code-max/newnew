@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ornamental divider under the Quran tile's title: two hairlines with a diamond in the middle
+  and two small diamonds flanking it. Kept as straight paths and rhombi so it stays crisp at
+  any size and takes the tile's gold through android:tint.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="10dp"
+    android:viewportWidth="120"
+    android:viewportHeight="10">
+
+    <path
+        android:pathData="M1,5 L45,5"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round"
+        android:strokeWidth="1" />
+    <path
+        android:pathData="M75,5 L119,5"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round"
+        android:strokeWidth="1" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M60,0.5 L64.5,5 L60,9.5 L55.5,5 Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M49,2.8 L51.2,5 L49,7.2 L46.8,5 Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M71,2.8 L73.2,5 L71,7.2 L68.8,5 Z" />
+</vector>

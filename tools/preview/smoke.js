@@ -117,11 +117,45 @@ setTimeout(() => {
   check('wallpaper applied to the live-wallpaper screen',
     els.wallScreen.style.backgroundImage.indexOf(D.wallpapers[0].file) >= 0,
     JSON.stringify(els.wallScreen.style.backgroundImage));
-  check('athkar badge visible inside the morning window',
-    !els.homeBadge._cls.has('hidden') && text('homeBadgeText') === D.ar.athkar_morning_title,
-    JSON.stringify(text('homeBadgeText')));
+  check('the athkar tile carries the golden chip inside the window',
+    !els.homeAthkarChip._cls.has('hidden') && text('homeAthkarChip') === D.ar.athkar_morning_title,
+    JSON.stringify(text('homeAthkarChip')));
   check('reward state uses the real string', text('unlockState') === D.ar.premium_not_unlocked,
     JSON.stringify(text('unlockState')));
+
+  console.log('\nquran reader (one continuous Mushaf page)');
+  const totalAyahs = Object.keys(D.quran.ayahs).reduce((n, k) => n + D.quran.ayahs[k].length, 0);
+  check('114 surahs in the metadata', D.quran.surahs.length === 114,
+    String(D.quran.surahs.length));
+  check('6236 ayahs in the bundled text', totalAyahs === 6236, String(totalAyahs));
+  const expectTitle = D.ar.quran_surah_title
+    .replace('%1$d', '1').replace('%2$s', D.quran.surahs[0].arabic);
+  check('the reader title uses quran_surah_title', text('quranTitle') === expectTitle,
+    JSON.stringify(text('quranTitle')));
+  check('the surah picker names the open surah',
+    text('surahName') === '1. ' + D.quran.surahs[0].arabic, JSON.stringify(text('surahName')));
+  const fatiha = html('quranSheet');
+  check('all 7 verses of Al-Fatiha are on the page',
+    (fatiha.match(/class="verse/g) || []).length === 7,
+    String((fatiha.match(/class="verse/g) || []).length));
+  const mark7 = String.fromCharCode(0x06DD) + vm.runInContext('arabicIndic(7)', sandbox);
+  check('a verse closes with U+06DD and an Arabic-Indic number',
+    fatiha.indexOf(mark7) >= 0, 'marker ' + mark7 + ' not found');
+  check('Al-Fatiha gets no separate Basmalah line (it is verse 1)',
+    fatiha.indexOf('class="basmalah"') < 0, 'a Basmalah line was added');
+  const baqara = vm.runInContext('buildQuranPage(2)', sandbox);
+  check('surah 2 renders all 286 verses',
+    (baqara.match(/class="verse/g) || []).length === 286,
+    String((baqara.match(/class="verse/g) || []).length));
+  check('surah 2 opens with the Basmalah taken from the asset',
+    baqara.indexOf('class="basmalah">' + D.quran.ayahs[1][0]) >= 0, 'no Basmalah line');
+  vm.runInContext('state.surah = 2; renderQuran()', sandbox);
+  check('tapping a verse saves it', vm.runInContext('toggleVerse(2, 255)', sandbox) === true,
+    'toggleVerse returned false');
+  check('the saved verse is tinted in place',
+    /class="verse saved" data-surah="2" data-ayah="255"/.test(html('quranSheet')),
+    html('quranSheet').slice(0, 90));
+  vm.runInContext('state.surah = 1; renderQuran()', sandbox);
 
   console.log(failures ? '\n' + failures + ' CHECK(S) FAILED' : '\nALL CHECKS PASSED');
   process.exit(failures ? 1 : 0);

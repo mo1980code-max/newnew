@@ -20,9 +20,10 @@
     <code>values/strings.xml</code> و<code>values-ar/strings.xml</code>، المصفوفات
     (المدن، الأشهر الهجرية، اتجاهات البوصلة)، أذكار <code>res/raw/athkar.json</code>،
     الألوان من <code>values/colors.xml</code>، الأيقونات المتجهية محوّلة إلى SVG،
-    الـ21 خلفية المدمجة، وصور التصاميم الحقيقية (<code>clock_bg_*</code> ·
-    <code>digital_thumb_*</code> · <code>smart_thumb_*</code>). الأبعاد 1:1 مع التخطيطات
-    (كل 1px هنا = 1dp هناك) داخل هاتف 360×720.
+    الـ21 خلفية المدمجة، صور التصاميم الحقيقية (<code>clock_bg_*</code> ·
+    <code>digital_thumb_*</code> · <code>smart_thumb_*</code>)، ونص القرآن العثماني كاملًا
+    (<b>114 سورة · 6236 آية</b>) من <code>res/raw/quran_uthmani.txt</code>. الأبعاد 1:1 مع
+    التخطيطات (كل 1px هنا = 1dp هناك) داخل هاتف 360×720.
   </p>
 
   <div class="controls">
@@ -46,6 +47,12 @@
       <button class="btn" id="prevWp">›</button>
       <button class="btn" id="nextWp">‹</button>
       <em id="wpName"></em>
+    </div>
+    <div class="ctl">
+      <span>السورة</span>
+      <button class="btn" id="prevSurah">›</button>
+      <button class="btn" id="nextSurah">‹</button>
+      <em id="surahName"></em>
     </div>
     <div class="ctl">
       <span>الساعات الذهبية</span>
@@ -84,21 +91,63 @@
             <img src="assets/wallpaper_logo.png" alt="">
             <b data-i18n="title_wallpaper"></b>
           </div>
-        </div>
-        <div class="badgeWrap">
-          <div class="athkar-badge hidden" id="homeBadge"><span id="homeBadgeText"></span></div>
+          <div class="tile gold quran">
+            <div class="ic" data-icon="ic_quran"></div>
+            <b data-i18n="tile_quran"></b>
+            <div class="rule"><i></i><s></s><i></i></div>
+          </div>
+          <div class="tile gold athkar">
+            <div class="ic" data-icon="ic_athkar"></div>
+            <b data-i18n="tile_athkar"></b>
+            <div class="chip hidden" id="homeAthkarChip"></div>
+          </div>
         </div>
       </div>
     </div>
     <figcaption>
       <b data-cap="home"></b>
-      <span>أيقونات اللغة والسبحة والقبلة، وبلاطتان (التصاميم / الخلفيات). شارة الأذكار الذهبية
-        تظهر <b>فقط داخل نافذتها</b> — جرّب «خارجها» من الأعلى فتختفي من كل الشاشات.</span>
-      <code>activity_select_function.xml</code>
+      <span>أيقونات اللغة والسبحة والقبلة، وبطاقتا التصاميم والخلفيات (108dp)، ثم
+        <b>بطاقتا القرآن والأذكار</b> بحجم أكبر (140dp) وإطار ذهبي مزدوج وخط نسخي كبير.
+        الأذكار صارت مدخلًا <b>دائمًا</b> — والشارة الذهبية داخلها تظهر
+        <b>فقط داخل نافذتها</b>: جرّب «خارجها» من الأعلى فتختفي الشارة من البطاقة ومن
+        الخلفية الحية معًا.</span>
+      <code>activity_select_function.xml · bg_home_tile_*.xml · ic_athkar.xml</code>
     </figcaption>
   </figure>
 
-  <!-- 2 ─ live wallpaper -->
+  <!-- 2 ─ quran reader: one continuous Mushaf page -->
+  <figure class="shot">
+    <div class="phone" id="ph-quran">
+      <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen quranPage" id="quranScreen">
+        <div class="topbar">
+          <div class="ic back" id="quranBack" data-icon="ic_back"></div>
+          <div class="title" id="quranTitle"></div>
+          <div class="ic" data-icon="ic_text_size"></div>
+          <div class="ic" data-icon="ic_quran"></div>
+          <div class="ic" data-icon="ic_bookmarks"></div>
+        </div>
+        <div class="quranHeader">
+          <div class="meta" id="quranMeta"></div>
+          <div class="hint" data-i18n="quran_reader_hint"></div>
+        </div>
+        <div class="quranScroll" id="quranScroll">
+          <div class="quranSheet" id="quranSheet"></div>
+        </div>
+        <div class="quranSource" data-i18n="quran_text_source_short"></div>
+      </div>
+    </div>
+    <figcaption>
+      <b data-cap="quran"></b>
+      <span>الآيات <b>بجانب بعضها</b> كما في المصحف: صفحة واحدة متصلة بدل بطاقة لكل آية،
+        وكل آية تُختم بعلامة <b>۝</b> ورقمها بالأرقام الهندية داخلها. انقر أي آية لحفظها
+        فيتلون موضعها بذهبي شفاف، وانقرها مرة أخرى لإزالة الحفظ. الافتتاح بالبسملة هو
+        <b>نص الآية ١:١ نفسه</b> من المورد — لا نص مكتوب يدويًا.</span>
+      <code>activity_quran_reader.xml · QuranReaderActivity.java · res/raw/quran_uthmani.txt</code>
+    </figcaption>
+  </figure>
+
+  <!-- 3 ─ live wallpaper -->
   <figure class="shot">
     <div class="phone" id="ph-wall">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
@@ -119,7 +168,7 @@
     </figcaption>
   </figure>
 
-  <!-- 3 ─ athkar reader (paper) -->
+  <!-- 4 ─ athkar reader (paper) -->
   <figure class="shot">
     <div class="phone" id="ph-athkar">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
@@ -145,7 +194,7 @@
     </figcaption>
   </figure>
 
-  <!-- 4 ─ athkar timing dialog -->
+  <!-- 5 ─ athkar timing dialog -->
   <figure class="shot">
     <div class="phone" id="ph-settings">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
@@ -182,7 +231,7 @@
     </figcaption>
   </figure>
 
-  <!-- 5 ─ qibla -->
+  <!-- 6 ─ qibla -->
   <figure class="shot">
     <div class="phone" id="ph-qibla">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
@@ -213,7 +262,7 @@
     </figcaption>
   </figure>
 
-  <!-- 6 ─ clock designs -->
+  <!-- 7 ─ clock designs -->
   <figure class="shot">
     <div class="phone" id="ph-clocks">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
@@ -234,7 +283,7 @@
     </figcaption>
   </figure>
 
-  <!-- 7 ─ editor -->
+  <!-- 8 ─ editor -->
   <figure class="shot">
     <div class="phone" id="ph-editor">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
@@ -263,7 +312,7 @@
     </figcaption>
   </figure>
 
-  <!-- 8 ─ wallpaper options -->
+  <!-- 9 ─ wallpaper options -->
   <figure class="shot">
     <div class="phone" id="ph-options">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
@@ -290,7 +339,7 @@
     </figcaption>
   </figure>
 
-  <!-- 9 ─ floating tasbeeh -->
+  <!-- 10 ─ floating tasbeeh -->
   <figure class="shot">
     <div class="phone" id="ph-tasbeeh">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
@@ -313,7 +362,7 @@
     </figcaption>
   </figure>
 
-  <!-- 10 ─ widgets -->
+  <!-- 11 ─ widgets -->
   <figure class="shot">
     <div class="phone" id="ph-widget">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
@@ -345,7 +394,7 @@
     </figcaption>
   </figure>
 
-  <!-- 11 ─ wallpaper gallery -->
+  <!-- 12 ─ wallpaper gallery -->
   <figure class="shot">
     <div class="phone" id="ph-gallery">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
@@ -367,7 +416,7 @@
     </figcaption>
   </figure>
 
-  <!-- 12 ─ rewarded unlock -->
+  <!-- 13 ─ rewarded unlock -->
   <figure class="shot">
     <div class="phone" id="ph-reward">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Home tile for the Quran: a deeper, larger card than the clock/wallpaper rasters, with a
+  double gold frame - a 2dp outer stroke plus a 1dp inner hairline inset by 6dp. The two
+  frames are what makes the "reading" entries read as one family on the home screen.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:endColor="@color/tileQuranBottom"
+                android:startColor="@color/tileQuranTop" />
+            <corners android:radius="24dp" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/tileFrameGold" />
+        </shape>
+    </item>
+
+    <item
+        android:bottom="6dp"
+        android:left="6dp"
+        android:right="6dp"
+        android:top="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/transparent" />
+            <corners android:radius="18dp" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/tileFrameGoldSoft" />
+        </shape>
+    </item>
+</layer-list>

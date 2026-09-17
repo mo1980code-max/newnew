@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Athkar tile icon: a misbaha - seven beads around a ring with a larger imam bead below.
+  Drawn as circles (arc path segments) rather than raster art, so the big home tile can tint
+  it gold at any size without a second asset.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- beaded ring, one bead every 45° with the 90° slot left empty for the imam bead -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M12,3.5 a1.95,1.95 0 1,0 0.01,0 z M16.95,5.55 a1.95,1.95 0 1,0 0.01,0 z M19,10.5 a1.95,1.95 0 1,0 0.01,0 z M16.95,15.45 a1.95,1.95 0 1,0 0.01,0 z M7.05,15.45 a1.95,1.95 0 1,0 0.01,0 z M5,10.5 a1.95,1.95 0 1,0 0.01,0 z M7.05,5.55 a1.95,1.95 0 1,0 0.01,0 z" />
+    <!-- the imam bead, slightly larger, and its tassel -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M12,18.4 a2.4,2.4 0 1,0 0.01,0 z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M11.2,22.9 L12.8,22.9 L12,23.9 Z" />
+</vector>

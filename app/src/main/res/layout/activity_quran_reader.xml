@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A calm, text-first Quran reader. Verse content is supplied from a local read-only asset. -->
+<!--
+  A calm, text-first Quran reader. Verse content is supplied from a local read-only asset.
+
+  The verses are laid out the way a Mushaf page lays them out: one continuous run of text, each
+  verse closed by the end-of-ayah glyph (U+06DD) carrying its own Arabic-Indic number, instead
+  of one bordered card per ayah. Tapping a verse saves or clears its bookmark, and the verse is
+  tinted while it stays saved.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/quranPaper"
@@ -101,12 +109,35 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/quranAyahList"
+        <ScrollView
+            android:id="@+id/quranReaderScroll"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingBottom="8dp" />
+            android:scrollbars="none">
+
+            <TextView
+                android:id="@+id/quranReaderPage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_quran_page"
+                android:fontFamily="serif"
+                android:justificationMode="inter_word"
+                android:lineSpacingExtra="12dp"
+                android:paddingStart="18dp"
+                android:paddingTop="16dp"
+                android:paddingEnd="18dp"
+                android:paddingBottom="16dp"
+                android:textColor="@color/quranInk"
+                android:textDirection="rtl"
+                android:textSize="23sp"
+                tools:targetApi="o" />
+
+        </ScrollView>
 
         <LinearLayout
             android:id="@+id/quranReaderLoading"

@@ -16,6 +16,8 @@ const state = {
   sw: { hijri: true, dhikr: true, power: false, badge: true },
   counters: {},          // athkar id -> taps left
   cat: 'all',
+  surah: 1,              // surah open in the Quran reader
+  marked: {},            // "surah:ayah" -> saved, the mock's QuranStore bookmark
 };
 
 /* ─────────── i18n: the app's real string tables ─────────── */
@@ -26,7 +28,8 @@ const fmt = (s, ...a) => String(s).replace(/%(\d+)\$[ds]/g, (m, i) => a[+i - 1])
 /* Captions the mock needs but the app has no string for (page chrome, not app UI). */
 const CAP = {
   ar: {
-    home: 'الشاشة الرئيسية', wallpaper: 'الخلفية الحية', athkar: 'قارئ الأذكار',
+    home: 'الشاشة الرئيسية', quran: 'قارئ القرآن — نص متصل', wallpaper: 'الخلفية الحية',
+    athkar: 'قارئ الأذكار',
     settings: 'إعدادات توقيت الأذكار', qibla: 'بوصلة القبلة', clocks: 'تصاميم الساعة',
     editor: 'محرّر الساعة', options: 'خيارات الخلفية', tasbeeh: 'السبحة العائمة',
     widgets: 'ودجت الشاشة الرئيسية', gallery: 'معرض الخلفيات الإسلامية',
@@ -37,7 +40,8 @@ const CAP = {
     all: 'الكل', locked: 'مقفلة', watchToUnlock: 'شاهد إعلانًا لفتحها',
   },
   en: {
-    home: 'Home screen', wallpaper: 'Live wallpaper', athkar: 'Athkar reader',
+    home: 'Home screen', quran: 'Quran reader - one continuous page',
+    wallpaper: 'Live wallpaper', athkar: 'Athkar reader',
     settings: 'Athkar timing settings', qibla: 'Qibla compass', clocks: 'Clock designs',
     editor: 'Clock editor', options: 'Wallpaper options', tasbeeh: 'Floating tasbeeh',
     widgets: 'Home-screen widgets', gallery: 'Islamic wallpaper gallery',
@@ -99,6 +103,52 @@ function clockImage() { return 'assets/' + D.clocks[state.kind][state.clock[stat
 function badgeOn() { return state.win !== 'none' && state.sw.badge; }
 function badgeLabel() { return t(state.win === 'evening' ? 'athkar_evening_title' : 'athkar_morning_title'); }
 
+/* ─────────── the Quran reader: one continuous page, verse by verse ───────────
+   buildQuranPage mirrors QuranReaderActivity.buildPage(): every verse of the surah in a
+   single run, each closed by U+06DD plus its number in Arabic-Indic digits. The Basmalah
+   opening is the text of 1:1 straight out of the bundled asset - never typed by hand. */
+function arabicIndic(value) {
+  return String(value).replace(/[0-9]/g, (d) => String.fromCharCode(0x0660 + Number(d)));
+}
+function surahOf(n) { return D.quran.surahs.filter((s) => s.n === n)[0]; }
+function ayahsOf(n) { return D.quran.ayahs[n] || []; }
+function markKey(n, a) { return n + ':' + a; }
+function isMarked(n, a) { return state.marked[markKey(n, a)] === true; }
+
+function buildQuranPage(surahNumber) {
+  const ayahs = ayahsOf(surahNumber);
+  const parts = [];
+  if (surahNumber !== 1 && surahNumber !== 9) {
+    parts.push('<span class="basmalah">' + ayahsOf(1)[0] + '</span>');
+  }
+  ayahs.forEach((text, i) => {
+    const saved = isMarked(surahNumber, i + 1) ? ' saved' : '';
+    parts.push('<span class="verse' + saved + '" data-surah="' + surahNumber
+      + '" data-ayah="' + (i + 1) + '">' + text + ' <span class="ayahMark">۝'
+      + arabicIndic(i + 1) + '</span></span> ');
+  });
+  return parts.join('');
+}
+
+function toggleVerse(surahNumber, ayahNumber) {
+  const key = markKey(surahNumber, ayahNumber);
+  if (state.marked[key]) delete state.marked[key]; else state.marked[key] = true;
+  renderQuran();
+  return state.marked[key] === true;
+}
+
+function renderQuran() {
+  const surah = surahOf(state.surah) || D.quran.surahs[0];
+  document.getElementById('quranTitle').textContent =
+    fmt(t('quran_surah_title'), surah.n, state.lang === 'ar' ? surah.arabic : surah.translit);
+  const revelation = t(surah.meccan ? 'quran_meccan' : 'quran_medinan');
+  document.getElementById('quranMeta').textContent =
+    fmt(t('quran_surah_metadata'), surah.ayahs, revelation);
+  document.getElementById('quranSheet').innerHTML = buildQuranPage(surah.n);
+  const el = document.getElementById('surahName');
+  if (el) el.textContent = surah.n + '. ' + (state.lang === 'ar' ? surah.arabic : surah.translit);
+}
+
 /* ─────────── rendering ─────────── */
 function renderChrome() {
   document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
@@ -113,9 +163,10 @@ function renderChrome() {
 
 function renderBadges() {
   const on = badgeOn(), label = on ? badgeLabel() : '';
-  const home = document.getElementById('homeBadge');
-  home.classList.toggle('hidden', !on);
-  document.getElementById('homeBadgeText').textContent = label;
+  // The athkar tile is permanent; only the chip inside it follows the window.
+  const chip = document.getElementById('homeAthkarChip');
+  chip.textContent = label;
+  chip.classList.toggle('hidden', !on);
   const wall = document.getElementById('wallBadge');
   wall.textContent = label;
   wall.classList.toggle('hidden', !on);
@@ -318,6 +369,7 @@ function renderAll() {
   renderChrome();
   renderBadges();
   renderWallpaper();
+  renderQuran();
   renderAthkar();
   renderQibla();
   renderClocks();
@@ -346,6 +398,7 @@ function wire() {
       state.lang = b.dataset.lang;
       document.querySelectorAll('#langSeg button').forEach((x) => x.classList.toggle('on', x === b));
       document.getElementById('athkarList').scrollTop = 0;
+      document.getElementById('quranScroll').scrollTop = 0;
       renderAll();
     });
   });
@@ -392,6 +445,23 @@ function wire() {
   longPress(document.getElementById('tasbeehReset'), 700, () => {
     state.tasbeeh = 0;
     renderTasbeeh();
+  });
+
+  const step_surah = (d) => {
+    state.surah = ((state.surah - 1 + d + D.quran.surahs.length) % D.quran.surahs.length) + 1;
+    renderQuran();
+    document.getElementById('quranScroll').scrollTop = 0;
+  };
+  document.getElementById('prevSurah').addEventListener('click', () => step_surah(1));
+  document.getElementById('nextSurah').addEventListener('click', () => step_surah(-1));
+
+  document.getElementById('quranSheet').addEventListener('click', (e) => {
+    const verse = e.target.closest('.verse');
+    if (!verse) return;
+    toggleVerse(Number(verse.dataset.surah), Number(verse.dataset.ayah));
+  });
+  document.getElementById('quranBack').addEventListener('click', () => {
+    document.getElementById('ph-home').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 
   document.getElementById('athkarPage').addEventListener('click', (e) => {

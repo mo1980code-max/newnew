@@ -95,6 +95,40 @@ print('athkar: %d items (%d morning / %d evening)'
       % (len(data['athkar']), morning, len(data['athkar']) - morning))
 
 
+# ══════════════════════════════════ quran ══════════════════════════════════
+# The reader shows the Tanzil Uthmani text verbatim, so the mock loads the same two files the
+# app bundles: the 114-surah metadata and every one of the 6236 ayahs.
+surahs = []
+for line in open(os.path.join(RES, 'raw', 'quran_surahs.tsv'), encoding='utf-8'):
+    line = line.rstrip('\n')
+    if not line or line.startswith('#'):
+        continue
+    number, _offset, count, arabic, transliteration, meaning, revelation = line.split('|')
+    surahs.append({
+        'n': int(number),
+        'ayahs': int(count),
+        'arabic': arabic,
+        'translit': transliteration,
+        'meaning': meaning,
+        'meccan': revelation == 'Meccan',
+    })
+
+ayahs = {}
+for line in open(os.path.join(RES, 'raw', 'quran_uthmani.txt'), encoding='utf-8'):
+    line = line.rstrip('\n')
+    if not line or line.startswith('#'):
+        continue
+    surah, ayah, text = line.split('|', 2)
+    ayahs.setdefault(int(surah), []).append(text)
+
+assert len(surahs) == 114, 'the Quran metadata must hold 114 surahs'
+assert sum(len(v) for v in ayahs.values()) == 6236, 'the Quran text must hold 6236 ayahs'
+data['quran'] = {'surahs': surahs, 'ayahs': ayahs}
+print('quran: %d surahs, %d ayahs (%d KB of text)'
+      % (len(surahs), sum(len(v) for v in ayahs.values()),
+         os.path.getsize(os.path.join(RES, 'raw', 'quran_uthmani.txt')) // 1024))
+
+
 # ══════════════════════════════════ qibla ══════════════════════════════════
 KAABA_LAT, KAABA_LON = 21.422487, 39.826206
 coords = re.search(r'CITY_COORDS\s*=\s*\{(.*?)\};',

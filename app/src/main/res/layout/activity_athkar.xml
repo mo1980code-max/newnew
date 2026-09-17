@@ -67,6 +67,26 @@
         android:layout_height="1dp"
         android:background="@color/athkarHairline" />
 
+    <!--
+      Shown only when the reader is opened from the home tile outside both windows: the tile is
+      permanent, so the reader must say which set it is showing instead of opening silently.
+    -->
+    <TextView
+        android:id="@+id/athkarOutsideNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="14dp"
+        android:background="@drawable/bg_athkar_note"
+        android:paddingStart="14dp"
+        android:paddingTop="9dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="9dp"
+        android:textColor="@color/athkarBody"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/athkarList"
         android:layout_width="match_parent"
