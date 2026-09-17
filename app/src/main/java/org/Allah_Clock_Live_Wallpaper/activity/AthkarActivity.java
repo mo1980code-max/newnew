@@ -149,19 +149,25 @@ public class AthkarActivity extends AppCompatActivity {
             rb15.setChecked(true);
         }
 
-        final TextView morningStart = content.findViewById(R.id.tMorningStart);
-        final TextView morningEnd = content.findViewById(R.id.tMorningEnd);
-        final TextView eveningStart = content.findViewById(R.id.tEveningStart);
-        final TextView eveningEnd = content.findViewById(R.id.tEveningEnd);
-        morningStart.setText(minutesLabel(this.tinyDB.getInt("morningStartMin", 270)));
-        morningEnd.setText(minutesLabel(this.tinyDB.getInt("morningEndMin", 540)));
-        eveningStart.setText(minutesLabel(this.tinyDB.getInt("eveningStartMin", 960)));
-        eveningEnd.setText(minutesLabel(this.tinyDB.getInt("eveningEndMin", 1230)));
-
-        morningStart.setOnClickListener(v -> pickTime(morningStart, "morningStartMin", 270));
-        morningEnd.setOnClickListener(v -> pickTime(morningEnd, "morningEndMin", 540));
-        eveningStart.setOnClickListener(v -> pickTime(eveningStart, "eveningStartMin", 960));
-        eveningEnd.setOnClickListener(v -> pickTime(eveningEnd, "eveningEndMin", 1230));
+        // The four window slots are staged here and written to TinyDB only by the OK button, so
+        // Cancel leaves the saved windows exactly as they were. They used to be written inside the
+        // TimePickerDialog callback - i.e. before the reader had decided anything - and Cancel
+        // could not take that back (UPGRADE_NOTES section 23).
+        final String[] slotKeys = {"morningStartMin", "morningEndMin", "eveningStartMin", "eveningEndMin"};
+        final int[] slotFallbacks = {270, 540, 960, 1230};
+        final int[] staged = new int[slotKeys.length];
+        final TextView[] slots = {
+                content.findViewById(R.id.tMorningStart),
+                content.findViewById(R.id.tMorningEnd),
+                content.findViewById(R.id.tEveningStart),
+                content.findViewById(R.id.tEveningEnd),
+        };
+        for (int i = 0; i < slotKeys.length; i++) {
+            staged[i] = this.tinyDB.getInt(slotKeys[i], slotFallbacks[i]);
+            slots[i].setText(minutesLabel(staged[i]));
+            final int slot = i;
+            slots[slot].setOnClickListener(v -> pickTime(slots[slot], staged, slot));
+        }
 
         new AlertDialog.Builder(this)
                 .setView(content)
@@ -169,6 +175,11 @@ public class AthkarActivity extends AppCompatActivity {
                     this.tinyDB.putBoolean("athkarFixedTimes", rbFixed.isChecked());
                     this.tinyDB.putInt("fajrAngle", rb18.isChecked() ? 18 : 15);
                     this.tinyDB.putBoolean(PREF_BILINGUAL, bilingual.isChecked());
+                    // Nothing about the window reaches storage before this point, so Cancel or a
+                    // tap outside the dialog discards a picked time along with the rest.
+                    for (int i = 0; i < slotKeys.length; i++) {
+                        this.tinyDB.putInt(slotKeys[i], staged[i]);
+                    }
                     if (this.adapter != null
                             && this.adapter.isDualLanguage() != bilingual.isChecked()) {
                         this.adapter.setDualLanguage(bilingual.isChecked());
@@ -182,11 +193,16 @@ public class AthkarActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void pickTime(final TextView target, final String prefKey, int fallback) {
-        int current = this.tinyDB.getInt(prefKey, fallback);
+    /**
+     * Picks one window slot. The choice is staged in {@code staged} and shown on the chip only:
+     * the dialog's OK button is what writes the slots to TinyDB, so Cancel discards the change
+     * instead of leaving a half-saved window behind.
+     */
+    private void pickTime(final TextView target, final int[] staged, final int slot) {
+        int current = staged[slot];
         new TimePickerDialog(this, (view, hour, minute) -> {
-            this.tinyDB.putInt(prefKey, hour * 60 + minute);
-            target.setText(minutesLabel(hour * 60 + minute));
+            staged[slot] = hour * 60 + minute;
+            target.setText(minutesLabel(staged[slot]));
         }, current / 60, current % 60, true).show();
     }
 
