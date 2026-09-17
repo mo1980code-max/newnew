@@ -156,7 +156,7 @@ public class CustomWallpaper extends WallpaperService {
                             try {
                                 surfaceHolder.unlockCanvasAndPost(canvas);
                             } catch (IllegalArgumentException e) {
-                                e.printStackTrace();
+                                Log.w(TAG, "unlockCanvasAndPost after draw failure", e);
                             }
                         }
                         throw th;
@@ -166,7 +166,7 @@ public class CustomWallpaper extends WallpaperService {
                     try {
                         surfaceHolder.unlockCanvasAndPost(canvas);
                     } catch (IllegalArgumentException e2) {
-                        e2.printStackTrace();
+                        Log.w(TAG, "unlockCanvasAndPost failed", e2);
                     }
                 }
                 CustomWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);

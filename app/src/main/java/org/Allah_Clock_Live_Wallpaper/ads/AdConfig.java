@@ -3,10 +3,10 @@ package org.Allah_Clock_Live_Wallpaper.ads;
 /**
  * Single place that holds every advertising / monetisation constant.
  *
- * <p><b>BEFORE YOU PUBLISH:</b> the four ad-unit ids and the app id below are Google's
+ * <p><b>BEFORE YOU PUBLISH:</b> the five ad-unit ids and the app id below are Google's
  * official <i>sample</i> ids. They render real looking test ads, never earn money and
  * never count as invalid traffic — but shipping them to production breaks AdMob policy.
- * Replace all five values with your own from https://apps.admob.com and mirror the app id
+ * Replace all six values with your own from https://apps.admob.com and mirror the app id
  * into the {@code com.google.android.gms.ads.APPLICATION_ID} meta-data in
  * AndroidManifest.xml.</p>
  */
