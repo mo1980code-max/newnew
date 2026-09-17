@@ -23,6 +23,22 @@
 
 
 
+    <!--
+      One tile of the home dashboard's top action bar: frosted glass, a 14 dp radius, soft
+      elevation and a 46 dp target (44 dp is the accessibility minimum, and six of them still fit
+      a 360 dp screen). Declared once so the six tiles can never drift apart.
+    -->
+    <style name="HomeGlassTile">
+        <item name="android:layout_width">46dp</item>
+        <item name="android:layout_height">46dp</item>
+        <item name="android:background">@drawable/bg_glass_tile</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:elevation">6dp</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
     <!-- The Quran reader is an opaque, distraction-free paper page. -->
     <style name="AppTheme.QuranReader" parent="AppTheme">
         <item name="android:windowBackground">@color/quranPaper</item>

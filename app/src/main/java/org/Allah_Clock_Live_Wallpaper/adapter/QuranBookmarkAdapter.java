@@ -14,6 +14,7 @@ import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
 import org.Allah_Clock_Live_Wallpaper.model.QuranBookmark;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSurah;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranRepository;
+import org.Allah_Clock_Live_Wallpaper.viewUtils.AyahBadgeSpan;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,12 +49,14 @@ public final class QuranBookmarkAdapter
     static final class ViewHolder extends RecyclerView.ViewHolder {
         final TextView title;
         final TextView text;
+        final TextView badgeNumber;
         final ImageButton remove;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.quranBookmarkTitle);
             text = itemView.findViewById(R.id.quranBookmarkText);
+            badgeNumber = itemView.findViewById(R.id.ayahBadgeNumber);
             remove = itemView.findViewById(R.id.quranBookmarkRemove);
         }
     }
@@ -74,6 +77,7 @@ public final class QuranBookmarkAdapter
             // Invalid legacy preferences are filtered by the activity, but keep this holder safe.
             holder.title.setText("");
             holder.text.setText("");
+            holder.badgeNumber.setText("");
             holder.itemView.setOnClickListener(null);
             holder.remove.setOnClickListener(null);
             return;
@@ -87,6 +91,7 @@ public final class QuranBookmarkAdapter
                 : holder.itemView.getContext().getString(title, surah.getNumber(), name,
                         ayah.getAyahNumber()));
         holder.text.setText(ayah.getText());
+        holder.badgeNumber.setText(AyahBadgeSpan.arabicIndic(ayah.getAyahNumber()));
         holder.remove.setContentDescription(holder.itemView.getContext().getString(
                 R.string.quran_remove_bookmark, ayah.getAyahNumber()));
         holder.itemView.setOnClickListener(view -> listener.onOpenBookmark(bookmark));

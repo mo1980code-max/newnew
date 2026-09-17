@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The dashboard backdrop: a slow vertical gradient instead of a flat fill, so the frosted tiles
+  and the gold-framed reading cards have depth behind them. Deliberately a gradient rather than a
+  photograph: the tiles carry text, and a busy image would fight the type.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:endColor="@color/homeBackdropBottom"
+        android:startColor="@color/homeBackdropTop" />
+</shape>

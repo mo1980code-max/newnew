@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A frosted-glass tile at rest.
+
+  Three layers, which is what makes glass read as glass rather than as a flat grey square:
+    * a soft top-to-bottom white gradient (the pane catching the light),
+    * a translucent rim for the pane's edge,
+    * a hairline gold highlight inset by 2 dp (the metallic accent),
+  over the deep violet backdrop of the home screen. The 14 dp radius keeps every icon on the bar
+  the same shape as the clock/wallpaper cards below it.
+
+  No BitmapShader blur: a real backdrop blur is API 31+ only and would blur the wrong layers in a
+  scrolling layout. This is a faux glass that stays identical on every device the app supports.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="14dp" />
+            <gradient
+                android:angle="270"
+                android:endColor="@color/glassTileBottom"
+                android:startColor="@color/glassTileTop" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/glassTileRim" />
+        </shape>
+    </item>
+
+    <item
+        android:bottom="2dp"
+        android:left="2dp"
+        android:right="2dp"
+        android:top="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp" />
+            <solid android:color="@color/transparent" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/glassTileGold" />
+        </shape>
+    </item>
+</layer-list>

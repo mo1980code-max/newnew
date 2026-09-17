@@ -7,7 +7,7 @@
     <string name="title_digital_clock">Digital Clock</string>
     <string name="title_smart_clock">Smart Clock</string>
     <string name="title_wallpaper">Wallpaper</string>
-    <string name="tile_android_clock">Android 12 Clock</string>
+    <string name="tile_android_clock">Android Clock</string>
     <string name="tile_analog_clock">Analog\nClock</string>
     <string name="tile_digital_clock">Digital\nClock</string>
     <string name="tile_smart_clock">Smart\nClock</string>
@@ -162,7 +162,7 @@
     <string name="quran_bookmark_removed">Bookmark removed</string>
     <string name="quran_add_bookmark">Save bookmark at ayah %1$d</string>
     <string name="quran_remove_bookmark">Remove bookmark at ayah %1$d</string>
-    <string name="quran_reader_hint">One continuous Mushaf page: the ayahs run one after another, each closed by its number. Tap a verse to save it, tap it again to remove the save.</string>
+    <string name="quran_reader_hint">Pages turn sideways like a printed Mushaf: swipe, or use the arrows below. Tap a verse to save it, tap it again to remove the save.</string>
     <string name="quran_surah_title">Surah %1$d · %2$s</string>
     <string name="quran_ayah_reference">Surah %1$d · %2$s · Ayah %3$d</string>
     <string name="quran_surah_metadata">%1$d verses · %2$s</string>
@@ -203,5 +203,35 @@
     <string name="cd_quran_choose_juz">Choose a Quran juz</string>
 
     <string name="quran_juz_range">Juz %1$d–%2$d</string>
+
+
+    <!-- ── Quran night reading theme (in-app, independent of the system dark mode) ── -->
+    <string name="quran_night_mode">Night reading</string>
+    <string name="quran_day_mode">Day reading</string>
+    <string name="cd_quran_night_mode">Turn the Quran night reading theme on or off</string>
+    <string name="quran_night_enabled">Night reading on — soft ink on deep slate</string>
+    <string name="quran_day_enabled">Day reading on — ink on paper</string>
+    <string name="quran_flip_hint">Swipe sideways to turn the page, exactly like a printed Mushaf</string>
+    <string name="quran_screen_ayahs">Ayahs %1$d–%2$d</string>
+    <string name="cd_quran_previous_page">Turn to the previous page</string>
+    <string name="cd_quran_next_page">Turn to the next page</string>
+    <string name="quran_surah_header">Surah %1$s</string>
+    <string name="quran_page_number_short">Page %1$d</string>
+
+    <!-- ── Athkar display language (strict single language, or dual language on demand) ── -->
+    <string name="athkar_bilingual">Show the Arabic text together with the translation</string>
+    <string name="cd_athkar_bilingual">Turn the dual-language athkar display on or off</string>
+    <string name="athkar_bilingual_on">Dual language: Arabic and English</string>
+    <string name="athkar_bilingual_off">Single language, following the app language</string>
+
+    <!-- ── Premium backgrounds (rewarded ad unlock) ──────────────────── -->
+    <string name="cat_premium">Premium Backgrounds</string>
+    <string name="premium_bg_badge">Premium</string>
+    <string name="premium_bg_lock_cd">Premium background, locked. Watch a rewarded ad to unlock it permanently</string>
+    <string name="premium_bg_open_cd">Premium background, unlocked</string>
+    <string name="premium_bg_title">Background locked</string>
+    <string name="premium_bg_message">Watch one short video to unlock this background for good. The unlock is stored on this device, so it stays yours after you close the app.</string>
+    <string name="premium_bg_unlocked">Background unlocked — it is yours to keep</string>
+    <string name="premium_bg_not_unlocked">The background is still locked</string>
 
 </resources>

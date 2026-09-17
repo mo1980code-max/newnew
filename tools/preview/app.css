@@ -120,10 +120,28 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
 .topbar.dark .ic { color: #fff; }
 
 /* ─────────── 1. home ─────────── */
-.home { background: #fff; height: 100%; display: flex; flex-direction: column; color: #101820; }
+/* The home backdrop and the frosted tiles are painted from data.glass at runtime, so these
+   rules carry only the geometry: 46x46, a 14dp radius (the same corner as the layout) and the
+   hairline that reads as the metallic rim. */
+.home { height: 100%; display: flex; flex-direction: column; color: #fff; }
+.glassbar { display: flex; align-items: center; gap: 6px; padding: 10px 10px 0; }
+.glassSpacer { flex: 1; }
+.glassTile {
+  width: 46px; height: 46px; border-radius: 14px; border: 1px solid #ffffff33;
+  display: grid; place-items: center; cursor: pointer;
+  transition: transform .12s ease;
+}
+.glassTile:active { transform: scale(0.92); }
+.glassTile .icon { width: 24px; height: 24px; }
+.glassTile.dim { opacity: .82; }
+.titleRule { display: flex; align-items: center; justify-content: center; gap: 6px; width: 128px; margin: 6px auto 10px; }
+.titleRule i { flex: 1; height: 1px; background: #e6c36a8c; }
+.titleRule s { width: 7px; height: 7px; background: #e6c36a; transform: rotate(45deg); }
 .home .appName {
-  font-family: var(--display); font-size: 25px; text-align: center; color: var(--appColor);
-  margin: 16px 0 6px;
+  font-family: var(--display); font-size: 25px; text-align: center;
+  color: var(--tileTitleGold);   /* the layout's @color/tileTitleGold */
+  margin: 14px 0 0;
+  text-shadow: 0 2px 10px #0006;
 }
 .home .tiles { display: flex; flex-direction: column; gap: 8px; padding: 10px 20px 4px; }
 .tile {
@@ -374,6 +392,16 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
 .cat.on { background: var(--goldSoft); color: #101820; font-weight: 700; border-color: transparent; }
 .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .gallery .thumb { aspect-ratio: 9 / 16; }
+/* The rewarded gate on the gallery: the same ic_lock_gold + 14dp chip the layout binds. */
+.gallery .thumb.locked img { filter: brightness(.55) saturate(.8); }
+.lockBadge {
+  position: absolute; inset: auto 8px 34px 8px; display: grid; place-items: center; gap: 2px;
+  background: #0d1319d9; border: 1px solid #e6c36a8c; border-radius: 14px; padding: 6px 4px;
+  color: #ffe08a;
+}
+.lockBadge .icon { width: 22px; height: 22px; }
+.lockBadge small { font-size: 9px; letter-spacing: .2px; }
+.gallery .thumb { position: relative; }
 .gallery .cap {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 8px 7px; font-size: 11px;
   color: #fff; background: linear-gradient(#0000, #000c); text-align: center;
@@ -435,14 +463,38 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
 .quranPage .topbar .ic { color: var(--quranGreen); }
 .quranPage .topbar .ic.back { color: var(--quranInk); }
 .quranHeader {
-  margin: 0 16px 8px; background: #fff; border: 1px solid var(--quranLine);
+  margin: 0 16px 8px; background: var(--quranPaper); border: 1px solid var(--quranLine);
   border-radius: 18px; padding: 9px 16px;
 }
 .quranHeader .meta { font-size: 12px; color: var(--quranMuted); }
 .quranHeader .hint { margin-top: 4px; font-size: 12px; line-height: 1.8; color: var(--quranBody); }
-.quranScroll { flex: 1; overflow-y: auto; padding: 0 16px; }
+/* One page at a time: the active sheet fades in, the others stay hidden. The app swipes with a
+   ViewPager2; the mock shows the same discrete pages. */
+.quranPager { flex: 1; position: relative; overflow: hidden; }
+.quranPageView { position: absolute; inset: 0 16px 0 16px; overflow-y: auto; opacity: 0;
+  transform: translateX(8%); transition: opacity .26s ease, transform .26s ease; pointer-events: none; }
+.quranPageView.on { opacity: 1; transform: none; pointer-events: auto; }
+.quranFooter { display: flex; align-items: center; gap: 8px; padding: 8px 16px 0; }
+.pageArrow {
+  width: 44px; height: 40px; border-radius: 12px; border: 1px solid var(--quranLine);
+  background: var(--quranGreen); color: #fff; font-size: 20px; line-height: 1; cursor: pointer;
+}
+.pageArrow.off { opacity: .42; }
+.pageArrow:active { transform: scale(.95); }
+.pageChip {
+  flex: 1; text-align: center; border-radius: 12px; padding: 7px 10px; font-size: 12px;
+  background: var(--quranLine); color: var(--quranGreen); display: flex; justify-content: center; gap: 10px;
+}
+.pageChip b { font-weight: 700; }
+/* The night palette is written onto the screen element from data.night (the quranNight* tokens in
+   values/colors.xml), so this rule only has to say what changes structurally. */
+.quranPage.night .quranHeader, .quranPage.night .quranSheet { border-color: var(--quranGold); }
+.quranPage.night .ic { color: var(--quranGreen); }
+.quranPage.night .ic.back { color: var(--quranInk); }
+.quranPage .ic.nightOn { color: var(--quranGold); }
+.quranPage .verse.saved { background: #c9a22733; }
 .quranSheet {
-  background: #fff; border: 1px solid var(--quranGold); border-radius: 18px;
+  background: var(--quranPaper); border: 1px solid var(--quranGold); border-radius: 18px;
   padding: 16px 18px; position: relative;
 }
 .quranSheet::after {
@@ -456,7 +508,20 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
 .quranSheet .basmalah { text-align: center; color: var(--quranGold); margin-bottom: 10px; }
 .verse { cursor: pointer; border-radius: 6px; }
 .verse.saved { background: rgba(201, 162, 39, 0.2); }
-.ayahMark { color: var(--quranGold); font-size: 0.8em; }
+/* The end-of-ayah rosette: AyahBadgeSpan draws a 16-petal ornament in the app, so the mock
+   draws the same rosette in CSS around the Arabic-Indic number instead of the bare ۝ glyph. */
+.ayahBadge {
+  display: inline-grid; place-items: center; width: 1.45em; height: 1.45em; vertical-align: -0.3em;
+  color: var(--quranGold); position: relative;
+}
+.ayahBadge::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  border: 1px solid currentColor;
+  clip-path: polygon(50% 0%, 61% 15%, 79% 9%, 81% 28%, 100% 34%, 91% 50%, 100% 66%, 81% 72%,
+    79% 91%, 61% 85%, 50% 100%, 39% 85%, 21% 91%, 19% 72%, 0% 66%, 9% 50%, 0% 34%, 19% 28%,
+    21% 9%, 39% 15%);
+}
+.ayahBadge i { font-style: normal; font-size: 0.62em; }
 .quranSource {
   padding: 6px 20px 10px; text-align: center; font-size: 10px;
   color: var(--quranMuted);

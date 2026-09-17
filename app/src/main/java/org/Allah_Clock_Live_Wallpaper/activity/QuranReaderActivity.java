@@ -2,107 +2,100 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.text.Layout;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.AlignmentSpan;
-import android.text.style.BackgroundColorSpan;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.RelativeSizeSpan;
+import android.text.TextPaint;
 import android.util.TypedValue;
-import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.NumberPicker;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
+import androidx.appcompat.widget.AppCompatImageButton;
+import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.viewpager2.widget.ViewPager2;
 
 import org.Allah_Clock_Live_Wallpaper.R;
+import org.Allah_Clock_Live_Wallpaper.adapter.QuranScreenAdapter;
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
 import org.Allah_Clock_Live_Wallpaper.model.QuranBookmark;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSurah;
 import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
+import org.Allah_Clock_Live_Wallpaper.utils.QuranPageBuilder;
+import org.Allah_Clock_Live_Wallpaper.utils.QuranPageMetrics;
+import org.Allah_Clock_Live_Wallpaper.utils.QuranPaginator;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranRepository;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranStore;
+import org.Allah_Clock_Live_Wallpaper.utils.QuranTheme;
+import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Distraction-free Quran reader, laid out the way a Mushaf page lays text out.
+ * The Quran reader: one surah, printed as a Mushaf page and <b>flipped</b> sideways.
  *
- * <p>One continuous run of verses instead of a bordered card per ayah: each verse is followed by
- * the end-of-ayah glyph U+06DD carrying its own number in Arabic-Indic digits, so the text flows
- * as a single justified page and the eye moves the way it does in print. Tapping a verse saves
- * it or clears its save, and a saved verse stays tinted while it is saved.</p>
+ * <p>Verses run on as a single justified block, each closed by the numbered end-of-ayah
+ * ornament, and {@link QuranPaginator} cuts that block into screen-sized pages. The
+ * {@code ViewPager2} then turns those pages horizontally — the same motion as turning a printed
+ * page, in either direction — instead of scrolling one endless column. Tapping a verse saves or
+ * clears its bookmark, and a saved verse stays tinted while it is saved.</p>
  *
- * <p>The first visible verse is remembered locally, so reopening the Quran resumes where the
- * reader left off. All reading state stays in {@code SharedPreferences}.</p>
+ * <p>Night reading is a switch inside the reader, not the system dark mode: it swaps the palette
+ * held by {@link QuranTheme} and repaints. Because the ornaments, the sheet and the text all read
+ * their colours from that one shared object, the page turns dark in place — no rebuild, no
+ * pagination jump, no lost position.</p>
+ *
+ * <p>Reading state (bookmarks, last position, text size, night mode) stays in
+ * {@code SharedPreferences} through {@link QuranStore} and {@link TinyDB}.</p>
  */
 public final class QuranReaderActivity extends AppCompatActivity {
 
     private static final String EXTRA_SURAH = "quran_reader_surah";
     private static final String EXTRA_AYAH = "quran_reader_ayah";
 
-    /** U+06DD ARABIC END OF AYAH; the digits that follow it are drawn inside its enclosure. */
-    private static final char END_OF_AYAH = '\u06DD';
-
-    /** How long the reader must rest before the visible verse is written to the store. */
-    private static final long POSITION_SAVE_DELAY_MS = 400L;
+    /** How long to wait for the pager to be measured, and how many times to ask again. */
+    private static final long MEASURE_RETRY_MS = 60L;
+    private static final int MEASURE_RETRIES = 20;
 
     private final ExecutorService loader = Executors.newSingleThreadExecutor();
-    private final Handler positionSaver = new Handler(Looper.getMainLooper());
-    private final Runnable savePositionTask = this::saveVisiblePosition;
-
-    /** Offsets of one verse inside the page, in layout coordinates. */
-    private static final class VerseRange {
-        final int start;
-        final int end;
-        final int markerEnd;
-        final int ayahNumber;
-
-        VerseRange(int start, int end, int markerEnd, int ayahNumber) {
-            this.start = start;
-            this.end = end;
-            this.markerEnd = markerEnd;
-            this.ayahNumber = ayahNumber;
-        }
-    }
 
     private QuranRepository repository;
     private QuranStore store;
-    private ScrollView scroll;
-    private TextView page;
+
+    private View root;
+    private ViewPager2 pager;
     private View loading;
     private TextView error;
     private TextView title;
     private TextView metadata;
+    private TextView range;
+    private Button previous;
+    private Button next;
 
-    /** The page currently on screen, and where each verse sits inside it. */
-    private SpannableStringBuilder pageText;
-    private final List<VerseRange> verses = new ArrayList<>();
-    private final Map<Integer, BackgroundColorSpan> highlights = new HashMap<>();
+    /** The built surah and the pages it was cut into; both are replaced on re-pagination. */
+    private QuranPageBuilder builder;
+    private List<QuranPaginator.Screen> screens = Collections.emptyList();
+    private QuranScreenAdapter adapter;
+    private QuranTheme theme;
+    private TextPaint paint;
+    private float lineSpacingExtraPx;
 
     private int surahNumber;
     private int textSizeSp;
-    private float touchDownX;
-    private float touchDownY;
+    private int targetAyah = 1;
+    private int measureAttempts;
 
     public static Intent createIntent(@NonNull Context context, int surahNumber, int ayahNumber) {
         return new Intent(context, QuranReaderActivity.class)
@@ -115,32 +108,59 @@ public final class QuranReaderActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quran_reader);
         UiCompat.applyEdgeToEdge(this);
-        getWindow().setBackgroundDrawableResource(R.color.quranPaper);
 
         this.store = new QuranStore(this);
-        this.scroll = findViewById(R.id.quranReaderScroll);
-        this.page = findViewById(R.id.quranReaderPage);
+        TinyDB preferences = new TinyDB(this);
+        this.theme = new QuranTheme(this, this.store.isNightMode(preferences));
+        this.lineSpacingExtraPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                QuranPageBuilder.LINE_SPACING_EXTRA_DP, getResources().getDisplayMetrics());
+
+        this.root = findViewById(R.id.quranReaderRoot);
+        this.pager = findViewById(R.id.quranReaderPager);
         this.loading = findViewById(R.id.quranReaderLoading);
         this.error = findViewById(R.id.quranReaderError);
         this.title = findViewById(R.id.quranReaderTitle);
         this.metadata = findViewById(R.id.quranReaderMeta);
+        this.range = findViewById(R.id.quranReaderRange);
+        this.previous = findViewById(R.id.quranReaderPrevious);
+        this.next = findViewById(R.id.quranReaderNext);
         this.title.setText(R.string.title_quran);
 
         findViewById(R.id.quranReaderBack).setOnClickListener(view -> finish());
         ImageButton textSize = findViewById(R.id.quranReaderTextSize);
         textSize.setOnClickListener(view -> showTextSizePicker());
+        ImageButton night = findViewById(R.id.quranReaderNight);
+        night.setOnClickListener(view -> toggleNightMode());
         ImageButton mushaf = findViewById(R.id.quranReaderMushaf);
         mushaf.setOnClickListener(view -> openMushafAtVisiblePage());
         ImageButton bookmarks = findViewById(R.id.quranReaderBookmarks);
         bookmarks.setOnClickListener(view -> startActivity(new Intent(this,
                 QuranBookmarksActivity.class)));
 
-        this.page.setOnTouchListener(this::rememberTouchDown);
-        this.page.setOnClickListener(view -> toggleVerseUnder(touchDownX, touchDownY));
-        this.scroll.setOnScrollChangeListener(
-                (view, scrollX, scrollY, oldScrollX, oldScrollY) -> schedulePositionSave());
+        this.previous.setOnClickListener(view -> turnPage(-1));
+        this.next.setOnClickListener(view -> turnPage(1));
 
+        // Horizontal, right-to-left page turning with a real page-curl-free slide: the reader
+        // must feel like paper, so the pager keeps the default slide and stays RTL aware.
+        this.pager.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+        this.pager.setOffscreenPageLimit(1);
+        this.pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                updateFooter();
+                saveVisiblePosition();
+            }
+        });
+
+        applyTheme();
         loadRepository();
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // A rotation only changes how much text fits, so re-cut the surah and stay put.
+        this.pager.post(this::paginate);
     }
 
     @Override
@@ -151,7 +171,6 @@ public final class QuranReaderActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        this.positionSaver.removeCallbacks(this.savePositionTask);
         saveVisiblePosition();
         super.onPause();
     }
@@ -179,7 +198,9 @@ public final class QuranReaderActivity extends AppCompatActivity {
             return;
         }
         this.surahNumber = surah.getNumber();
+        this.targetAyah = start.getAyahNumber();
         this.textSizeSp = this.store.getTextSizeSp();
+        this.paint = this.theme.newTextPaint(spToPx(this.textSizeSp));
 
         boolean arabicUi = LocaleHelper.isArabic(this);
         String name = surah.getDisplayName(arabicUi);
@@ -188,16 +209,15 @@ public final class QuranReaderActivity extends AppCompatActivity {
         this.metadata.setText(getString(R.string.quran_surah_metadata, surah.getAyahCount(), revelation));
 
         buildPage(loaded, surah);
-        this.page.setText(this.pageText);
-        this.page.setTextSize(TypedValue.COMPLEX_UNIT_SP, this.textSizeSp);
+        applyTheme();
 
         this.loading.setVisibility(View.GONE);
         this.error.setVisibility(View.GONE);
-        this.scroll.setVisibility(View.VISIBLE);
+        this.pager.setVisibility(View.VISIBLE);
 
         this.store.saveLastReading(start.getSurahNumber(), start.getAyahNumber());
-        final int targetAyah = start.getAyahNumber();
-        this.page.post(() -> scrollToAyah(targetAyah));
+        // The pages can only be cut once the pager has a real size, so measure it first.
+        this.pager.post(this::paginate);
     }
 
     /**
@@ -206,151 +226,243 @@ public final class QuranReaderActivity extends AppCompatActivity {
      * every surah that carries it (all but Al-Fatiha, where it is verse 1, and At-Tawbah).
      */
     private void buildPage(@NonNull QuranRepository loaded, @NonNull QuranSurah surah) {
-        this.pageText = new SpannableStringBuilder();
-        this.verses.clear();
-        this.highlights.clear();
-
-        int goldInk = ContextCompat.getColor(this, R.color.quranGold);
+        this.builder = new QuranPageBuilder(this.theme);
         if (surah.getNumber() != 1 && surah.getNumber() != 9) {
             QuranAyah basmalah = loaded.getAyah(1, 1);
             if (basmalah != null) {
-                int from = this.pageText.length();
-                this.pageText.append(basmalah.getText());
-                int to = this.pageText.length();
-                this.pageText.setSpan(new ForegroundColorSpan(goldInk), from, to,
-                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                // Centred like the opening line of a printed Mushaf.
-                this.pageText.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER),
-                        from, to, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                this.pageText.append("\n\n");
+                this.builder.appendBasmalah(basmalah);
             }
         }
-
-        int verseTint = ContextCompat.getColor(this, R.color.quranVerseHighlight);
         for (QuranAyah ayah : loaded.getAyahs(surah.getNumber())) {
-            int start = this.pageText.length();
-            this.pageText.append(ayah.getText());
-            int end = this.pageText.length();
-
-            this.pageText.append(' ');
-            int markerStart = this.pageText.length();
-            this.pageText.append(END_OF_AYAH).append(arabicIndic(ayah.getAyahNumber()));
-            int markerEnd = this.pageText.length();
-            this.pageText.setSpan(new ForegroundColorSpan(goldInk), markerStart, markerEnd,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            this.pageText.setSpan(new RelativeSizeSpan(0.8f), markerStart, markerEnd,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            this.pageText.append(' ');
-
-            this.verses.add(new VerseRange(start, end, markerEnd, ayah.getAyahNumber()));
+            this.builder.appendAyah(ayah);
             if (this.store.isBookmarked(surah.getNumber(), ayah.getAyahNumber())) {
-                this.highlights.put(ayah.getAyahNumber(),
-                        tint(this.pageText, this.verses.size() - 1, verseTint));
+                this.builder.highlight(ayah.getAyahNumber(), this.theme.verseHighlight);
             }
         }
     }
 
-    /** Paints the saved-verse tint over a verse that is already in the page. */
-    @Nullable
-    private BackgroundColorSpan tint(@NonNull SpannableStringBuilder target, int verseIndex,
-                                     int colour) {
-        VerseRange range = this.verses.get(verseIndex);
-        BackgroundColorSpan span = new BackgroundColorSpan(colour);
-        target.setSpan(span, range.start, range.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        return span;
-    }
+    // ═══════════════════════════════ horizontal paging ═══════════════════════════════
 
     /**
-     * A tap only opens or clears the save of the verse under the finger. It never changes which
-     * verse is remembered as the reading position: that follows the scroll instead, so an
-     * accidental tap cannot move the resume point.
+     * Cuts the surah into screen-sized pages and hands them to the pager. Called on the first
+     * layout, after a text-size change and after a rotation; the verse the reader was on is
+     * carried over, so a re-cut never loses their place.
      */
-    private void toggleVerseUnder(float x, float y) {
-        if (this.pageText == null || this.surahNumber <= 0) {
+    private void paginate() {
+        if (this.builder == null || this.repository == null || isFinishing() || isDestroyed()) {
             return;
         }
-        Layout layout = this.page.getLayout();
-        if (layout == null) {
+        int restoreAyah = this.targetAyah;
+        int currentPosition = this.adapter == null ? -1 : this.pager.getCurrentItem();
+        if (this.adapter != null && currentPosition >= 0 && currentPosition < this.screens.size()) {
+            int visible = this.screens.get(currentPosition).lastAyah;
+            if (visible > 0) {
+                restoreAyah = visible;
+            }
+        }
+
+        QuranPageMetrics metrics = QuranPageMetrics.measure(getLayoutInflater(), this.pager, this);
+        if (metrics == null) {
+            // The pager has no size yet (first frame, or a transition in progress): ask again on
+            // the next frames, but never in an open-ended loop.
+            if (this.measureAttempts++ < MEASURE_RETRIES) {
+                this.pager.postDelayed(this::paginate, MEASURE_RETRY_MS);
+            }
             return;
         }
-        float localX = x - this.page.getTotalPaddingLeft();
-        float localY = y - this.page.getTotalPaddingTop();
-        int line = layout.getLineForVertical((int) localY);
-        if (localX < layout.getLineLeft(line) || localX > layout.getLineRight(line)) {
-            return; // the finger landed on the page margin, not on a verse
+        this.measureAttempts = 0;
+        this.paint.setColor(this.theme.ink);
+        this.paint.setTextSize(spToPx(this.textSizeSp));
+        this.screens = QuranPaginator.slice(this.builder.getText(), this.builder.getVerses(),
+                this.paint, metrics.textWidth, metrics.textHeight, this.lineSpacingExtraPx);
+        this.adapter = new QuranScreenAdapter(this.builder.getText(), this.builder.getVerses(),
+                this.screens, this.paint, this.theme, this.lineSpacingExtraPx, this::toggleVerse);
+        this.pager.setAdapter(this.adapter);
+
+        int index = pageOfAyah(restoreAyah);
+        this.pager.setCurrentItem(index, false);
+        updateFooter();
+        this.targetAyah = restoreAyah;
+    }
+
+    /** The page that carries {@code ayahNumber}; falls back to the first page. */
+    private int pageOfAyah(int ayahNumber) {
+        for (int index = 0; index < this.screens.size(); index++) {
+            QuranPaginator.Screen screen = this.screens.get(index);
+            if (ayahNumber >= screen.firstAyah && ayahNumber <= screen.lastAyah) {
+                return index;
+            }
         }
-        VerseRange range = verseAt(layout.getOffsetForHorizontal(line, localX));
-        if (range == null) {
+        return 0;
+    }
+
+    private void turnPage(int delta) {
+        if (this.adapter == null || this.adapter.getItemCount() == 0) {
             return;
         }
-        boolean added = this.store.toggleBookmark(this.surahNumber, range.ayahNumber);
-        paintBookmark(range.ayahNumber, added);
+        int target = this.pager.getCurrentItem() + delta;
+        target = Math.max(0, Math.min(target, this.adapter.getItemCount() - 1));
+        if (target != this.pager.getCurrentItem()) {
+            this.pager.setCurrentItem(target, true);
+        }
+    }
+
+    /** States which verses the open page carries and whether there are pages on either side. */
+    private void updateFooter() {
+        if (this.screens.isEmpty()) {
+            return;
+        }
+        int position = Math.max(0, Math.min(this.pager.getCurrentItem(), this.screens.size() - 1));
+        QuranPaginator.Screen screen = this.screens.get(position);
+        this.range.setText(getString(R.string.quran_screen_ayahs, screen.firstAyah, screen.lastAyah));
+        boolean hasPrevious = position > 0;
+        boolean hasNext = position < this.screens.size() - 1;
+        this.previous.setEnabled(hasPrevious);
+        this.previous.setAlpha(hasPrevious ? 1f : 0.42f);
+        this.next.setEnabled(hasNext);
+        this.next.setAlpha(hasNext ? 1f : 0.42f);
+        this.pager.setUserInputEnabled(this.screens.size() > 1);
+    }
+
+    // ══════════════════════════════ night reading theme ══════════════════════════════
+
+    /**
+     * Swaps the palette in place. Nothing is rebuilt: the ornaments inside the page text read
+     * their colours from the same {@link QuranTheme} instance, so they simply repaint, and the
+     * page the reader is on stays the page they are on.
+     */
+    private void toggleNightMode() {
+        boolean night = !this.theme.isNight();
+        this.theme.apply(this, night);
+        this.store.saveNightMode(new TinyDB(this), night);
+        applyTheme();
+        if (this.adapter != null) {
+            this.adapter.refreshBookmarks();
+        }
+        Toast.makeText(this, night ? R.string.quran_night_enabled : R.string.quran_day_enabled,
+                Toast.LENGTH_SHORT).show();
+    }
+
+    /** Paints every surface of the screen from the active theme. */
+    private void applyTheme() {
+        if (this.theme == null) {
+            return;
+        }
+        this.root.setBackgroundColor(this.theme.paper);
+        getWindow().setBackgroundDrawableResource(this.theme.isNight()
+                ? R.color.quranNightPaper : R.color.quranPaper);
+        if (this.paint != null) {
+            this.paint.setColor(this.theme.ink);
+        }
+
+        GradientDrawable card = new GradientDrawable();
+        card.setShape(GradientDrawable.RECTANGLE);
+        card.setColor(this.theme.surface);
+        card.setCornerRadius(dp(18f));
+        card.setStroke(dp(1f), this.theme.line);
+        findViewById(R.id.quranReaderHeader).setBackground(card);
+
+        GradientDrawable footer = new GradientDrawable();
+        footer.setShape(GradientDrawable.RECTANGLE);
+        footer.setColor(this.theme.surface);
+        footer.setCornerRadius(dp(18f));
+        footer.setStroke(dp(1f), this.theme.line);
+        findViewById(R.id.quranReaderFooter).setBackground(footer);
+
+        GradientDrawable chip = new GradientDrawable();
+        chip.setShape(GradientDrawable.RECTANGLE);
+        chip.setColor(this.theme.softGreen);
+        chip.setCornerRadius(dp(12f));
+        this.range.setBackground(chip);
+
+        GradientDrawable button = new GradientDrawable();
+        button.setShape(GradientDrawable.RECTANGLE);
+        button.setColor(this.theme.softGreen);
+        button.setCornerRadius(dp(12f));
+        button.setStroke(dp(1f), this.theme.line);
+        this.previous.setBackground(button);
+        this.next.setBackground(button);
+
+        tint(R.id.quranReaderBack, this.theme.ink);
+        tint(R.id.quranReaderNight, this.theme.isNight() ? this.theme.gold : this.theme.green);
+        tint(R.id.quranReaderTextSize, this.theme.green);
+        tint(R.id.quranReaderBookmarks, this.theme.green);
+        tint(R.id.quranReaderMushaf, this.theme.gold);
+
+        this.title.setTextColor(this.theme.ink);
+        this.metadata.setTextColor(this.theme.muted);
+        this.range.setTextColor(this.theme.greenDark);
+        this.previous.setTextColor(this.theme.greenDark);
+        this.next.setTextColor(this.theme.greenDark);
+        ((TextView) findViewById(R.id.quranReaderHint)).setTextColor(this.theme.body);
+    }
+
+    private void tint(int viewId, int colour) {
+        View view = findViewById(viewId);
+        if (!(view instanceof AppCompatImageButton)) {
+            return;
+        }
+        AppCompatImageButton button = (AppCompatImageButton) view;
+        Drawable icon = button.getDrawable();
+        if (icon != null) {
+            Drawable wrapped = DrawableCompat.wrap(icon.mutate());
+            DrawableCompat.setTint(wrapped, colour);
+            button.setImageDrawable(wrapped);
+        }
+    }
+
+    private int dp(float value) {
+        return UiCompat.dp(this, value);
+    }
+
+    private float spToPx(int sp) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp,
+                getResources().getDisplayMetrics());
+    }
+
+    // ═════════════════════════════ bookmarks and position ═════════════════════════════
+
+    /** A tap toggles the save of one verse; it never moves the reading position by itself. */
+    private void toggleVerse(int ayahNumber) {
+        if (this.surahNumber <= 0 || this.builder == null) {
+            return;
+        }
+        boolean added = this.store.toggleBookmark(this.surahNumber, ayahNumber);
+        paintBookmark(ayahNumber, added);
         Toast.makeText(this, added ? R.string.quran_bookmark_added : R.string.quran_bookmark_removed,
                 Toast.LENGTH_SHORT).show();
     }
 
     /** Adds or removes the tint of one verse without touching anything else on the page. */
     private void paintBookmark(int ayahNumber, boolean saved) {
-        if (this.pageText == null) {
+        if (this.builder == null) {
             return;
         }
-        BackgroundColorSpan span = this.highlights.get(ayahNumber);
-        if (saved && span == null) {
-            for (int i = 0; i < this.verses.size(); i++) {
-                if (this.verses.get(i).ayahNumber == ayahNumber) {
-                    this.highlights.put(ayahNumber, tint(this.pageText, i,
-                            ContextCompat.getColor(this, R.color.quranVerseHighlight)));
-                    break;
-                }
-            }
-        } else if (!saved && span != null) {
-            this.pageText.removeSpan(span);
-            this.highlights.remove(ayahNumber);
+        QuranPageBuilder.Verse verse = this.builder.verse(ayahNumber);
+        if (saved) {
+            this.builder.highlight(ayahNumber, this.theme.verseHighlight);
+        } else if (verse != null) {
+            this.builder.clearHighlight(ayahNumber);
         }
-        this.page.invalidate();
+        if (this.adapter != null) {
+            this.adapter.refreshBookmarks();
+        }
     }
 
-    /** Repaints the whole page after returning from the saved-marks screen. */
+    /** Repaints the whole surah after returning from the saved-marks screen. */
     private void refreshBookmarks() {
-        if (this.pageText == null || this.surahNumber <= 0) {
+        if (this.builder == null || this.surahNumber <= 0) {
             return;
         }
-        for (VerseRange range : this.verses) {
-            paintBookmark(range.ayahNumber,
-                    this.store.isBookmarked(this.surahNumber, range.ayahNumber));
-        }
-    }
-
-    /** The verse whose text or number contains {@code offset}. */
-    @Nullable
-    private VerseRange verseAt(int offset) {
-        int low = 0;
-        int high = this.verses.size() - 1;
-        while (low <= high) {
-            int mid = (low + high) >>> 1;
-            VerseRange range = this.verses.get(mid);
-            if (offset < range.start) {
-                high = mid - 1;
-            } else if (offset >= range.markerEnd) {
-                low = mid + 1;
-            } else {
-                return range;
+        this.builder.clearHighlights();
+        for (QuranPageBuilder.Verse verse : this.builder.getVerses()) {
+            if (this.store.isBookmarked(this.surahNumber, verse.ayahNumber)) {
+                this.builder.highlight(verse.ayahNumber, this.theme.verseHighlight);
             }
         }
-        return null;
-    }
-
-    /** The verse the reader is in: the last one that starts at or before {@code offset}. */
-    @Nullable
-    private VerseRange verseAtOrBefore(int offset) {
-        VerseRange found = null;
-        for (VerseRange range : this.verses) {
-            if (range.start > offset) {
-                break;
-            }
-            found = range;
+        if (this.adapter != null) {
+            this.adapter.refreshBookmarks();
         }
-        return found;
     }
 
     @NonNull
@@ -368,6 +480,24 @@ public final class QuranReaderActivity extends AppCompatActivity {
         return new QuranBookmark(1, 1);
     }
 
+    /** Writes the verse shown on the open page, so reopening the reader resumes there. */
+    private void saveVisiblePosition() {
+        if (this.store == null || this.surahNumber <= 0 || this.screens.isEmpty()) {
+            return;
+        }
+        int position = this.pager.getCurrentItem();
+        if (position < 0 || position >= this.screens.size()) {
+            return;
+        }
+        int ayah = this.screens.get(position).lastAyah;
+        if (ayah > 0) {
+            this.store.saveLastReading(this.surahNumber, ayah);
+            this.targetAyah = ayah;
+        }
+    }
+
+    // ═══════════════════════════════ text size and links ═══════════════════════════════
+
     private void showTextSizePicker() {
         if (this.store == null) {
             return;
@@ -384,15 +514,14 @@ public final class QuranReaderActivity extends AppCompatActivity {
                     int selected = picker.getValue();
                     this.textSizeSp = selected;
                     this.store.saveTextSizeSp(selected);
-                    this.page.setTextSize(TypedValue.COMPLEX_UNIT_SP, selected);
+                    // A bigger type needs different page breaks: re-cut and keep the place.
+                    this.pager.post(this::paginate);
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
     private void openMushafAtVisiblePage() {
-        this.positionSaver.removeCallbacks(this.savePositionTask);
-        saveVisiblePosition();
         int page = -1;
         QuranBookmark reading = this.store == null ? null : this.store.getLastReading();
         if (reading != null && this.repository != null) {
@@ -402,76 +531,19 @@ public final class QuranReaderActivity extends AppCompatActivity {
         startActivity(QuranMushafActivity.createIntent(this, page));
     }
 
-    /** Writes the verse at the top of the viewport, at most once per scroll pause. */
-    private void schedulePositionSave() {
-        this.positionSaver.removeCallbacks(this.savePositionTask);
-        this.positionSaver.postDelayed(this.savePositionTask, POSITION_SAVE_DELAY_MS);
-    }
-
-    private void saveVisiblePosition() {
-        if (this.store == null || this.surahNumber <= 0 || this.pageText == null) {
-            return;
-        }
-        Layout layout = this.page.getLayout();
-        if (layout == null || this.verses.isEmpty()) {
-            return;
-        }
-        int top = this.scroll.getScrollY() - this.page.getTop() + this.page.getTotalPaddingTop();
-        int line = layout.getLineForVertical(Math.max(0, top));
-        VerseRange range = verseAtOrBefore(layout.getLineStart(line));
-        if (range != null) {
-            this.store.saveLastReading(this.surahNumber, range.ayahNumber);
-        }
-    }
-
-    private void scrollToAyah(int ayahNumber) {
-        Layout layout = this.page.getLayout();
-        if (layout == null) {
-            return;
-        }
-        for (VerseRange range : this.verses) {
-            if (range.ayahNumber == ayahNumber) {
-                int line = layout.getLineForOffset(range.start);
-                this.scroll.scrollTo(0,
-                        Math.max(0, layout.getLineTop(line) - UiCompat.dp(this, 8)));
-                return;
-            }
-        }
-    }
-
-    /** Remembers where the finger went down; a click carries no coordinates of its own. */
-    private boolean rememberTouchDown(View view, MotionEvent event) {
-        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-            this.touchDownX = event.getX();
-            this.touchDownY = event.getY();
-        }
-        return false;
-    }
-
-    /** 6236 -> ٦٢٣٦, the way an ayah number is printed inside the end-of-ayah glyph. */
-    @NonNull
-    private static String arabicIndic(int value) {
-        String digits = String.valueOf(value);
-        StringBuilder out = new StringBuilder(digits.length());
-        for (int i = 0; i < digits.length(); i++) {
-            out.append((char) ('\u0660' + (digits.charAt(i) - '0')));
-        }
-        return out.toString();
-    }
-
     private void showLoadError() {
         if (isFinishing() || isDestroyed()) {
             return;
         }
         this.loading.setVisibility(View.GONE);
-        this.scroll.setVisibility(View.GONE);
+        this.pager.setVisibility(View.GONE);
         this.error.setVisibility(View.VISIBLE);
     }
 
     @Override
     protected void onDestroy() {
-        this.positionSaver.removeCallbacks(this.savePositionTask);
         loader.shutdownNow();
         super.onDestroy();
     }
+
 }

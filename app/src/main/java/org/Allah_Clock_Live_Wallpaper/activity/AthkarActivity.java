@@ -5,10 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -47,7 +49,11 @@ public class AthkarActivity extends AppCompatActivity {
     /** The window the caller wants opened when "now" is outside both windows. */
     private static final String EXTRA_WINDOW = "athkar_window";
 
+    /** Preference key: show the Arabic text together with the translation. */
+    private static final String PREF_BILINGUAL = "athkarBilingual";
+
     private TinyDB tinyDB;
+    private AthkarAdapter adapter;
 
     /** Opens the reader for the window that is active now, or closes it when there is none. */
     @NonNull
@@ -114,7 +120,11 @@ public class AthkarActivity extends AppCompatActivity {
 
         RecyclerView list = findViewById(R.id.athkarList);
         list.setLayoutManager(new LinearLayoutManager(this));
-        list.setAdapter(new AthkarAdapter(items, LocaleHelper.isArabic(this), this));
+        // Strict single language: the app locale decides whether a row is Arabic or English.
+        // The dual-language display only happens when the reader switched it on themselves.
+        this.adapter = new AthkarAdapter(items, LocaleHelper.isArabic(this),
+                this.tinyDB.getBoolean(PREF_BILINGUAL, false));
+        list.setAdapter(this.adapter);
     }
 
     // ═══════════════════════════════ timing settings ═══════════════════════════════
@@ -128,6 +138,8 @@ public class AthkarActivity extends AppCompatActivity {
         RadioGroup angle = content.findViewById(R.id.rgAngle);
         RadioButton rb15 = content.findViewById(R.id.rbAngle15);
         RadioButton rb18 = content.findViewById(R.id.rbAngle18);
+        CheckBox bilingual = content.findViewById(R.id.cbBilingual);
+        bilingual.setChecked(this.adapter != null && this.adapter.isDualLanguage());
 
         rbFixed.setChecked(this.tinyDB.getBoolean("athkarFixedTimes", false));
         rbAuto.setChecked(!rbFixed.isChecked());
@@ -156,6 +168,15 @@ public class AthkarActivity extends AppCompatActivity {
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
                     this.tinyDB.putBoolean("athkarFixedTimes", rbFixed.isChecked());
                     this.tinyDB.putInt("fajrAngle", rb18.isChecked() ? 18 : 15);
+                    this.tinyDB.putBoolean(PREF_BILINGUAL, bilingual.isChecked());
+                    if (this.adapter != null
+                            && this.adapter.isDualLanguage() != bilingual.isChecked()) {
+                        this.adapter.setDualLanguage(bilingual.isChecked());
+                        Toast.makeText(this, bilingual.isChecked()
+                                        ? R.string.athkar_bilingual_on
+                                        : R.string.athkar_bilingual_off,
+                                Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();

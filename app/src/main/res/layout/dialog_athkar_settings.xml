@@ -41,6 +41,15 @@
                 android:textColor="@color/athkarBody" />
         </RadioGroup>
 
+        <CheckBox
+            android:id="@+id/cbBilingual"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:contentDescription="@string/cd_athkar_bilingual"
+            android:text="@string/athkar_bilingual"
+            android:textColor="@color/athkarBody" />
+
         <RadioGroup
             android:id="@+id/rgAngle"
             android:layout_width="match_parent"

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The numbered end-of-ayah badge, as one reusable block: the ayah_circle ornament with the ayah
+  number stacked on top of it.
+
+  Both children are match_parent inside the same fixed-size FrameLayout and both centre their
+  content, so the ornament and the number share one set of bounds and the digits end up centred
+  horizontally *and* vertically inside the rosette. There is no padding, no gravity offset and no
+  magic margin to retune on another density - which is exactly what used to let the number drift.
+  android:includeFontPadding="false" removes the font's own top/bottom padding, so the single line
+  of digits is centred on its glyph box rather than on the line box.
+
+  The block is sized in dp on purpose: it is a fixed-size badge beside text, not part of the laid
+  out page. Inside the reader's continuous page the ornament is drawn with the text instead (see
+  AyahBadgeSpan), where it has to scale with the reader's chosen type size.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ayahBadge"
+    android:layout_width="40dp"
+    android:layout_height="40dp">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ayah_circle" />
+
+    <TextView
+        android:id="@+id/ayahBadgeNumber"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textColor="@color/ayahOrnamentNumber"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+</FrameLayout>

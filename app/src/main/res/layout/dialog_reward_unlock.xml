@@ -24,6 +24,7 @@
         android:src="@drawable/ic_lock_gold" />
 
     <TextView
+        android:id="@+id/rewardTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
@@ -34,6 +35,7 @@
         android:textSize="20sp" />
 
     <TextView
+        android:id="@+id/rewardMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"

@@ -19,8 +19,9 @@
     معاينة تفاعلية مبنية من <b>موارد المستودع نفسها</b>: نصوص
     <code>values/strings.xml</code> و<code>values-ar/strings.xml</code>، المصفوفات
     (المدن، الأشهر الهجرية، اتجاهات البوصلة)، أذكار <code>res/raw/athkar.json</code>،
-    الألوان من <code>values/colors.xml</code>، الأيقونات المتجهية محوّلة إلى SVG،
-    الـ21 خلفية المدمجة، صور التصاميم الحقيقية (<code>clock_bg_*</code> ·
+    الألوان من <code>values/colors.xml</code> (ومنها لوحة <code>quranNight*</code>
+    وبطاقات الزجاج <code>glass*</code>)، الأيقونات المتجهية محوّلة إلى SVG،
+    الـ24 خلفية المدمجة (منها ٣ حصرية بإعلان مكافأة)، صور التصاميم الحقيقية (<code>clock_bg_*</code> ·
     <code>digital_thumb_*</code> · <code>smart_thumb_*</code>)، ونص القرآن العثماني كاملًا
     (<b>114 سورة · 6236 آية</b>) من <code>res/raw/quran_uthmani.txt</code>. الأبعاد 1:1 مع
     التخطيطات (كل 1px هنا = 1dp هناك) داخل هاتف 360×720.
@@ -49,10 +50,15 @@
       <em id="wpName"></em>
     </div>
     <div class="ctl">
-      <span>السورة</span>
-      <button class="btn" id="prevSurah">›</button>
-      <button class="btn" id="nextSurah">‹</button>
-      <em id="surahName"></em>
+      <span>صفحة المصحف</span>
+      <button class="btn" id="prevPage">›</button>
+      <button class="btn" id="nextPage">‹</button>
+      <em id="quranPageIndicator"></em>
+    </div>
+    <div class="ctl">
+      <span>القراءة الليلية</span>
+      <button class="btn" id="nightToggle">تبديل</button>
+      <em id="quranNightState"></em>
     </div>
     <div class="ctl">
       <span>الساعات الذهبية</span>
@@ -73,15 +79,17 @@
     <div class="phone" id="ph-home">
       <div class="status"><span class="clk">9:41</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
       <div class="screen home" id="homeScreen">
-        <div class="topbar">
-          <div class="ic" data-icon="ic_language"></div>
-          <div class="ic" data-icon="ic_tasbeeh"></div>
-          <div class="ic" data-icon="ic_qibla"></div>
-          <div class="ic" data-icon="ic_privacy_shield"></div>
-          <div class="ic"><img class="icon" src="assets/star.png" alt=""></div>
-          <div class="ic" data-icon="ic_share"></div>
+        <div class="glassbar">
+          <div class="glassTile" data-icon="ic_language"></div>
+          <div class="glassTile" data-icon="ic_tasbeeh"></div>
+          <div class="glassTile" data-icon="ic_qibla"></div>
+          <div class="glassSpacer"></div>
+          <div class="glassTile dim" data-icon="ic_privacy_shield"></div>
+          <div class="glassTile dim"><img class="icon" src="assets/star.png" alt=""></div>
+          <div class="glassTile dim" data-icon="ic_share"></div>
         </div>
-        <div class="appName" data-i18n="app_name"></div>
+        <div class="appName" id="homeTitle" data-i18n="app_name"></div>
+        <div class="titleRule"><i></i><s></s><i></i></div>
         <div class="tiles">
           <div class="tile">
             <img src="assets/clock_logo.png" alt="">
@@ -124,6 +132,7 @@
           <div class="ic back" id="quranBack" data-icon="ic_back"></div>
           <div class="title" id="quranTitle"></div>
           <div class="ic" data-icon="ic_text_size"></div>
+          <div class="ic" data-icon="ic_quran_night"></div>
           <div class="ic" data-icon="ic_quran"></div>
           <div class="ic" data-icon="ic_bookmarks"></div>
         </div>
@@ -131,19 +140,55 @@
           <div class="meta" id="quranMeta"></div>
           <div class="hint" data-i18n="quran_reader_hint"></div>
         </div>
-        <div class="quranScroll" id="quranScroll">
-          <div class="quranSheet" id="quranSheet"></div>
+        <div class="quranPager" id="quranPages"></div>
+        <div class="quranFooter">
+          <button class="pageArrow" id="quranPrev">‹</button>
+          <div class="pageChip"><span id="quranRange"></span><b id="quranPageIndicator"></b></div>
+          <button class="pageArrow" id="quranNext">›</button>
         </div>
+        <div class="quranSource" data-i18n="quran_text_source_short"></div>
+      </div>
+    <figcaption>
+      <b data-cap="quran"></b>
+      <span>لم تعد قائمة آيات تُمرَّر عموديًا: السورة <b>صفحات مصحف تُقلب جانبيًا</b>
+        بـ<code>ViewPager2</code> أفقي، مع سهمَي «السابقة/التالية» وشرائح المدى
+        (<code>quran_screen_ayahs</code>). كل آية تُختم بعلامة <b>۝</b> ورقمها بالأرقام
+        الهندية داخلها، وانقر أي آية لحفظها فيتلون موضعها بذهبي شفاف. والافتتاح بالبسملة هو
+        <b>نص الآية ١:١ نفسه</b> من المورد — لا نص مكتوب يدويًا. مواضع القطع أدناه ليست
+        تخمينًا: مولّد المعاينة يقرأ <code>U+06DD</code> من <code>QuranPageBuilder</code>
+        نفسها.</span>
+      <code>activity_quran_reader.xml · QuranReaderActivity.java · QuranScreenAdapter.java</code>
+    </figcaption>
+  </figure>
+
+  <!-- 2b ─ night reading: the in-reader theme, deep slate with soft golden ink -->
+  <figure class="shot">
+    <div class="phone" id="ph-night">
+      <div class="status"><span class="clk">21:05</span><span class="dots">●●● ▮ ⌁ ▰</span></div>
+      <div class="screen quranPage night" id="quranNightScreen">
+        <div class="topbar">
+          <div class="ic back" data-icon="ic_back"></div>
+          <div class="title" data-i18n="quran_night_mode"></div>
+          <div class="ic" data-icon="ic_text_size"></div>
+          <div class="ic nightOn" data-icon="ic_quran_night"></div>
+          <div class="ic" data-icon="ic_quran"></div>
+          <div class="ic" data-icon="ic_bookmarks"></div>
+        </div>
+        <div class="quranHeader">
+          <div class="meta" data-i18n="quran_night_enabled"></div>
+          <div class="hint" data-i18n="quran_flip_hint"></div>
+        </div>
+        <div class="quranPager" id="quranNightPage"></div>
         <div class="quranSource" data-i18n="quran_text_source_short"></div>
       </div>
     </div>
     <figcaption>
-      <b data-cap="quran"></b>
-      <span>الآيات <b>بجانب بعضها</b> كما في المصحف: صفحة واحدة متصلة بدل بطاقة لكل آية،
-        وكل آية تُختم بعلامة <b>۝</b> ورقمها بالأرقام الهندية داخلها. انقر أي آية لحفظها
-        فيتلون موضعها بذهبي شفاف، وانقرها مرة أخرى لإزالة الحفظ. الافتتاح بالبسملة هو
-        <b>نص الآية ١:١ نفسه</b> من المورد — لا نص مكتوب يدويًا.</span>
-      <code>activity_quran_reader.xml · QuranReaderActivity.java · res/raw/quran_uthmani.txt</code>
+      <b data-cap="night"></b>
+      <span>زر <b>داخل القارئ نفسه</b> (لا الوضع الداكن للنظام): يبدّل لوحة الألوان إلى
+        <code>quranNightPaper</code> العميق و<code>quranNightInk</code> الذهبي الناعم،
+        فتنقلب الورقة والحبر والإطار والزخارف معًا بلا إعادة بناء ولا فقدان للصفحة،
+        ويُحفظ الاختيار في <code>TinyDB</code> فيبقى عند إعادة الفتح.</span>
+      <code>QuranTheme.java · QuranStore.java · ic_quran_night.xml</code>
     </figcaption>
   </figure>
 
@@ -409,10 +454,12 @@
     </div>
     <figcaption>
       <b data-cap="gallery"></b>
-      <span>الـ21 خلفية كلها <b>مدمجة داخل التطبيق</b> (لا أي مصدر خارجي): الكعبة، المسجد
-        النبوي، الأقصى، مساجد ومئذنة. انقر أي صورة فتصير الخلفية المعروضة في كل الشاشات
-        (الخلفية الحية، الودجت، السبحة، الحوارات).</span>
-      <code>activity_wallpaper.xml · res/drawable-nodpi/wp_*.jpg</code>
+      <span>الخلفيات الـ24 كلها <b>مدمجة داخل التطبيق</b> (لا أي مصدر خارجي): الكعبة، المسجد
+        النبوي، الأقصى، مساجد ومئذنة — و<b>٣ خلفيات حصرية</b> تتصدّر الشبكة ببطاقة
+        <b>Premium</b> وشارة قفل ذهبية. انقر أي صورة فتصير الخلفية المعروضة في كل الشاشات
+        (الخلفية الحية، الودجت، السبحة، الحوارات). والمقفلة منها لا تُفتح إلا بإعلان مكافأة
+        يُخزَّن في <code>SharedPreferences</code> فيبقى فتحًا دائمًا.</span>
+      <code>WallpaperCatalog.java · item_wallpaper.xml · res/drawable-nodpi/wp_premium_*.jpg</code>
     </figcaption>
   </figure>
 
@@ -435,10 +482,11 @@
     </div>
     <figcaption>
       <b data-cap="reward"></b>
-      <span>إعلان مكافأة يفتح <b>كل الساعات الذهبية لهذه الجلسة</b> (يعود القفل عند إعادة
-        تشغيل التطبيق) — قرار مقصود: لا تخزين لحالة الدفع. الحوار بمواردNative Ad
-        الحقيقية وبشارة «Ad» الإلزامية.</span>
-      <code>dialog_reward_unlock.xml · AdManager.java</code>
+      <span>إعلان مكافأة واحد يفتح <b>الخلفية الحصرية المختارة فتحًا دائمًا</b> (يُكتب فور
+        تحقّق المكافأة في <code>PremiumUnlocks</code>)، وإلغاء الحوار أو إغلاق الفيديو
+        لا يفتح شيئًا. انقر أي بطاقة مقفلة في المعرض لترى المسار كاملًا. وللساعات الذهبية
+        مسار مقابل لكنه <b>لجلسة واحدة فقط</b> من زر «الساعات الذهبية» بالأعلى.</span>
+      <code>dialog_reward_unlock.xml · RewardedUnlockHelper.java · AdManager.java</code>
     </figcaption>
   </figure>
 

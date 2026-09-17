@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  One tile of the home dashboard's top action bar, in both of its states.
+
+  The pressed state is a real drawable rather than a ripple: the tile is held down for the length
+  of the tap and UiMotion keeps it pressed while the finger is down, so the pane visibly lights up
+  and then dips in scale - which is the whole micro-interaction, and it works identically from
+  API 23 to 36.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:drawable="@drawable/bg_glass_tile_pressed"
+        android:state_pressed="true" />
+    <item android:drawable="@drawable/bg_glass_tile_rest" />
+</selector>
