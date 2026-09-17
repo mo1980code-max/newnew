@@ -1185,3 +1185,75 @@ python3 tools/build_package.py                     # 410 ملفًا · 9.84 م.�
 
 > **للتجربة العملية بعد التنزيل**: افتح المجلد في Android Studio (JDK 17 مدمج) → Sync → Run.
 > الإصدار `release` هو وحده الذي يمرّ بـ R8، فأي فرق في الحجم يظهر هناك.
+
+## 23) تدقيق ما بعد R8: ما يستطيع `assembleRelease` كسره — وما لا تستطيع هذه البيئة فحصه (17 سبتمبر 2026)
+
+جلسة **توثيقية: لا تغيير في كود التطبيق**. سببها أن القسم 22 شغّل التصغير لأول مرة منذ v1.1
+(`minifyEnabled true` + `shrinkResources true` مع `proguard-android-optimize.txt`)، فصار أول بناء
+`release` يمرّ بـ R8 فعليًا، وكل ما كان يخفيه السطر القديم `-keep class * { public private *; }`
+صار مكشوفًا. الفكرة: فحص ساكن مسبق لكل ما يستطيع R8 كسره، قبل الوصول إلى الجهاز. فرع هذه
+الجلسة بُني من `99efd19` (دمج PR #8) ولم يمسّ الكود، فالشجرة هنا مطابقة لـ `main`.
+
+### 1) ما فُحص، وكيف، والنتيجة
+
+| الخطر في بناء release | الدليل في المستودع | النتيجة |
+|---|---|---|
+| صنف يُنشئه النظام من الـ layout بالاسم الكامل، فيُعاد اسمه أو يُحذف | **7** أصناف تُذكر بوسمها الكامل في `res/layout`: `AnalogClock` · `CompassView` · `QuranPageView` · `SmartClockPreview` · `SquareRelativeLayout` · `TextClockPreview` · `WallpaperOverlayView` | كلها داخل `viewUtils` ← محفوظة بـ `-keep class ...viewUtils.** { *; }`، وقواعد المنصة تحفظ باني `(Context, AttributeSet)` أصلًا |
+| مكوّن مُسمّى في `AndroidManifest.xml` | **19** مكوّنًا من كود التطبيق: 14 `activity` + 3 `service` + 2 `receiver` (`widget.ClockWidgetSquare` / `ClockWidgetWide`) | محفوظة صراحةً (`activity.**` · `service.**` · `widget.**` · `AppClass` · `LiveClockWallpaper` · `CustomWallpaper`)، والمدق يتأكد أن لكل اسم ملفًا مقابلًا |
+| Gson يقرأ الحقول ويكتبها بالاسم (`TinyDB` السطور 69-75 و108-115، `AthkarRepository` السطر 72) | أصناف `model.**` | محفوظة كاملةً بـ `-keep class ...model.** { *; }` |
+| مورد يُطلب بالاسم فيحذفه `shrinkResources` | `getIdentifier` | **صفر** نتيجة في 88 ملف جافا |
+| انعكاس (reflection) عام | `Class.forName` · `newInstance` · `getMethod` · `getDeclaredField` · `@Keep` | **صفر** نتيجة — لا شيء يحتاج قاعدة حفظ إضافية |
+| مكوّنات مكتبات في الـ Manifest | `androidx.core.content.FileProvider` و`androidx.appcompat.app.AppLocalesMetadataHolderService` | ليست من كود التطبيق (المدق يتجاوزها صراحةً)، ولكلٍّ قواعد المستهلك الخاصة بمكتبته |
+
+`-ignorewarnings` بقي مقصودًا كما في القسم 22؛ المرجع بعد البناء هو تقرير R8 في
+`build/outputs/mapping/release/`.
+
+### 2) ما لا يمكن فحصه هنا — بصراحة
+
+لا JDK ولا Android SDK ولا Gradle في هذه البيئة:
+
+```bash
+$ java -version        # command not found
+$ echo $ANDROID_HOME   # (فارغ)
+$ ls ~/.gradle         # No such file or directory
+```
+
+فلا `assembleRelease` ولا تشغيل R8 فعلًا؛ وأي تأكيد على سلوك التصغير صادر من هذه البيئة سيكون
+تخمينًا لا فحصًا. المتاح هو أداتا المستودع + البحث الساكن في الجدول أعلاه، وكلاهما يمرّ على
+الشجرة كما هي.
+
+### 3) الفحص
+
+```bash
+python3 tools/verify_java_symbols.py               # NO ERRORS — 88 ملفًا · 122 نوعًا · 74 مرجعًا · 19 مكوّن Manifest
+python3 tools/verify_java_symbols.py --self-test   # SELF-TEST PASSED
+python3 tools/verify_resources.py                  # NO ERRORS — 108 XML · 188 نصًا en/ar · 217 drawable
+python3 tools/build_package.py                     # 410 ملفًا — مطابقة تامة للشجرة
+```
+
+### 4) ملاحظة سلوكية وُجدت ولم تُغيَّر: «إلغاء» في حوار إعدادات الأذكار لا يرجع الوقت
+
+في `AthkarActivity` تُكتب الإعدادات في توقيتين مختلفين:
+
+* الوضع/الزاوية/ثنائية اللغة تُحفظ **فقط** عند الضغط على «موافق» (السطور 169-171).
+* أمّا التوقيت فيُكتب **فورًا** داخل `TimePickerDialog` (السطر 188 في `pickTime`)، قبل أن يقرّر
+  المستخدم شيئًا في الحوار نفسه.
+
+النتيجة: من غيّر وقتًا ثم ضغط «إلغاء» يخرج والوقت الجديد محفوظ فعلًا. لم يُصلَح هنا لأن هذه
+الجلسة توثيقية بلا تغيير كود؛ الإصلاح المقترح: احتفظ بالقيم في متغيرات محلية واعرضها في
+الـ `TextView` وحده، ثم اكتبها كلها مرة واحدة داخل `setPositiveButton`.
+
+### الملفات
+
+| المجموعة | الملفات |
+|---|---|
+| التوثيق | `UPGRADE_NOTES.md` |
+| الحزمة | `Allah-Clock-Live-Wallpaper-android-studio.zip` (أُعيد بناؤها لأنها تضمّ هذا الملف: 410 مدخلًا) |
+
+### أول ما يُجرَّب على الجهاز بعد أول بناء release
+
+1. `./gradlew assembleRelease` ثم مراجعة `build/outputs/mapping/release/` (خريطة الأسماء وما سُجّل مفقودًا).
+2. تثبيت الـ APK المصغّر وتجربة: الخلفية الحيّة · الودجتان · الأذكار (مع تبديل اللغة) · قارئ القرآن ·
+   منتقي الألوان في شاشة التحرير (المكتبة الوحيدة المحفوظة يدويًا في `proguard-rules.pro`).
+3. إن ظهر `cannot find symbol` فليس سببه R8 (يعمل بعد الترجمة)؛ شغّل
+   `python3 tools/verify_java_symbols.py`.
