@@ -256,6 +256,9 @@ public final class AdManager {
         try {
             ad.show(activity);
         } catch (Throwable t) {
+            // The show callbacks will never fire after a throw, so the flag must be
+            // cleared here — otherwise app-open ads stay blocked for the whole process.
+            FULL_SCREEN_ACTIVE.set(false);
             Log.w(TAG, "interstitial show threw", t);
             if (finished.compareAndSet(false, true)) {
                 runOnce(onFinished);
@@ -319,7 +322,15 @@ public final class AdManager {
                             }
                         });
                     FULL_SCREEN_ACTIVE.set(true);
-                    rewardedAd.show(activity, rewardItem -> rewarded.set(true));
+                    try {
+                        rewardedAd.show(activity, rewardItem -> rewarded.set(true));
+                    } catch (Throwable t) {
+                        // Without this the flag would stay raised forever (blocking every
+                        // later app-open ad) and the caller would never get its callback.
+                        FULL_SCREEN_ACTIVE.set(false);
+                        Log.w(TAG, "rewarded show threw", t);
+                        settle(settled, rewarded, shown, callback);
+                    }
                     }
 
                     @Override

@@ -206,23 +206,41 @@ public final class NativeAdListAdapter extends RecyclerView.Adapter<RecyclerView
         inner.onDetachedFromRecyclerView(recyclerView);
     }
 
+    /**
+     * The ad card is ours, not the inner adapter's: forwarding its holder would let an
+     * inner implementation cast it to its own ViewHolder type and crash. Content holders
+     * (positions that are not the ad) are still forwarded untouched.
+     */
+    private boolean isOwnAdHolder(@NonNull RecyclerView.ViewHolder holder) {
+        return holder instanceof NativeAdViewHolder;
+    }
+
     @Override
     public void onViewAttachedToWindow(@NonNull RecyclerView.ViewHolder holder) {
-        inner.onViewAttachedToWindow(holder);
+        if (!isOwnAdHolder(holder)) {
+            inner.onViewAttachedToWindow(holder);
+        }
     }
 
     @Override
     public void onViewDetachedFromWindow(@NonNull RecyclerView.ViewHolder holder) {
-        inner.onViewDetachedFromWindow(holder);
+        if (!isOwnAdHolder(holder)) {
+            inner.onViewDetachedFromWindow(holder);
+        }
     }
 
     @Override
     public void onViewRecycled(@NonNull RecyclerView.ViewHolder holder) {
-        inner.onViewRecycled(holder);
+        if (!isOwnAdHolder(holder)) {
+            inner.onViewRecycled(holder);
+        }
     }
 
     @Override
     public boolean onFailedToRecycleView(@NonNull RecyclerView.ViewHolder holder) {
+        if (isOwnAdHolder(holder)) {
+            return false;
+        }
         return inner.onFailedToRecycleView(holder);
     }
 }
