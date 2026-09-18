@@ -35,17 +35,45 @@
     <color name="adBadge">#CC3A3A45</color>
     <color name="adBadgeText">#FFFFFF</color>
 
-    <!-- ── Athkar reader: classic paper, no colours ────────────────────────
-      The reader used to float over the live wallpaper (mosque photographs) with a
-      gold counter circle and a teal "done" tag. It is now an opaque paper page in
-      ink and warm greys only: nothing between the reader and the text.
+    <!-- ── Athkar reader (morning / evening) ──────────────────────────────
+      Each dhikr is a rounded cream card with an earthy taupe dock: a white circular
+      share button beside "مشاركة" and the "التكرار" label beside a white circular
+      counter badge. A completed dhikr settles into the muted tones below. The top
+      bar is vibrant sky blue with a sun for morning, deep blue with a moon for
+      evening. The night palette mirrors the Quran reader (#121212 / #E0D6C3).
     -->
-    <color name="athkarPaper">#FBF8F2</color>
+    <color name="athkarPaper">#F1EBDF</color>
     <color name="athkarInk">#1B1B1B</color>
     <color name="athkarBody">#3D3A35</color>
     <color name="athkarMuted">#6E6A63</color>
     <color name="athkarSoft">#8C867C</color>
     <color name="athkarHairline">#E3DDD1</color>
+    <color name="athkarCardCream">#FDFBF7</color>
+    <color name="athkarDockTaupe">#B5ABA1</color>
+    <color name="athkarCardDone">#E8E5DF</color>
+    <color name="athkarDockDone">#8E8880</color>
+    <color name="athkarDoneText">#8A857F</color>
+    <color name="athkarBarMorning">#03A9F4</color>
+    <color name="athkarBarEvening">#1E88E5</color>
+    <color name="athkarNightPaper">#121212</color>
+    <color name="athkarNightInk">#E0D6C3</color>
+    <color name="athkarNightBody">#C9BEA5</color>
+    <color name="athkarNightMuted">#97917F</color>
+    <color name="athkarNightCard">#201E1B</color>
+    <color name="athkarNightCardDone">#2B2823</color>
+    <color name="athkarNightDock">#45423C</color>
+    <color name="athkarNightDockDone">#6E6A63</color>
+    <color name="athkarNightDoneText">#9A948A</color>
+    <color name="athkarHairlineNight">#2B2925</color>
+    <!-- The palette switch cycles the card through these tints (day and night pairs). -->
+    <color name="athkarPalette1">#FDFBF7</color>
+    <color name="athkarPalette2">#F7F1E4</color>
+    <color name="athkarPalette3">#EFF3EC</color>
+    <color name="athkarPalette4">#F6EFED</color>
+    <color name="athkarPalette1Night">#201E1B</color>
+    <color name="athkarPalette2Night">#211E17</color>
+    <color name="athkarPalette3Night">#1D211B</color>
+    <color name="athkarPalette4Night">#221D1B</color>
 
     <!-- ── Premium / golden clocks ────────────────────────────────────── -->
     <color name="goldLight">#FFE08A</color>
@@ -69,21 +97,21 @@
     <!--
       ── Quran night reading theme ──────────────────────────────────────────
       Deliberately its own palette rather than values-night: the reader's night mode is an
-      in-app switch, so it must work whatever the system dark-mode setting is. Deep slate
-      surfaces (#1A1D24) with warm, low-contrast cream and gold type: nothing here is
-      pure white on pure black, which is what makes long night reading tiring.
+      in-app switch, so it must work whatever the system dark-mode setting is. A true black
+      surface (#121212) with soft, warm parchment type (#E0D6C3): warm and low-contrast, the
+      way a lamp-lit Mushaf reads, so nothing here is glaring white on black.
     -->
-    <color name="quranNightPaper">#1A1D24</color>
-    <color name="quranNightSurface">#20242C</color>
-    <color name="quranNightInk">#E7D9B4</color>
-    <color name="quranNightBody">#D2C49F</color>
-    <color name="quranNightMuted">#9A927E</color>
-    <color name="quranNightLine">#2E333D</color>
-    <color name="quranNightGreen">#8FBFA4</color>
-    <color name="quranNightGreenDark">#BFD8C7</color>
-    <color name="quranNightSoftGreen">#232A28</color>
+    <color name="quranNightPaper">#121212</color>
+    <color name="quranNightSurface">#1C1B18</color>
+    <color name="quranNightInk">#E0D6C3</color>
+    <color name="quranNightBody">#C9BEA5</color>
+    <color name="quranNightMuted">#8F887A</color>
+    <color name="quranNightLine">#2B2924</color>
+    <color name="quranNightGreen">#A89F8B</color>
+    <color name="quranNightGreenDark">#D8CDB4</color>
+    <color name="quranNightSoftGreen">#221F19</color>
     <color name="quranNightGold">#D9B36A</color>
-    <color name="quranNightIconBar">#14161B</color>
+    <color name="quranNightIconBar">#0D0D0C</color>
 
     <!-- ── Home tiles: the Quran and the athkar get their own gold-framed, bigger tiles
       The clock/wallpaper tiles are 108dp rasters. These two are 140dp with a double gold
@@ -98,17 +126,6 @@
     <!-- Saved-verse tint inside the continuous reader page (soft, still readable ink on top). -->
     <color name="quranVerseHighlight">#33C9A227</color>
 
-    <!--
-      ── End-of-ayah ornament (the ۝ rosette drawn behind the ayah number) ────
-      Two palettes because the badge is drawn, not tinted: AyahBadgeSpan takes the values of
-      the active QuranTheme.
-    -->
-    <color name="ayahOrnamentGold">#BA8B36</color>
-    <color name="ayahOrnamentFill">#F3EFE2</color>
-    <color name="ayahOrnamentNumber">#173E30</color>
-    <color name="ayahOrnamentGoldNight">#D9B36A</color>
-    <color name="ayahOrnamentFillNight">#262B34</color>
-    <color name="ayahOrnamentNumberNight">#E7D9B4</color>
 
     <!-- ── Glassmorphism top action bar (home dashboard) ──────────────────
       Frosted tiles with a hairline gold rim over the app's deep violet backdrop.

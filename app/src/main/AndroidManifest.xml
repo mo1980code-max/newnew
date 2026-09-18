@@ -156,18 +156,22 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.QuranReader"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <!--
+          The two readers are continuous vertical scrolls: rotation is handled in place
+          (configChanges) so the activity is never recreated and the scroll keeps its place —
+          the column simply re-lays out for the new width. They are therefore not locked
+          portrait.
+        -->
         <activity
             android:name=".activity.QuranReaderActivity"
+            android:configChanges="orientation|screenSize"
             android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.QuranReader"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+            android:theme="@style/AppTheme.QuranReader" />
         <activity
             android:name=".activity.QuranMushafActivity"
+            android:configChanges="orientation|screenSize"
             android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.QuranReader"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+            android:theme="@style/AppTheme.QuranReader" />
         <activity
             android:name=".activity.QuranSearchActivity"
             android:exported="false"

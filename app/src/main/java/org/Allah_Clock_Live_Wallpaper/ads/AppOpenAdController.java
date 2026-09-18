@@ -13,7 +13,6 @@ import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.appopen.AppOpenAd;
-import com.google.android.gms.ads.appopen.AppOpenAdLoadCallback;
 
 /**
  * App-open ads, implemented strictly inside Google's policy envelope:
@@ -57,13 +56,16 @@ public final class AppOpenAdController {
         loadInProgress = true;
         try {
             // The orientation argument is mandatory: the four-argument
-            // load(Context, String, AdRequest, AppOpenAdLoadCallback) overload was deprecated in
-            // Google Mobile Ads SDK 21 and removed in the next major release, which is what made
-            // this file fail to compile with "cannot find symbol: method load" on play-services-ads
-            // 25.x. The app's home screen is portrait, so the ad is asked for in portrait.
+            // load(Context, String, AdRequest, AppOpenAd.AppOpenAdLoadCallback) overload was
+            // deprecated in Google Mobile Ads SDK 21 and removed in the next major release, which
+            // is what made this file fail to compile with "cannot find symbol" on
+            // play-services-ads 25.x. The app's home screen is portrait, so the ad is asked for
+            // in portrait. The load callback is referenced through its parent class
+            // ({@link AppOpenAd#AppOpenAdLoadCallback}), which is how this SDK version exposes
+            // it — importing a top-level AppOpenAdLoadCallback does not resolve.
             AppOpenAd.load(context.getApplicationContext(), AdConfig.APP_OPEN_UNIT_ID,
                     new AdRequest.Builder().build(), AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT,
-                    new AppOpenAdLoadCallback() {
+                    new AppOpenAd.AppOpenAdLoadCallback() {
                         @Override
                         public void onAdLoaded(@NonNull AppOpenAd appOpenAd) {
                             loadInProgress = false;

@@ -17,7 +17,7 @@ const state = {
   sw: { hijri: true, dhikr: true, power: false, badge: true },
   counters: {},          // athkar id -> taps left
   cat: 'all',
-  page: 0,               // Mushaf page open in the Quran reader (ViewPager2 currentItem)
+  page: 0,               // current position in the Quran reader preview
   night: false,          // the reader's own night theme, not the system one
   marked: {},            // "surah:ayah" -> saved, the mock's QuranStore bookmark
 };
@@ -111,11 +111,11 @@ function clockImage() { return 'assets/' + D.clocks[state.kind][state.clock[stat
 function badgeOn() { return state.win !== 'none' && state.sw.badge; }
 function badgeLabel() { return t(state.win === 'evening' ? 'athkar_evening_title' : 'athkar_morning_title'); }
 
-/* ─────────── the Quran reader: a surah cut into flippable Mushaf pages ───────────
-   buildQuranPages() mirrors QuranPageBuilder.appendAyah() - the verse, then " U+06DD<number> " -
-   and cuts the run at D.quranPages.breaks, which build_assets.py took straight out of the app's
-   own builder. Flipping therefore shows the same page breaks the app's ViewPager2 makes. The
-   verses of Al-Fatiha are long enough that one lands per page; the app packs as many as fit. */
+/* ─────────── the Quran reader: one surah as a continuous scroll ───────────
+   buildQuranPages() mirrors QuranText.withEndGlyph() - the verse, then the built-in end-of-ayah
+   glyph U+06DD followed by the number in Arabic-Indic digits - and cuts the run at
+   D.quranPages.breaks, which build_assets.py derives the same way. The app's reader is a
+   vertical RecyclerView; the mock keeps its paged preview of the same marked text. */
 function arabicIndic(value) {
   return String(value).replace(/[0-9]/g, (d) => String.fromCharCode(0x0660 + Number(d)));
 }
@@ -157,7 +157,7 @@ function buildQuranPages() {
     const ayah = i + 1;
     const saved = isMarked(n, ayah) ? ' saved' : '';
     html += '<span class="verse' + saved + '" data-surah="' + n + '" data-ayah="' + ayah + '">'
-      + text + ' <span class="ayahBadge"><i>' + arabicIndic(ayah) + '</i></span></span> ';
+      + text + ' ' + String.fromCharCode(0x06DD) + arabicIndic(ayah) + '</span> ';
     if (breaks[i] !== undefined) {
       pages.push({ html: html, first: first, last: ayah });
       html = '';
@@ -170,7 +170,7 @@ function buildQuranPages() {
 
 function renderQuranPages() {
   const pages = buildQuranPages();
-  const html = pages.map((page, i) => '<div class="quranPageView' + (i === state.page ? ' on' : '')
+  const html = pages.map((page, i) => '<div class="quranScrollPage' + (i === state.page ? ' on' : '')
     + '" data-page="' + i + '"><div class="quranSheet"><p>' + page.html
     + '</p></div></div>').join('');
   QURAN_PAGERS.forEach((id) => {
@@ -228,7 +228,7 @@ function renderQuran() {
   state.page = Math.max(0, Math.min(state.page, count - 1));
   const open = quranPage();
   const range = document.getElementById('quranRange');
-  if (range && open) range.textContent = fmt(t('quran_screen_ayahs'), open.first, open.last);
+  if (range && open) range.textContent = fmt(t('quran_page_number'), open.first, open.last);
   // The chip inside the page footer and the read-out beside the demo's page stepper show the
   // same numbers; both are updated from the one place.
   const label = cap('page') + ' ' + arabicIndic(state.page + 1) + ' ' + cap('of') + ' '
@@ -617,7 +617,7 @@ function wire() {
     renderTasbeeh();
   });
 
-  // Turning the page: the same two actions as the app's arrows and the ViewPager2 swipe.
+  // Turning the page: the same position change shown by the continuous reader preview.
   document.getElementById('prevPage').addEventListener('click', () => flipPage(-1));
   document.getElementById('nextPage').addEventListener('click', () => flipPage(1));
   const inPagePrev = document.getElementById('quranPrev');

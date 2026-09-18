@@ -84,9 +84,8 @@ def main(argv):
     for probe in ('gradlew', 'settings.gradle', 'app/build.gradle',
                   'app/src/main/AndroidManifest.xml', 'docs/ANDROID_STUDIO_SETUP.md',
                   'docs/QURAN_TEXT_ATTRIBUTION.md',
-                  'app/src/main/res/raw/quran_uthmani.txt',
-                  'app/src/main/res/raw/quran_pages.tsv',
-                  'app/src/main/res/raw/quran_juz.tsv',
+                  'app/src/main/assets/quran.json',
+                  'app/src/main/assets/quran_info.json',
                   'app/src/main/java/org/Allah_Clock_Live_Wallpaper/activity/QuranIndexActivity.java',
                   'app/src/main/java/org/Allah_Clock_Live_Wallpaper/activity/QuranMushafActivity.java'):
         if probe not in {a for _, a in entries}:

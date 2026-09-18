@@ -120,6 +120,19 @@
     <string name="athkar_progress">%1$d / %2$d</string>
     <string name="athkar_position">Dhikr %1$d of %2$d</string>
     <string name="athkar_completed">Completed ✓</string>
+    <!-- The card's bottom dock: share the dhikr, and the remaining repeat count. -->
+    <string name="athkar_share">Share</string>
+    <string name="athkar_repeat">Repeats</string>
+    <string name="athkar_cd_share">Share this dhikr</string>
+    <!-- The top bar\'s action buttons: night reading, text size (ض), card colour. -->
+    <string name="athkar_cd_night">Turn the night reading theme on or off</string>
+    <string name="athkar_cd_font">Change the text size</string>
+    <string name="athkar_cd_palette">Switch the card colour</string>
+    <string name="athkar_font_letter">ض</string>
+    <string name="athkar_night_on">Night reading on — soft parchment on true black</string>
+    <string name="athkar_night_off">Day reading on — ink on paper</string>
+    <string name="athkar_font_size">Text size %1$d</string>
+    <string name="athkar_palette_changed">Card colour changed</string>
     <string name="option_athkar_badge">Show the athkar badge on the wallpaper</string>
     <string name="cd_athkar_badge">Open the athkar reader</string>
     <string name="cd_athkar_close">Close the athkar reader</string>
@@ -162,17 +175,16 @@
     <string name="quran_bookmark_removed">Bookmark removed</string>
     <string name="quran_add_bookmark">Save bookmark at ayah %1$d</string>
     <string name="quran_remove_bookmark">Remove bookmark at ayah %1$d</string>
-    <string name="quran_reader_hint">Pages turn sideways like a printed Mushaf: swipe, or use the arrows below. Tap a verse to save it, tap it again to remove the save.</string>
     <string name="quran_surah_title">Surah %1$d · %2$s</string>
     <string name="quran_ayah_reference">Surah %1$d · %2$s · Ayah %3$d</string>
     <string name="quran_surah_metadata">%1$d verses · %2$s</string>
     <string name="quran_meccan">Meccan</string>
     <string name="quran_medinan">Medinan</string>
     <string name="quran_open_surah">Open %1$s</string>
-    <string name="quran_text_source_short">Quran text: Tanzil Project · tanzil.net</string>
+    <string name="quran_text_source_short">Quran text: Uthmanic (Hafs) · fawazahmed0/quran-api</string>
     <string name="quran_text_source_title">Quran text source</string>
-    <string name="quran_text_source_message">This app bundles the verbatim Uthmani Quran text from the Tanzil Project, Version 1.1, under Creative Commons Attribution 3.0. The page reader groups this text by the 604 Madani page boundaries and reflows it for the screen; it is not a scanned or PDF Mushaf layout. The complete notice is included with the app source. Visit tanzil.net for updates.</string>
-    <string name="quran_text_source_link">Open Tanzil.net</string>
+    <string name="quran_text_source_message">This app bundles the official Uthmanic Quran text (Hafs reading, fully vowel-marked) from the fawazahmed0/quran-api repository, with its companion metadata carrying the surah names, the 604 Madani page boundaries and the 30 juzs. The text is reflowed for the screen and never altered; every ayah is closed by its built-in end-of-ayah glyph. The complete notice is included with the app source. Visit the repository for updates.</string>
+    <string name="quran_text_source_link">Open the source repository</string>
     <string name="quran_load_failed">The Quran text could not be opened. Please reinstall the app.</string>
     <string name="cd_quran">Open the Holy Quran reader</string>
     <string name="cd_quran_search">Search the Quran text</string>
@@ -184,11 +196,8 @@
     <string name="quran_read_by_page">Read Mushaf by page</string>
     <string name="quran_read_by_page_hint">Browse 604 Madani page divisions in reflowed text</string>
     <string name="quran_page_number">Page %1$d of %2$d</string>
-    <string name="quran_page_range">%1$s, ayah %2$d — %3$s, ayah %4$d</string>
-    <string name="quran_previous_page">Previous</string>
-    <string name="quran_next_page">Next</string>
     <string name="quran_choose_page">Go to page</string>
-    <string name="cd_quran_mushaf">Open page-by-page Mushaf reading</string>
+    <string name="cd_quran_mushaf">Open the continuous Mushaf scroll</string>
     <string name="cd_quran_choose_page">Choose a Mushaf page</string>
 
     <string name="quran_text_size">Quran text size</string>
@@ -202,19 +211,13 @@
     <string name="quran_choose_juz">Go to juz</string>
     <string name="cd_quran_choose_juz">Choose a Quran juz</string>
 
-    <string name="quran_juz_range">Juz %1$d–%2$d</string>
-
-
     <!-- ── Quran night reading theme (in-app, independent of the system dark mode) ── -->
     <string name="quran_night_mode">Night reading</string>
-    <string name="quran_day_mode">Day reading</string>
     <string name="cd_quran_night_mode">Turn the Quran night reading theme on or off</string>
-    <string name="quran_night_enabled">Night reading on — soft ink on deep slate</string>
+    <string name="quran_night_enabled">Night reading on — soft parchment on true black</string>
     <string name="quran_day_enabled">Day reading on — ink on paper</string>
-    <string name="quran_flip_hint">Swipe sideways to turn the page, exactly like a printed Mushaf</string>
-    <string name="quran_screen_ayahs">Ayahs %1$d–%2$d</string>
-    <string name="cd_quran_previous_page">Turn to the previous page</string>
-    <string name="cd_quran_next_page">Turn to the next page</string>
+    <string name="quran_surah_header_meta">Juz %1$d · %2$d verses</string>
+    <string name="quran_mushaf_hint">Scroll through all 604 pages. Tap a verse to save it, tap it again to remove the save.</string>
     <string name="quran_surah_header">Surah %1$s</string>
     <string name="quran_page_number_short">Page %1$d</string>
 

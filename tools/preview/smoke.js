@@ -140,7 +140,7 @@ setTimeout(() => {
   check('the same tap now goes straight through',
     vm.runInContext('openWallpaper(D.wallpapers[1]) === true', sandbox), 'still refused');
 
-  console.log('\nquran reader (flippable Mushaf pages)');
+  console.log('\nquran reader (continuous text preview)');
   const totalAyahs = Object.keys(D.quran.ayahs).reduce((n, k) => n + D.quran.ayahs[k].length, 0);
   check('114 surahs in the metadata', D.quran.surahs.length === 114,
     String(D.quran.surahs.length));
@@ -158,31 +158,31 @@ setTimeout(() => {
   check('all 7 verses of Al-Fatiha are on the pages',
     (fatiha.match(/class="verse/g) || []).length === 7,
     String((fatiha.match(/class="verse/g) || []).length));
-  check('the surah is cut into 7 flippable pages',
-    (fatiha.match(/class="quranPageView/g) || []).length === 7,
-    String((fatiha.match(/class="quranPageView/g) || []).length));
+  check('the preview preserves the 7 marked ayah segments',
+    (fatiha.match(/class="quranScrollPage/g) || []).length === 7,
+    String((fatiha.match(/class="quranScrollPage/g) || []).length));
   check('one page is on screen at a time',
-    (fatiha.match(/class="quranPageView on"/g) || []).length === 1,
-    String((fatiha.match(/class="quranPageView on"/g) || []).length));
+    (fatiha.match(/class="quranScrollPage on"/g) || []).length === 1,
+    String((fatiha.match(/class="quranScrollPage on"/g) || []).length));
   const mark7 = String.fromCharCode(0x06DD) + vm.runInContext('arabicIndic(7)', sandbox);
   check('a verse closes with U+06DD and an Arabic-Indic number',
-    fatiha.indexOf('>' + vm.runInContext('arabicIndic(7)', sandbox) + '<') >= 0,
+    fatiha.indexOf(mark7) >= 0,
     'marker ' + mark7 + ' not found');
   check('Al-Fatiha gets no separate Basmalah line (it is verse 1)',
     fatiha.indexOf('class="basmalah"') < 0, 'a Basmalah line was added');
   // The mock prints one verse per page (see buildQuranPages), so page 1 carries ayah 1 alone;
-  // the string is still the app's own quran_screen_ayahs.
+  // the string is still the app's own quran_page_number.
   check('the footer states the ayah range with the real string',
-    text('quranRange') === D.ar.quran_screen_ayahs.replace('%1$d', '1').replace('%2$d', '1'),
+    text('quranRange') === D.ar.quran_page_number.replace('%1$d', '1').replace('%2$d', '1'),
     JSON.stringify(text('quranRange')));
   vm.runInContext('flipPage(1)', sandbox);
-  check('flipping turns to the next page', vm.runInContext('state.page', sandbox) === 1,
+  check('moving to the next preview segment', vm.runInContext('state.page', sandbox) === 1,
     String(vm.runInContext('state.page', sandbox)));
   check('the day phone follows the flip too',
-    (html('quranPages').match(/class="quranPageView on"/g) || []).length === 1,
+    (html('quranPages').match(/class="quranScrollPage on"/g) || []).length === 1,
     'more than one page is on screen');
   vm.runInContext('flipPage(-1)', sandbox);
-  check('the previous arrow stops at the first page',
+  check('the previous control stops at the first segment',
     vm.runInContext('state.page', sandbox) === 0, String(vm.runInContext('state.page', sandbox)));
   vm.runInContext('state.marked = {}; toggleVerse(1, 7)', sandbox);
   check('tapping a verse saves it',
@@ -192,7 +192,7 @@ setTimeout(() => {
 
   console.log('\nnight reading (the in-reader theme)');
   check('the night palette is the app\'s own colours',
-    D.night.quranNightPaper === '#1A1D24' && D.night.quranNightInk === '#E7D9B4',
+    D.night.quranNightPaper === '#121212' && D.night.quranNightInk === '#E0D6C3',
     JSON.stringify(D.night));
   vm.runInContext('setNight(true)', sandbox);
   check('the reader swaps to the night palette in place',

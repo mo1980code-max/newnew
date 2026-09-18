@@ -117,6 +117,19 @@
     <string name="athkar_progress">%1$d / %2$d</string>
     <string name="athkar_position">الذكر %1$d من %2$d</string>
     <string name="athkar_completed">تم ✓</string>
+    <!-- شريط أسفل البطاقة: مشاركة الذكر، وعداد التكرار المتبقي -->
+    <string name="athkar_share">مشاركة</string>
+    <string name="athkar_repeat">التكرار</string>
+    <string name="athkar_cd_share">مشاركة هذا الذكر</string>
+    <!-- أزرار الشريط العلوي: الوضع الليلي، حجم الخط (ض)، لون البطاقة -->
+    <string name="athkar_cd_night">تشغيل أو إيقاف وضع القراءة الليلية</string>
+    <string name="athkar_cd_font">تغيير حجم الخط</string>
+    <string name="athkar_cd_palette">تبديل لون البطاقة</string>
+    <string name="athkar_font_letter">ض</string>
+    <string name="athkar_night_on">تم تشغيل القراءة الليلية — ورقي ناعم على أسود خالص</string>
+    <string name="athkar_night_off">تم تشغيل القراءة النهارية — حبر على ورق</string>
+    <string name="athkar_font_size">حجم الخط %1$d</string>
+    <string name="athkar_palette_changed">تم تغيير لون البطاقة</string>
     <string name="option_athkar_badge">إظهار شارة الأذكار على الخلفية</string>
     <string name="cd_athkar_badge">افتح قارئ الأذكار</string>
     <string name="cd_athkar_close">إغلاق قارئ الأذكار</string>
@@ -160,17 +173,16 @@
     <string name="quran_bookmark_removed">تمت إزالة العلامة</string>
     <string name="quran_add_bookmark">حفظ علامة عند الآية %1$d</string>
     <string name="quran_remove_bookmark">إزالة علامة الآية %1$d</string>
-    <string name="quran_reader_hint">الصفحات تُقلب جانبيًا كمصحف مطبوع: اسحب، أو استخدم السهمين بالأسفل. انقر أي آية لحفظها، وانقرها مرة أخرى لإزالة الحفظ.</string>
     <string name="quran_surah_title">سورة %1$d · %2$s</string>
     <string name="quran_ayah_reference">سورة %1$d · %2$s · الآية %3$d</string>
     <string name="quran_surah_metadata">%1$d آيات · %2$s</string>
     <string name="quran_meccan">مكية</string>
     <string name="quran_medinan">مدنية</string>
     <string name="quran_open_surah">فتح سورة %1$s</string>
-    <string name="quran_text_source_short">نص القرآن: مشروع تنزيل · tanzil.net</string>
+    <string name="quran_text_source_short">نص القرآن: العثماني (حفص) · fawazahmed0/quran-api</string>
     <string name="quran_text_source_title">مصدر نص القرآن</string>
-    <string name="quran_text_source_message">يحتوي التطبيق على نص القرآن العثماني الحرفي من مشروع تنزيل، الإصدار 1.1، وفق ترخيص المشاع الإبداعي للنسبة 3.0. يجمع قارئ الصفحات هذا النص حسب حدود صفحات المصحف المدني الـ604 ويعيد تدفقه للشاشة؛ وليس صورة ممسوحة أو تخطيط PDF للمصحف. يتضمن مصدر التطبيق الإشعار الكامل. تفضل بزيارة tanzil.net لمعرفة التحديثات.</string>
-    <string name="quran_text_source_link">فتح Tanzil.net</string>
+    <string name="quran_text_source_message">يحتوي التطبيق على النص العثماني الرسمي للقرآن الكريم (رواية حفص، بالتشكيل الكامل) من مستودع fawazahmed0/quran-api، إلى جانب بياناته المرفقة التي تحمل أسماء السور وحدود صفحات المصحف المدني الـ604 والأجزاء الثلاثين. يُعاد تدفق النص للشاشة دون أي تغيير، وتُختم كل آية برموز نهايتها المدمجة. يتضمن مصدر التطبيق الإشعار الكامل. تفضل بزيارة المستودع لمعرفة التحديثات.</string>
+    <string name="quran_text_source_link">فتح مستودع المصدر</string>
     <string name="quran_load_failed">تعذّر فتح نص القرآن. يرجى إعادة تثبيت التطبيق.</string>
     <string name="cd_quran">فتح قارئ القرآن الكريم</string>
     <string name="cd_quran_search">البحث في نص القرآن</string>
@@ -182,11 +194,8 @@
     <string name="quran_read_by_page">قراءة المصحف بالصفحات</string>
     <string name="quran_read_by_page_hint">تصفّح تقسيم المصحف إلى 604 صفحات بنص متدفق</string>
     <string name="quran_page_number">الصفحة %1$d من %2$d</string>
-    <string name="quran_page_range">%1$s، الآية %2$d — %3$s، الآية %4$d</string>
-    <string name="quran_previous_page">السابق</string>
-    <string name="quran_next_page">التالي</string>
     <string name="quran_choose_page">الانتقال إلى صفحة</string>
-    <string name="cd_quran_mushaf">فتح قراءة المصحف صفحة بصفحة</string>
+    <string name="cd_quran_mushaf">فتح التمرير المتصل للمصحف</string>
     <string name="cd_quran_choose_page">اختيار صفحة من المصحف</string>
 
     <string name="quran_text_size">حجم نص القرآن</string>
@@ -200,19 +209,13 @@
     <string name="quran_choose_juz">الانتقال إلى جزء</string>
     <string name="cd_quran_choose_juz">اختيار جزء من القرآن</string>
 
-    <string name="quran_juz_range">الجزء %1$d–%2$d</string>
-
-
     <!-- ── وضع القراءة الليلية للقرآن (داخل التطبيق، مستقل عن وضع النظام الداكن) ── -->
     <string name="quran_night_mode">القراءة الليلية</string>
-    <string name="quran_day_mode">القراءة النهارية</string>
     <string name="cd_quran_night_mode">تشغيل أو إيقاف وضع القراءة الليلية للقرآن</string>
-    <string name="quran_night_enabled">تم تشغيل القراءة الليلية — حبر ناعم على خلفية داكنة</string>
+    <string name="quran_night_enabled">تم تشغيل القراءة الليلية — ورقي ناعم على أسود خالص</string>
     <string name="quran_day_enabled">تم تشغيل القراءة النهارية — حبر على ورق</string>
-    <string name="quran_flip_hint">اسحب جانبًا لتقليب الصفحة، تمامًا كمصحف مطبوع</string>
-    <string name="quran_screen_ayahs">الآيات %1$d–%2$d</string>
-    <string name="cd_quran_previous_page">الانتقال إلى الصفحة السابقة</string>
-    <string name="cd_quran_next_page">الانتقال إلى الصفحة التالية</string>
+    <string name="quran_surah_header_meta">الجزء %1$d · %2$d آية</string>
+    <string name="quran_mushaf_hint">مرّر عبر الصفحات الـ604. انقر أي آية لحفظها، وانقرها مرة أخرى لإزالة الحفظ.</string>
     <string name="quran_surah_header">سورة %1$s</string>
     <string name="quran_page_number_short">الصفحة %1$d</string>
 

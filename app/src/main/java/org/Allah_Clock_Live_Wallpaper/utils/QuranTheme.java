@@ -11,7 +11,7 @@ import androidx.core.content.ContextCompat;
 import org.Allah_Clock_Live_Wallpaper.R;
 
 /**
- * The reader's palette: paper for the day, deep slate and warm cream for the night.
+ * The reader's palette: warm paper for the day, true black and soft parchment for the night.
  *
  * <p><b>Why this is not {@code values-night}:</b> the night reading theme is an in-app switch,
  * so it has to work whatever the system dark-mode setting is — a reader who keeps their phone
@@ -20,9 +20,8 @@ import org.Allah_Clock_Live_Wallpaper.R;
  * {@code colors.xml} and this class is the only thing that chooses between them.</p>
  *
  * <p>Instances are deliberately <b>mutable</b>: {@link #apply(Context, boolean)} re-reads the
- * selected palette into the same object, so every painter, span and view that holds a reference
- * to this theme (including the end-of-ayah badges already laid out inside the page text) follows
- * a night-mode toggle immediately, without the page being rebuilt or repaginated.</p>
+ * selected palette into the same object, so every painter and view that holds a reference to
+ * this theme follows a night-mode toggle immediately, without the column being rebuilt.</p>
  */
 public final class QuranTheme {
 
@@ -50,15 +49,6 @@ public final class QuranTheme {
     public int gold;
     @ColorInt
     public int verseHighlight;
-    /** Fill behind the ayah number inside the end-of-ayah ornament. */
-    @ColorInt
-    public int badgeFill;
-    /** The digits themselves, inside the ornament. */
-    @ColorInt
-    public int badgeNumber;
-    /** Top action bar tone; darker than the paper so the controls read as a separate strip. */
-    @ColorInt
-    public int iconBar;
 
     public QuranTheme(@NonNull Context context, boolean night) {
         apply(context, night);
@@ -78,11 +68,6 @@ public final class QuranTheme {
         this.softGreen = color(context, night ? R.color.quranNightSoftGreen : R.color.quranSoftGreen);
         this.gold = color(context, night ? R.color.quranNightGold : R.color.quranGold);
         this.verseHighlight = color(context, R.color.quranVerseHighlight);
-        this.badgeFill = color(context,
-                night ? R.color.ayahOrnamentFillNight : R.color.ayahOrnamentFill);
-        this.badgeNumber = color(context,
-                night ? R.color.ayahOrnamentNumberNight : R.color.ayahOrnamentNumber);
-        this.iconBar = color(context, night ? R.color.quranNightIconBar : R.color.quranPaper);
     }
 
     public boolean isNight() {
@@ -90,9 +75,8 @@ public final class QuranTheme {
     }
 
     /**
-     * The text paint the page is laid out with. One instance is shared by the layout, the
-     * paginator and the page views, so nothing can drift out of sync: colours are re-read from
-     * this theme and the size is set by the reader.
+     * The text paint a column is set in: serif, anti-aliased and linearly filtered, with the
+     * colour of the active palette.
      */
     @NonNull
     public TextPaint newTextPaint(float textSizePx) {

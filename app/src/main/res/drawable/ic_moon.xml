@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Evening crescent for the athkar top bar, on the same 24 dp grid as the rest of the icon set
+  and tinted at runtime, so it follows the bar's colour like every other control on it.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M20.6,14.3a8.8,8.8 0,0 1,-11.5 -11.5A9.3,9.3 0,1 0,20.6 14.3z" />
+</vector>

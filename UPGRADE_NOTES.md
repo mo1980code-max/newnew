@@ -662,9 +662,9 @@ python3 tools/build_package.py
 
 | المسار | المهمة |
 |---|---|
-| `res/raw/quran_uthmani.txt` | النص العثماني الكامل، 6,236 آية؛ مورد للقراءة فقط ولا يغيّر التطبيق نصه |
-| `res/raw/quran_surahs.tsv` | بيانات فهرس السور الـ114 |
-| `res/raw/quran_uthmani_license.txt` | إشعار ترخيص النص الكامل |
+| `app/src/main/assets/quran.json` | النص العثماني الكامل، 6,236 آية؛ مورد للقراءة فقط ولا يغيّر التطبيق نصه |
+| `app/src/main/assets/quran_info.json` | بيانات فهرس السور الـ114 |
+| `res/raw/docs/QURAN_TEXT_ATTRIBUTION.md` | إشعار ترخيص النص الكامل |
 | `activity/QuranIndexActivity.java` | الفهرس، الاستئناف، نافذة المصدر |
 | `activity/QuranReaderActivity.java` | القراءة وحفظ موضع القراءة |
 | `activity/QuranSearchActivity.java` | البحث المحلي في النص والفهرس |
@@ -672,7 +672,7 @@ python3 tools/build_package.py
 | `utils/QuranRepository.java` | تحميل المورد والتحقق من 114/6,236 والبحث |
 | `utils/QuranStore.java` | تخزين الموضع والعلامات محليًا |
 
-النص هو **Tanzil Quran Text (Uthmani, Version 1.1)**، Copyright © 2007–2024 Tanzil Project،
+النص هو **official Uthmanic Hafs text from fawazahmed0/quran-api**، source and attribution documented in docs/QURAN_TEXT_ATTRIBUTION.md،
 بترخيص Creative Commons Attribution 3.0. نُسخت النسخة حرفيًا من المصدر المراجع ولم يُعدّل
 نص الآيات. تظهر نسبة المصدر في الواجهة، ويوجد الإشعار الكامل في المورد، وتفاصيل المصدر
 والبصمة في [`docs/QURAN_TEXT_ATTRIBUTION.md`](docs/QURAN_TEXT_ATTRIBUTION.md).
@@ -680,18 +680,18 @@ python3 tools/build_package.py
 ### سلامة النص قبل النشر
 
 امتد `tools/verify_resources.py` الآن بفحص ثامن خاص بالمصحف: يتأكد من 114 سورة و6,236 آية
-وترتيب كل الآيات وعددها، ومن إشعار Tanzil، ومن SHA-256 للنص:
+وترتيب كل الآيات وعددها، ومن إشعار the upstream Quran source، ومن SHA-256 للنص:
 
 ```text
 f64fe7657dbe2e185e9995e14f7a67ee6cf1a30773f39184883d7a763d70fb19
 ```
 
-لا تستبدل النص أو تعدله يدويًا. عند اعتماد تحديث موثق من Tanzil: راجعه مستقلًا أولًا ثم حدّث
+لا تستبدل النص أو تعدله يدويًا. عند اعتماد تحديث موثق من the upstream Quran source: راجعه مستقلًا أولًا ثم حدّث
 النص والبصمة في المدقق وملف النسبة معًا.
 
 ---
 
-## 17) وضع المصحف بالصفحات وإتاحة حجم النص (16 سبتمبر 2026)
+## 17) وضع المصحف بالتمرير العمودي وإتاحة حجم النص (16 سبتمبر 2026)
 
 اكتمل القارئ بوضع **«المصحف»** القابل للقراءة صفحةً بصفحة، مع الحفاظ على قارئ السور والبحث
 والعلامات القائمة. لا يدّعي هذا الوضع أنه صورة أو PDF للمصحف المرفوع غير المتاح في شجرة
@@ -700,9 +700,9 @@ f64fe7657dbe2e185e9995e14f7a67ee6cf1a30773f39184883d7a763d70fb19
 
 ### ما أضيف
 
-1. **604 صفحة معيارية و30 جزءًا**: الموردان `res/raw/quran_pages.tsv` و`res/raw/quran_juz.tsv`
-   يسجلان بداية كل صفحة وجزء بمرجع السورة والآية، مستخرجين من `QuranData.Page` و`QuranData.Juz`
-   في نسخة Tanzil المراجعة نفسها. يستبعدان عمدًا فهرس JavaScript الفارغ والحارس `[115, 1]`
+1. **604 صفحة معيارية و30 جزءًا**: الموردان `app/src/main/assets/quran_info.json` و`app/src/main/assets/quran_info.json`
+   يسجلان بداية كل صفحة وجزء بمرجع السورة والآية، مستخرجين من `quran_info.json page and juz references`
+   في نسخة the upstream Quran source المراجعة نفسها. يستبعدان عمدًا فهرس JavaScript الفارغ والحارس `[115, 1]`
    بعد آخر حد.
 2. **تنقل عملي**: بطاقة «قراءة المصحف بالصفحات» في الفهرس، وأزرار السابق/التالي، ولمس رقم
    الصفحة للانتقال المباشر إلى أي صفحة من 1 إلى 604 أو لمس شارة الجزء لاختيار أحد الأجزاء
@@ -720,14 +720,14 @@ f64fe7657dbe2e185e9995e14f7a67ee6cf1a30773f39184883d7a763d70fb19
 
 | المسار | المهمة |
 |---|---|
-| `res/raw/quran_pages.tsv` | 604 حدود صفحات مدنية مع نسبة Tanzil وبصمة موثقة |
-| `res/raw/quran_juz.tsv` | 30 بداية جزء للتنقل المباشر مع نسبة Tanzil وبصمة موثقة |
-| `model/QuranPage.java` و`model/QuranJuz.java` | نطاق آيات الصفحة وبدايتها ونهايتها، وبداية الجزء وصفحته |
-| `activity/QuranMushafActivity.java` | شاشة القراءة بالصفحات والتنقل والاستئناف |
-| `activity/QuranReaderActivity.java` | انتقال من قارئ السورة إلى الصفحة المطابقة وحجم النص |
+| `app/src/main/assets/quran_info.json` | 604 حدود صفحات مدنية مع نسبة the upstream Quran source وبصمة موثقة |
+| `app/src/main/assets/quran_info.json` | 30 بداية جزء للتنقل المباشر مع نسبة the upstream Quran source وبصمة موثقة |
+| `model/QuranJuz.java` | نطاق آيات الصفحة وبدايتها ونهايتها، وبداية الجزء وصفحته |
+| `activity/QuranMushafActivity.java` | شاشة التمرير العمودي المتصل والتنقل والاستئناف |
+| `activity/QuranReaderActivity.java` | قارئ السورة العمودي وحفظ موضع القراءة وحجم النص |
 | `utils/QuranRepository.java` | تحميل/تحقق حدود الصفحات وربط كل آية بصفحتها |
 | `utils/QuranStore.java` | حفظ حجم نص القارئ محليًا |
-| `adapter/QuranAyahAdapter.java` | تطبيق حجم النص المختار دون استبدال النص |
+| `adapter/QuranFlowAdapter.java` | تطبيق حجم النص المختار دون استبدال النص |
 
 امتد المدقق إلى فحص أن موردي الصفحات والأجزاء يحتويان بالضبط على 604 و30 بداية مرتبة، وأن
 كلًا منهما يغطي 6,236 آية مرة واحدة. بصمتاهما هما:
@@ -743,7 +743,7 @@ f64fe7657dbe2e185e9995e14f7a67ee6cf1a30773f39184883d7a763d70fb19
 
 طلب الجلسة: إصلاح/تحسين + إعلانات/AdMob + توثيق/تنظيف + «إضافة القرآن».
 الفحص أظهر أن القرآن **موجود ومكتمل أصلًا** (الأقسام 16–17: قارئ سور ومصحف
-بالصفحات وبحث وعلامات واستئناف، نص Tanzil العثماني ببصمات موثقة، ومدخل من
+بالصفحات وبحث وعلامات واستئناف، نص the upstream Quran source العثماني ببصمات موثقة، ومدخل من
 الشاشة الرئيسية) والمدقق يعطي `NO ERRORS` — فتركّز العمل على إصلاحات حقيقية
 وُجدت بالمراجعة اليدوية، لا على إعادة ما هو موجود.
 
@@ -788,7 +788,7 @@ Native) + رقم التطبيق = **ست قيم** يجب استبدالها قب
 
 ### القرآن في هذه الجلسة: تحقق لا إضافة
 
-- المدقق يؤكد: 114 سورة، 6236 آية، 604 صفحة مدنية، 30 جزءًا، وبصمات Tanzil
+- المدقق يؤكد: 114 سورة، 6236 آية، 604 صفحة مدنية، 30 جزءًا، وبصمات the upstream Quran source
   الثلاث مطابقة (`NO ERRORS`).
 - رُوجعت شاشات القراءة يدويًا: الاستئناف، العلامات، حجم النص (18–34sp مع ضمّن
   في `QuranStore`)، `contentDescription` لكل الأزرار، وغياب الإعلانات عن كل
@@ -832,21 +832,21 @@ grep -rn "printStackTrace\|TODO\|FIXME" app/src/main/java/  # لا نتائج
 ### 2) قارئ السورة: الآيات بجانب بعضها — صفحة مصحف واحدة
 
 بدل `RecyclerView` وبطاقة لكل آية، صار القارئ `ScrollView` فيه `TextView` واحد
-(`quranReaderPage`) وبطاقته `bg_quran_page.xml` (إطار ذهبي + خط شعرة داخلي):
+(`quranReaderRoot` وبطاقات التدفق `bg_quran_card.xml` (زوايا هادئة وخط شعرة داخلي):
 
 - كل آية تُكتب ثم تُختم بعلامة **U+06DD (۝)** يليها رقمها **بالأرقام الهندية**، وهي طريقة
   المصحف المطبوعة؛ والخط النسخي يرسم الرقم داخل العلامة نفسها.
 - **افتتاح السورة بالبسملة** لغير الفاتحة والتوبة، والنص المستخدم هو **نص الآية ١:١ نفسه**
-  من `res/raw/quran_uthmani.txt` — لا حرف مكتوب يدويًا، ويبقى الشرط الثامن في المدقق سليمًا.
+  من `app/src/main/assets/quran.json` — لا حرف مكتوب يدويًا، ويبقى الشرط الثامن في المدقق سليمًا.
 - **النقر على أي آية** يحفظها (أو يزيل حفظها) في `QuranStore`، ويُلوَّن موضعها بلون ذهبي
   شفاف (`quranVerseHighlight`) يبقى ظاهرًا ما دامت محفوظة. النقر لا يغيّر موضع «متابعة
   القراءة» إطلاقًا: الموضع يُحسب من التمرير وحده (مع مهلة 400ms ثم عند `onPause`)، حتى لا
   تُفقد نقطة الاستئناف بنقرة عابرة.
 - حجم النص (18–34sp من `QuranStore`)، وزر «المصحف» للانتقال إلى الصفحات، وزر العلامات
-  المحفوظة، وشريط `quran_reader_hint` — كلها باقية كما كانت، وتغيّرت صياغة التلميح في
+  المحفوظة، وشريط `quran_mushaf_hint` — كلها باقية كما كانت، وتغيّرت صياغة التلميح في
   اللغتين ليصف السلوك الجديد. صفحات القرآن بلا إعلانات كما كانت.
 
-بقيت `QuranAyahAdapter` و`item_quran_ayah.xml` لأن **وضع المصحف بالصفحات (القسم 17) لم
+بقيت `QuranFlowAdapter` و`item_quran_ayah.xml` لأن **وضع المصحف بالتمرير العمودي (القسم 17) لم
 يتغيّر** بطلب المستخدم، فهو ما يزال يستعملهما.
 
 ### 3) الأذكار صارت مدخلًا دائمًا — وسلوك مختلف عن الشارة
@@ -861,8 +861,8 @@ grep -rn "printStackTrace\|TODO\|FIXME" app/src/main/java/  # لا نتائج
 ### 4) المعاينة التفاعلية: شاشة قرآن جديدة
 
 `tools/preview` صار **13 شاشة** بدل 12: أُضيفت شاشة قارئ القرآن (نص متصل) ببيانات حقيقية
-— `build_assets.py` يقرأ الآن `res/raw/quran_uthmani.txt` و`quran_surahs.tsv` كاملين
-(114 سورة · 6236 آية · 1.4MB)، و`buildQuranPage()` في `app.js` تبني الصفحة بنفس منطق
+— `build_assets.py` يقرأ الآن `app/src/main/assets/quran.json` و`assets/quran_info.json` كاملين
+(114 سورة · 6236 آية · 1.4MB)، و`buildQuranFlow()` في `app.js` تبني الصفحة بنفس منطق
 `QuranReaderActivity` (البسملة من المورد، علامة ۝ بالأرقام الهندية، النقر يحفظ/يزيل).
 وبطاقتا الرئيسية الجديدتان مرسومتان بنفس الأبعاد والألوان، وشارة الأذكار داخلها.
 و`smoke.js` صار **34 فحصًا** بعد إضافة 11 فحصًا للقرآن (114 سورة، 6236 آية، 7 آيات
@@ -873,9 +873,9 @@ grep -rn "printStackTrace\|TODO\|FIXME" app/src/main/java/  # لا نتائج
 | المجموعة | الملفات |
 |---|---|
 | ألوان | `values/colors.xml` (8 ألوان جديدة) |
-| رسومات | `bg_home_tile_quran` · `bg_home_tile_athkar` · `ic_tile_divider` · `ic_athkar` · `bg_quran_page` · `bg_athkar_note` |
+| رسومات | `bg_home_tile_quran` · `bg_home_tile_athkar` · `ic_tile_divider` · `ic_athkar` · `bg_quran_card` · `bg_athkar_note` |
 | تخطيطات | `activity_select_function.xml` (إعادة كتابة) · `activity_quran_reader.xml` (إعادة كتابة) · `activity_athkar.xml` |
-| نصوص | `values/strings.xml` + `values-ar/strings.xml` (`tile_athkar` · `cd_athkar_tile` · `athkar_outside_window` + صياغة جديدة لـ`quran_reader_hint`) |
+| نصوص | `values/strings.xml` + `values-ar/strings.xml` (`tile_athkar` · `cd_athkar_tile` · `athkar_outside_window` + صياغة جديدة لـ`quran_mushaf_hint`) |
 | جافا | `QuranReaderActivity` (إعادة كتابة) · `MainActivity` · `AthkarActivity` · `PrayerWindow` |
 | معاينة | `tools/preview/{build_assets.py,index.html,app.css,app.js,smoke.js,README.md}` |
 
@@ -961,11 +961,11 @@ python3 tools/verify_resources.py   # NO ERRORS
   و`ImageView` و`TextView` كلاهما `match_parent` مع `gravity=center` و
   `includeFontPadding=false` — فالتوسّط يأتي من تساوي الحدود لا من إزاحة dp مكتوبة
   يدويًا، فلا ينزلق الرقم بين الكثافات. أما داخل النص فالزخرفة يرسمها
-  `AyahBadgeSpan` (وريدة 16 بتلة، `DISC_FIT = 0.62`) ونصّها يتقلّص ليدخل داخل الوريدة.
-- **التقليب**: `activity_quran_reader.xml` أُعيد بناؤه على `ViewPager2`
-  (وأُضيفت `androidx.viewpager2:viewpager2:1.1.0` إلى `app/build.gradle`)،
-  و`QuranPaginator` يقطع نص السورة إلى صفحات بارتفاع الشاشة من صناديق الأسطر التي
-  يقيسها المحرّك نفسه (لا عدد حروف تخميني)، و`QuranScreenAdapter` يعرضها، مع سهمَي
+  `built-in U+06DD end glyph` (وريدة 16 بتلة، `DISC_FIT = 0.62`) ونصّها يتقلّص ليدخل داخل الوريدة.
+- **التقليب**: `activity_quran_reader.xml` أُعيد بناؤه على `RecyclerView`
+  (وأُضيفت `androidx.recyclerview:recyclerview:1.4.0` إلى `app/build.gradle`)،
+  و`QuranFlowAdapter` يقطع نص السورة إلى صفحات بارتفاع الشاشة من صناديق الأسطر التي
+  يقيسها المحرّك نفسه (لا عدد حروف تخميني)، و`QuranFlowAdapter` يعرضها، مع سهمَي
   السابقة/التالية وشريحة «الآيات ١–٣». التقليب أفقي وRTL-واعٍ، ومسار الحفظ/الاستئناف
   ونافذة حجم النص تبقى كما هي بعد كل إعادة تقطيع.
 - **الوضع الليلي**: زر داخل القارئ يبدّل `QuranTheme` في مكانه —
@@ -1015,7 +1015,7 @@ python3 tools/verify_resources.py   # NO ERRORS
 ### المعاينة التفاعلية
 
 `tools/preview` صارت تعرض الجديد: قارئ بمصحف مقسّم إلى صفحات تُقلب (ومواضع القطع
-تُقرأ من `QuranPageBuilder` نفسها لا من تقدير)، وهاتف ثانٍ للقراءة الليلية، ومعرض
+تُقرأ من `QuranText` نفسها لا من تقدير)، وهاتف ثانٍ للقراءة الليلية، ومعرض
 بالخلفيات الـ24 وبطاقات `Premium` المقفلة ومسار الإعلان، وشريط زجاجي على الرئيسية.
 
 ```bash
@@ -1042,9 +1042,9 @@ python3 tools/verify_resources.py       # NO ERRORS
 
 | ما كان | أين | لماذا حُذف |
 |---|---|---|
-| `adapter/QuranAyahAdapter.java` | **داخل الحزمة المسلَّمة** | محذوف من الشجرة في القسم 21 (القارئ صار `ViewPager2`)، لكن الأرشيف بقي يحمله |
+| `adapter/QuranFlowAdapter.java` | **داخل الحزمة المسلَّمة** | محذوف من الشجرة في القسم 21 (القارئ صار `RecyclerView`)، لكن الحزمة تُعاد بناؤها من الشجرة الحالية |
 | `layout/item_quran_ayah.xml` | **داخل الحزمة المسلَّمة** | بطاقة الآية الواحدة التي استُبدلت بصفحة مصحف متصلة |
-| `drawable/bg_quran_ayah_number.xml` | **داخل الحزمة المسلَّمة** | خلفية رقم الآية القديمة، حلّت محلها `view_ayah_number_badge.xml` + `AyahBadgeSpan` |
+| `drawable/bg_quran_ayah_number.xml` | **داخل الحزمة المسلَّمة** | خلفية رقم الآية القديمة، حلّت محلها `view_ayah_number_badge.xml` + `built-in U+06DD end glyph` |
 
 وإلى جانبها 11 موردًا ميتًا لا يشير إليه أي ملف في المستودع (فُحص: كل جافا + XML + أدوات + وثائق):
 `base_13.png` · `base_14.png` · `base_16.png` · `black_gradient.png` · `ic_bookmark.xml` ·
@@ -1199,7 +1199,7 @@ python3 tools/build_package.py                     # 410 ملفًا · 9.84 م.�
 
 | الخطر في بناء release | الدليل في المستودع | النتيجة |
 |---|---|---|
-| صنف يُنشئه النظام من الـ layout بالاسم الكامل، فيُعاد اسمه أو يُحذف | **7** أصناف تُذكر بوسمها الكامل في `res/layout`: `AnalogClock` · `CompassView` · `QuranPageView` · `SmartClockPreview` · `SquareRelativeLayout` · `TextClockPreview` · `WallpaperOverlayView` | كلها داخل `viewUtils` ← محفوظة بـ `-keep class ...viewUtils.** { *; }`، وقواعد المنصة تحفظ باني `(Context, AttributeSet)` أصلًا |
+| صنف يُنشئه النظام من الـ layout بالاسم الكامل، فيُعاد اسمه أو يُحذف | **7** أصناف تُذكر بوسمها الكامل في `res/layout`: `AnalogClock` · `CompassView` · `QuranFlowAdapter` · `SmartClockPreview` · `SquareRelativeLayout` · `TextClockPreview` · `WallpaperOverlayView` | كلها داخل `viewUtils` ← محفوظة بـ `-keep class ...viewUtils.** { *; }`، وقواعد المنصة تحفظ باني `(Context, AttributeSet)` أصلًا |
 | مكوّن مُسمّى في `AndroidManifest.xml` | **19** مكوّنًا من كود التطبيق: 14 `activity` + 3 `service` + 2 `receiver` (`widget.ClockWidgetSquare` / `ClockWidgetWide`) | محفوظة صراحةً (`activity.**` · `service.**` · `widget.**` · `AppClass` · `LiveClockWallpaper` · `CustomWallpaper`)، والمدق يتأكد أن لكل اسم ملفًا مقابلًا |
 | Gson يقرأ الحقول ويكتبها بالاسم (`TinyDB` السطور 69-75 و108-115، `AthkarRepository` السطر 72) | أصناف `model.**` | محفوظة كاملةً بـ `-keep class ...model.** { *; }` |
 | مورد يُطلب بالاسم فيحذفه `shrinkResources` | `getIdentifier` | **صفر** نتيجة في 88 ملف جافا |

@@ -163,7 +163,8 @@ public final class QuranIndexActivity extends AppCompatActivity {
                 .setMessage(R.string.quran_text_source_message)
                 .setNeutralButton(R.string.quran_text_source_link, (dialog, which) -> {
                     try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://tanzil.net")));
+                        startActivity(new Intent(Intent.ACTION_VIEW,
+                                Uri.parse("https://github.com/fawazahmed0/quran-api")));
                     } catch (ActivityNotFoundException ignored) {
                         // The attribution remains visible even on a device with no browser.
                     }

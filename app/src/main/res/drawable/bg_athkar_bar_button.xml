@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The action buttons of the athkar top bar sit on a saturated blue, so the pressed state is a
+  soft white ripple rather than the app's dark one.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#33FFFFFF">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/transparent" />
+        </shape>
+    </item>
+</ripple>

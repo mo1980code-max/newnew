@@ -23,7 +23,7 @@
     وبطاقات الزجاج <code>glass*</code>)، الأيقونات المتجهية محوّلة إلى SVG،
     الـ24 خلفية المدمجة (منها ٣ حصرية بإعلان مكافأة)، صور التصاميم الحقيقية (<code>clock_bg_*</code> ·
     <code>digital_thumb_*</code> · <code>smart_thumb_*</code>)، ونص القرآن العثماني كاملًا
-    (<b>114 سورة · 6236 آية</b>) من <code>res/raw/quran_uthmani.txt</code>. الأبعاد 1:1 مع
+    (<b>114 سورة · 6236 آية</b>) من <code>assets/quran.json</code>. الأبعاد 1:1 مع
     التخطيطات (كل 1px هنا = 1dp هناك) داخل هاتف 360×720.
   </p>
 
@@ -138,7 +138,7 @@
         </div>
         <div class="quranHeader">
           <div class="meta" id="quranMeta"></div>
-          <div class="hint" data-i18n="quran_reader_hint"></div>
+          <div class="hint" data-i18n="quran_mushaf_hint"></div>
         </div>
         <div class="quranPager" id="quranPages"></div>
         <div class="quranFooter">
@@ -150,14 +150,14 @@
       </div>
     <figcaption>
       <b data-cap="quran"></b>
-      <span>لم تعد قائمة آيات تُمرَّر عموديًا: السورة <b>صفحات مصحف تُقلب جانبيًا</b>
-        بـ<code>ViewPager2</code> أفقي، مع سهمَي «السابقة/التالية» وشرائح المدى
-        (<code>quran_screen_ayahs</code>). كل آية تُختم بعلامة <b>۝</b> ورقمها بالأرقام
+      <span>لم تعد قائمة آيات تُمرَّر عموديًا: السورة <b>نص مصحف يُمرَّر عموديًا</b>
+        بتمرير عمودي متصل عبر <code>RecyclerView</code>، مع شريط رقم الصفحة في الأسفل
+        (<code>quran_page_number</code>). كل آية تُختم بعلامة <b>۝</b> ورقمها بالأرقام
         الهندية داخلها، وانقر أي آية لحفظها فيتلون موضعها بذهبي شفاف. والافتتاح بالبسملة هو
         <b>نص الآية ١:١ نفسه</b> من المورد — لا نص مكتوب يدويًا. مواضع القطع أدناه ليست
-        تخمينًا: مولّد المعاينة يقرأ <code>U+06DD</code> من <code>QuranPageBuilder</code>
+        تخمينًا: مولّد المعاينة يقرأ <code>U+06DD</code> من <code>QuranText</code>
         نفسها.</span>
-      <code>activity_quran_reader.xml · QuranReaderActivity.java · QuranScreenAdapter.java</code>
+      <code>activity_quran_reader.xml · QuranReaderActivity.java · QuranFlowAdapter.java</code>
     </figcaption>
   </figure>
 
@@ -176,7 +176,7 @@
         </div>
         <div class="quranHeader">
           <div class="meta" data-i18n="quran_night_enabled"></div>
-          <div class="hint" data-i18n="quran_flip_hint"></div>
+          <div class="hint" data-i18n="quran_mushaf_hint"></div>
         </div>
         <div class="quranPager" id="quranNightPage"></div>
         <div class="quranSource" data-i18n="quran_text_source_short"></div>

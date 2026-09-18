@@ -1,15 +1,14 @@
 package org.Allah_Clock_Live_Wallpaper.utils;
 
 import android.content.Context;
-import android.content.res.Resources;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import org.Allah_Clock_Live_Wallpaper.R;
+import com.google.gson.Gson;
+
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
 import org.Allah_Clock_Live_Wallpaper.model.QuranJuz;
-import org.Allah_Clock_Live_Wallpaper.model.QuranPage;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSearchResult;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSurah;
 
@@ -31,10 +30,23 @@ import java.util.regex.Pattern;
 /**
  * Offline source of truth for the Quran reader.
  *
- * <p>The Uthmani text is deliberately shipped as a read-only raw asset rather than fetched
- * from a network API. The reader therefore opens without a connection, keeps a single
- * verified text source, and never changes the source text while formatting it for display.
- * The original Tanzil license is bundled alongside the text in {@code res/raw}.</p>
+ * <p>The app bundles the official Uthmanic text of the fawazahmed0/quran-api repository
+ * (branch 1, edition <i>ara-quranuthmanihaf</i> — the fully vowel-marked Uthmanic text after the
+ * Hafs reading, sourced from the King Fahd Quran Complex) as a read-only asset,
+ * {@code assets/quran.json}, together with the repository's companion metadata
+ * ({@code assets/quran_info.json}), which carries the 114 surah names, the revelation type and —
+ * for every single ayah — its Madani page (1..604), juz (1..30) and position on the printed page.
+ * The reader therefore opens without a connection, keeps one verified text source, and never
+ * changes the source text while formatting it for display.</p>
+ *
+ * <p>Each ayah's text is closed with its built-in end-of-ayah glyph (U+06DD) and the ayah number
+ * in Arabic-Indic digits at load time, exactly the shape the edition's rendered text uses, so the
+ * reader prints the glyph as an ordinary character instead of painting an ornament at computed
+ * coordinates.</p>
+ *
+ * <p>Both files are byte-identical to the upstream repository: {@code tools/verify_resources.py}
+ * pins the git blob SHAs, and {@code docs/QURAN_TEXT_ATTRIBUTION.md} records the source and the
+ * license terms.</p>
  */
 public final class QuranRepository {
 
@@ -42,6 +54,9 @@ public final class QuranRepository {
     public static final int AYAH_COUNT = 6236;
     public static final int PAGE_COUNT = 604;
     public static final int JUZ_COUNT = 30;
+
+    private static final String ASSET_TEXT = "quran.json";
+    private static final String ASSET_INFO = "quran_info.json";
 
     private static final Pattern REFERENCE = Pattern.compile(
             "^\\s*(\\d{1,3})\\s*[:：]\\s*(\\d{1,3})\\s*$");
@@ -52,17 +67,13 @@ public final class QuranRepository {
     private final Map<Integer, List<QuranAyah>> ayahsBySurah = new HashMap<>();
     private final List<QuranAyah> allAyahs = new ArrayList<>();
     private final Map<String, Integer> globalAyahIndexes = new HashMap<>();
-    private final List<QuranPage> pages = new ArrayList<>();
-    private final Map<String, Integer> pageByAyah = new HashMap<>();
+    private final Map<Integer, int[]> pageRanges = new HashMap<>();
     private final List<QuranJuz> juzs = new ArrayList<>();
-    private final Map<String, Integer> juzByAyah = new HashMap<>();
 
     private QuranRepository(@NonNull Context context) throws IOException {
-        Resources resources = context.getResources();
-        loadSurahs(resources);
-        loadAyahs(resources);
-        loadPages(resources);
-        loadJuzs(resources);
+        List<TextAyah> texts = readTexts(context);
+        Info info = readInfo(context);
+        build(texts, info);
         validate();
     }
 
@@ -86,165 +97,137 @@ public final class QuranRepository {
         }
     }
 
-    private void loadSurahs(@NonNull Resources resources) throws IOException {
-        try (InputStream input = resources.openRawResource(R.raw.quran_surahs);
+    // ══════════════════════════ parsing the two bundled assets ══════════════════════════
+
+    @NonNull
+    private static List<TextAyah> readTexts(@NonNull Context context) throws IOException {
+        String body = readAsset(context, ASSET_TEXT);
+        TextFile file = new Gson().fromJson(body, TextFile.class);
+        if (file == null || file.quran == null) {
+            throw new IOException("The bundled Quran text has no verses");
+        }
+        return file.quran;
+    }
+
+    @NonNull
+    private static Info readInfo(@NonNull Context context) throws IOException {
+        String body = readAsset(context, ASSET_INFO);
+        Info info = new Gson().fromJson(body, Info.class);
+        if (info == null) {
+            throw new IOException("The bundled Quran metadata is missing");
+        }
+        return info;
+    }
+
+    /** Reads one bundled asset completely (no API 24+ stream helpers: minSdk is 23). */
+    @NonNull
+    private static String readAsset(@NonNull Context context, @NonNull String name)
+            throws IOException {
+        try (InputStream input = context.getAssets().open(name);
              BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(input, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-                String[] fields = line.split("\\|", -1);
-                if (fields.length != 7) {
-                    throw new IOException("Invalid Quran surah metadata row");
-                }
-                int number = positiveInt(fields[0], "surah number");
-                int ayahCount = positiveInt(fields[2], "ayah count");
-                if (number != surahs.size() + 1 || fields[3].trim().isEmpty()
-                        || fields[4].trim().isEmpty()) {
-                    throw new IOException("Invalid Quran surah metadata order");
-                }
-                boolean meccan;
-                if ("Meccan".equals(fields[6])) {
-                    meccan = true;
-                } else if ("Medinan".equals(fields[6])) {
-                    meccan = false;
-                } else {
-                    throw new IOException("Invalid Quran revelation type");
-                }
-                QuranSurah surah = new QuranSurah(number, ayahCount, fields[3], fields[4],
-                        fields[5], meccan);
-                surahs.add(surah);
-                surahsByNumber.put(number, surah);
-                ayahsBySurah.put(number, new ArrayList<>());
+                     new InputStreamReader(input, StandardCharsets.UTF_8), 1 << 16)) {
+            StringBuilder out = new StringBuilder(1 << 20);
+            char[] buffer = new char[1 << 14];
+            int read;
+            while ((read = reader.read(buffer)) != -1) {
+                out.append(buffer, 0, read);
             }
+            return out.toString();
         }
     }
 
-    private void loadAyahs(@NonNull Resources resources) throws IOException {
-        try (InputStream input = resources.openRawResource(R.raw.quran_uthmani);
-             BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(input, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                // The upstream text carries its mandatory attribution as trailing # comments.
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
+    private void build(@NonNull List<TextAyah> texts, @NonNull Info info) throws IOException {
+        if (info.chapters == null || info.chapters.size() != SURAH_COUNT) {
+            throw new IOException("Quran metadata must describe 114 surahs");
+        }
+        for (int surahIndex = 0; surahIndex < SURAH_COUNT; surahIndex++) {
+            Chapter chapter = info.chapters.get(surahIndex);
+            int number = surahIndex + 1;
+            if (chapter.chapter != number || chapter.verses == null
+                    || chapter.verses.size() != expectedAyahCount(number)
+                    || chapter.verses.size() == 0) {
+                throw new IOException("Invalid Quran surah metadata for surah " + number);
+            }
+            String revelation = chapter.revelation == null ? "" : chapter.revelation;
+            if (!revelation.equalsIgnoreCase("Mecca") && !revelation.equalsIgnoreCase("Madina")) {
+                throw new IOException("Invalid Quran revelation type for surah " + number);
+            }
+            QuranSurah surah = new QuranSurah(number, expectedAyahCount(number),
+                    QuranText.displaySurahName(chapter.arabicname),
+                    chapter.name == null ? "" : chapter.name,
+                    chapter.englishname == null ? "" : chapter.englishname,
+                    revelation.equalsIgnoreCase("Mecca"));
+            surahs.add(surah);
+            surahsByNumber.put(number, surah);
+            List<QuranAyah> ayahs = new ArrayList<>(surah.getAyahCount());
+            ayahsBySurah.put(number, ayahs);
+        }
+
+        // The text file is ordered surah by surah, and the verse number restarts at one in
+        // every surah: the sequence must hold inside each surah and the surahs must be 1..114.
+        int expectedVerse = 0;
+        int lastChapter = 1;
+        for (TextAyah row : texts) {
+            if (row.chapter < 1 || row.chapter > SURAH_COUNT) {
+                throw new IOException("Quran text has an invalid surah " + row.chapter);
+            }
+            if (row.chapter != lastChapter) {
+                lastChapter = row.chapter;
+                expectedVerse = 0;
+            }
+            expectedVerse++;
+            if (row.verse != expectedVerse) {
+                throw new IOException("Quran ayah sequence breaks at "
+                        + row.chapter + ":" + row.verse);
+            }
+        }
+        if (texts.size() != AYAH_COUNT) {
+            throw new IOException("The Quran text must contain 6236 ayahs");
+        }
+
+        int cursor = 0;
+        for (int surahIndex = 0; surahIndex < SURAH_COUNT; surahIndex++) {
+            Chapter chapter = info.chapters.get(surahIndex);
+            List<QuranAyah> ayahs = ayahsBySurah.get(chapter.chapter);
+            for (int ayahIndex = 0; ayahIndex < chapter.verses.size(); ayahIndex++) {
+                Verse verseMeta = chapter.verses.get(ayahIndex);
+                TextAyah text = texts.get(cursor++);
+                if (text.chapter != chapter.chapter || text.verse != verseMeta.verse
+                        || text.text == null || text.text.isEmpty()) {
+                    throw new IOException("Quran text and metadata disagree at "
+                            + chapter.chapter + ":" + verseMeta.verse);
                 }
-                int first = line.indexOf('|');
-                int second = first < 0 ? -1 : line.indexOf('|', first + 1);
-                if (first <= 0 || second <= first + 1 || second == line.length() - 1) {
-                    throw new IOException("Invalid Quran text row");
+                if (verseMeta.page < 1 || verseMeta.page > PAGE_COUNT
+                        || verseMeta.juz < 1 || verseMeta.juz > JUZ_COUNT
+                        || verseMeta.line < 1) {
+                    throw new IOException("Quran navigation is out of range at "
+                            + chapter.chapter + ":" + verseMeta.verse);
                 }
-                int surahNumber = positiveInt(line.substring(0, first), "ayah surah number");
-                int ayahNumber = positiveInt(line.substring(first + 1, second), "ayah number");
-                QuranSurah surah = surahsByNumber.get(surahNumber);
-                List<QuranAyah> ayahs = ayahsBySurah.get(surahNumber);
-                if (surah == null || ayahs == null || ayahNumber != ayahs.size() + 1
-                        || ayahNumber > surah.getAyahCount()) {
-                    throw new IOException("Unexpected Quran ayah order");
-                }
-                String text = line.substring(second + 1);
-                QuranAyah ayah = new QuranAyah(surahNumber, ayahNumber, text,
-                        normalizeForSearch(text));
+                QuranAyah ayah = new QuranAyah(chapter.chapter, verseMeta.verse,
+                        QuranText.withEndGlyph(text.text, verseMeta.verse),
+                        normalizeForSearch(text.text), verseMeta.page, verseMeta.juz,
+                        verseMeta.line);
                 ayahs.add(ayah);
                 globalAyahIndexes.put(ayah.getKey(), allAyahs.size());
                 allAyahs.add(ayah);
             }
         }
-    }
+        if (cursor != texts.size()) {
+            throw new IOException("Quran metadata and text cover different ayah counts");
+        }
 
-    /**
-     * Reads the 604 traditional Madani-page starts. Tanzil puts a [115, 1] sentinel after its
-     * JavaScript list; the generated TSV intentionally excludes that one-past-the-end marker.
-     */
-    private void loadPages(@NonNull Resources resources) throws IOException {
-        List<Integer> startIndexes = new ArrayList<>();
-        try (InputStream input = resources.openRawResource(R.raw.quran_pages);
-             BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(input, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-                String[] fields = line.split("\\|", -1);
-                if (fields.length != 3) {
-                    throw new IOException("Invalid Quran page metadata row");
-                }
-                int page = positiveInt(fields[0], "page number");
-                int surah = positiveInt(fields[1], "page surah number");
-                int ayah = positiveInt(fields[2], "page ayah number");
-                Integer index = globalAyahIndexes.get(surah + ":" + ayah);
-                if (page != startIndexes.size() + 1 || index == null
-                        || (!startIndexes.isEmpty() && index <= startIndexes.get(startIndexes.size() - 1))) {
-                    throw new IOException("Invalid Quran page metadata order");
-                }
-                startIndexes.add(index);
+        if (info.pages != null && info.pages.references != null) {
+            for (PageRef ref : info.pages.references) {
+                pageRanges.put(ref.page, new int[]{ref.start.chapter, ref.start.verse});
             }
         }
-        if (startIndexes.size() != PAGE_COUNT || startIndexes.get(0) != 0) {
-            throw new IOException("Quran page metadata must contain 604 ordered pages");
-        }
-        for (int pageIndex = 0; pageIndex < startIndexes.size(); pageIndex++) {
-            int start = startIndexes.get(pageIndex);
-            int end = pageIndex + 1 < startIndexes.size()
-                    ? startIndexes.get(pageIndex + 1) - 1 : allAyahs.size() - 1;
-            if (end < start) {
-                throw new IOException("Empty Quran page metadata range");
-            }
-            QuranPage page = new QuranPage(pageIndex + 1, start, end,
-                    allAyahs.get(start), allAyahs.get(end));
-            pages.add(page);
-            for (int ayahIndex = start; ayahIndex <= end; ayahIndex++) {
-                pageByAyah.put(allAyahs.get(ayahIndex).getKey(), page.getNumber());
-            }
-        }
-    }
-
-    /** Reads the thirty traditional juz starts used for fast local navigation. */
-    private void loadJuzs(@NonNull Resources resources) throws IOException {
-        List<Integer> startIndexes = new ArrayList<>();
-        try (InputStream input = resources.openRawResource(R.raw.quran_juz);
-             BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(input, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
+        if (info.juzs != null && info.juzs.references != null) {
+            for (JuzRef ref : info.juzs.references) {
+                QuranAyah first = getAyah(ref.start.chapter, ref.start.verse);
+                if (first == null || first.getMushafPage() < 1) {
+                    throw new IOException("Invalid Quran juz metadata for juz " + ref.juz);
                 }
-                String[] fields = line.split("\\|", -1);
-                if (fields.length != 3) {
-                    throw new IOException("Invalid Quran juz metadata row");
-                }
-                int juz = positiveInt(fields[0], "juz number");
-                int surah = positiveInt(fields[1], "juz surah number");
-                int ayah = positiveInt(fields[2], "juz ayah number");
-                Integer index = globalAyahIndexes.get(surah + ":" + ayah);
-                if (juz != startIndexes.size() + 1 || index == null
-                        || (!startIndexes.isEmpty() && index <= startIndexes.get(startIndexes.size() - 1))) {
-                    throw new IOException("Invalid Quran juz metadata order");
-                }
-                startIndexes.add(index);
-            }
-        }
-        if (startIndexes.size() != JUZ_COUNT || startIndexes.get(0) != 0) {
-            throw new IOException("Quran juz metadata must contain 30 ordered juzs");
-        }
-        for (int juzIndex = 0; juzIndex < startIndexes.size(); juzIndex++) {
-            int start = startIndexes.get(juzIndex);
-            int end = juzIndex + 1 < startIndexes.size()
-                    ? startIndexes.get(juzIndex + 1) - 1 : allAyahs.size() - 1;
-            QuranAyah first = allAyahs.get(start);
-            Integer pageNumber = pageByAyah.get(first.getKey());
-            if (end < start || pageNumber == null) {
-                throw new IOException("Invalid Quran juz metadata range");
-            }
-            QuranJuz juz = new QuranJuz(juzIndex + 1, pageNumber, first);
-            juzs.add(juz);
-            for (int ayahIndex = start; ayahIndex <= end; ayahIndex++) {
-                juzByAyah.put(allAyahs.get(ayahIndex).getKey(), juz.getNumber());
+                juzs.add(new QuranJuz(ref.juz, first.getMushafPage(), first));
             }
         }
     }
@@ -253,38 +236,46 @@ public final class QuranRepository {
         if (surahs.size() != SURAH_COUNT) {
             throw new IOException("Quran index must contain 114 surahs");
         }
-        int total = 0;
-        for (QuranSurah surah : surahs) {
-            List<QuranAyah> list = ayahsBySurah.get(surah.getNumber());
-            if (list == null || list.size() != surah.getAyahCount()) {
-                throw new IOException("Unexpected ayah count in Quran data");
+        if (allAyahs.size() != AYAH_COUNT) {
+            throw new IOException("The Quran text must contain 6236 ayahs");
+        }
+        if (pageRanges.size() != PAGE_COUNT) {
+            throw new IOException("Quran metadata must cover all 604 Madani pages");
+        }
+        if (juzs.size() != JUZ_COUNT) {
+            throw new IOException("Quran metadata must contain the 30 juzs");
+        }
+        for (QuranAyah ayah : allAyahs) {
+            String suffix = "\u06DD" + QuranText.arabicIndic(ayah.getAyahNumber());
+            if (!ayah.getText().endsWith(suffix)) {
+                throw new IOException("Every ayah must carry its end-of-ayah glyph and number");
             }
-            total += list.size();
-            ayahsBySurah.put(surah.getNumber(), Collections.unmodifiableList(list));
-        }
-        if (total != AYAH_COUNT) {
-            throw new IOException("Quran text must contain 6236 ayahs");
-        }
-        if (pages.size() != PAGE_COUNT || pageByAyah.size() != total) {
-            throw new IOException("Quran page metadata does not cover every ayah");
-        }
-        if (juzs.size() != JUZ_COUNT || juzByAyah.size() != total) {
-            throw new IOException("Quran juz metadata does not cover every ayah");
         }
     }
 
-    private static int positiveInt(@NonNull String value, @NonNull String label)
-            throws IOException {
-        try {
-            int parsed = Integer.parseInt(value);
-            if (parsed <= 0) {
-                throw new NumberFormatException();
-            }
-            return parsed;
-        } catch (NumberFormatException error) {
-            throw new IOException("Invalid " + label, error);
+    /** The canonical ayah count of each surah, independent of the bundled files. */
+    private static int expectedAyahCount(int surahNumber) {
+        int[] counts = {
+                7, 286, 200, 176, 120, 165, 206, 75, 129, 109,
+                123, 111, 43, 52, 99, 128, 111, 110, 98, 135,
+                112, 78, 118, 64, 77, 227, 93, 88, 69, 60,
+                34, 30, 73, 54, 45, 83, 182, 88, 75, 85,
+                54, 53, 89, 59, 37, 35, 38, 29, 18, 45,
+                60, 49, 62, 55, 78, 96, 29, 22, 24, 13,
+                14, 11, 11, 18, 12, 12, 30, 52, 52, 44,
+                28, 28, 20, 56, 40, 31, 50, 40, 46, 42,
+                29, 19, 36, 25, 22, 17, 19, 26, 30, 20,
+                15, 21, 11, 8, 8, 19, 5, 8, 8, 11,
+                11, 8, 3, 9, 5, 4, 7, 3, 6, 3,
+                5, 4, 5, 6
+        };
+        if (surahNumber < 1 || surahNumber > counts.length) {
+            throw new IllegalStateException("unknown surah number " + surahNumber);
         }
+        return counts[surahNumber - 1];
     }
+
+    // ══════════════════════════════════════════ access ══════════════════════════════════════════
 
     @NonNull
     public List<QuranSurah> getSurahs() {
@@ -311,29 +302,39 @@ public final class QuranRepository {
         return ayahs.get(ayahNumber - 1);
     }
 
+    /** True when {@code pageNumber} is one of the 604 Madani pages. */
+    public boolean hasPage(int pageNumber) {
+        return pageRanges.containsKey(pageNumber);
+    }
+
     @Nullable
-    public QuranPage getPage(int pageNumber) {
-        if (pageNumber < 1 || pageNumber > pages.size()) {
-            return null;
-        }
-        return pages.get(pageNumber - 1);
+    public QuranAyah getFirstAyahOfPage(int pageNumber) {
+        int[] start = pageRanges.get(pageNumber);
+        return start == null ? null : getAyah(start[0], start[1]);
     }
 
-    /** Returns the canonical Madani-page number for a valid ayah, or -1 when unknown. */
+    /** The canonical page number (1..604) of a valid ayah, or -1 when unknown. */
     public int getPageForAyah(int surahNumber, int ayahNumber) {
-        Integer page = pageByAyah.get(surahNumber + ":" + ayahNumber);
-        return page == null ? -1 : page;
+        QuranAyah ayah = getAyah(surahNumber, ayahNumber);
+        return ayah == null ? -1 : ayah.getMushafPage();
     }
 
-    /** A read-only, compact list of the ayahs falling within one canonical page boundary. */
+    /** A read-only list of the ayahs printed on one Madani page. */
     @NonNull
     public List<QuranAyah> getAyahsForPage(int pageNumber) {
-        QuranPage page = getPage(pageNumber);
-        if (page == null) {
+        QuranAyah first = getFirstAyahOfPage(pageNumber);
+        if (first == null) {
             return Collections.emptyList();
         }
-        return Collections.unmodifiableList(new ArrayList<>(allAyahs.subList(
-                page.getStartIndex(), page.getEndIndex() + 1)));
+        List<QuranAyah> result = new ArrayList<>();
+        int page = first.getMushafPage();
+        for (QuranAyah ayah : allAyahs) {
+            if (ayah.getMushafPage() != page) {
+                continue;
+            }
+            result.add(ayah);
+        }
+        return Collections.unmodifiableList(result);
     }
 
     @Nullable
@@ -344,23 +345,35 @@ public final class QuranRepository {
         return juzs.get(juzNumber - 1);
     }
 
-    /** Returns the traditional juz containing a valid ayah, or -1 when unknown. */
+    /** The traditional juz (1..30) containing a valid ayah, or -1 when unknown. */
     public int getJuzForAyah(int surahNumber, int ayahNumber) {
-        Integer juz = juzByAyah.get(surahNumber + ":" + ayahNumber);
-        return juz == null ? -1 : juz;
+        QuranAyah ayah = getAyah(surahNumber, ayahNumber);
+        return ayah == null ? -1 : ayah.getJuz();
     }
 
-    /** Returns the juz in which the first ayah of this page falls. */
+    /** The juz in which the first ayah of this page falls. */
     public int getJuzForPage(int pageNumber) {
-        QuranPage page = getPage(pageNumber);
-        return page == null ? -1 : getJuzForAyah(page.getFirstAyah().getSurahNumber(),
-                page.getFirstAyah().getAyahNumber());
+        QuranAyah first = getFirstAyahOfPage(pageNumber);
+        return first == null ? -1 : first.getJuz();
     }
+
+    /** The juz that opens with this page (the header's juz when a juz starts mid-page). */
+    @Nullable
+    public QuranJuz getJuzStartingOnPage(int pageNumber) {
+        for (QuranJuz juz : juzs) {
+            if (juz.getPageNumber() == pageNumber) {
+                return juz;
+            }
+        }
+        return null;
+    }
+
+    // ══════════════════════════════════════════ search ══════════════════════════════════════════
 
     /**
      * Searches local surah names and all locally bundled ayahs. Arabic diacritics and common
      * alef/ya variants are ignored for matching only; the displayed Quran text remains exactly
-     * the original Uthmani source text.
+     * the original Uthmanic source text.
      */
     @NonNull
     public SearchResults search(@Nullable String rawQuery, int visibleLimit) {
@@ -419,7 +432,7 @@ public final class QuranRepository {
     }
 
     /**
-     * Uthmani text uses a superscript alef in words that readers commonly type with a regular
+     * Uthmanic text uses a superscript alef in words that readers commonly type with a regular
      * alef (for example الصراط), while other words conventionally omit that visual alef
      * (for example الرحمن). Direct matching is tried first; an alef-insensitive fallback
      * makes both familiar spellings find the same original, untouched text.
@@ -513,5 +526,72 @@ public final class QuranRepository {
         public boolean isTruncated() {
             return totalMatches > items.size();
         }
+    }
+
+    // ══════════════════════════ Gson shapes of the two assets ══════════════════════════
+
+    /** assets/quran.json — the edition text file. */
+    private static final class TextFile {
+        List<TextAyah> quran;
+    }
+
+    private static final class TextAyah {
+        int chapter;
+        int verse;
+        String text;
+    }
+
+    /** assets/quran_info.json — the repository's companion metadata. */
+    private static final class Info {
+        CountOnly verses;
+        List<Chapter> chapters;
+        CountRef<PageRef> pages;
+        CountRef<JuzRef> juzs;
+    }
+
+    private static final class CountOnly {
+        int count;
+    }
+
+    private static final class CountRef<T> {
+        int count;
+        List<T> references;
+    }
+
+    private static final class Chapter {
+        int chapter;
+        String name;
+        String englishname;
+        String arabicname;
+        String revelation;
+        List<Verse> verses;
+    }
+
+    private static final class Verse {
+        int verse;
+        int line;
+        int juz;
+        int manzil;
+        int page;
+        int ruku;
+        int maqra;
+        boolean sajda;
+    }
+
+    private static final class PageRef {
+        int page;
+        Ref start;
+        Ref end;
+    }
+
+    private static final class JuzRef {
+        int juz;
+        Ref start;
+        Ref end;
+    }
+
+    private static final class Ref {
+        int chapter;
+        int verse;
     }
 }

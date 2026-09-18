@@ -19,7 +19,7 @@ node tools/preview/smoke.js               # يفحص المنطق بلا متص�
 | `values/strings.xml` + `values-ar/strings.xml` | جدولا النصوص (`D.en` / `D.ar`) |
 | كل `string-array` في `values*/` | المدن (73)، الأشهر الهجرية (12)، اتجاهات البوصلة، الأيام، `adhkar` |
 | `res/raw/athkar.json` | الأذكار (31 صباح + 30 مساء) بالفضل والتكرار |
-| `res/raw/quran_uthmani.txt` + `quran_surahs.tsv` | نص القرآن العثماني كاملًا: 114 سورة · 6236 آية |
+| `assets/quran.json` + `assets/quran_info.json` | النص العثماني الكامل (حفص) مع البيانات: 114 سورة · 6236 آية · 604 صفحة · 30 جزءًا |
 | `values/colors.xml` | الألوان الحقيقية (ورق الأذكار، ذهب الشارة، خلفية القبلة) |
 | `QiblaUtil.CITY_COORDS` + إحداثيات الكعبة | اتجاه عمّان 161° ومسافتها 1234 كم بنفس المعادلة |
 | `GetClocks.java` | 14 تناظري + 10 رقمية + 11 ذكية، وآخر 3 من كل قائمة بقفل ذهبي |
