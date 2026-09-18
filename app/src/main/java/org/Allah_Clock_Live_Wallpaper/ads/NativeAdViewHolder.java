@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.ads.nativead.MediaView;
 import com.google.android.gms.ads.nativead.NativeAd;
-import com.google.android.gms.ads.nativead.NativeAdImage;
 import com.google.android.gms.ads.nativead.NativeAdView;
 
 import org.Allah_Clock_Live_Wallpaper.R;
@@ -89,7 +88,7 @@ final class NativeAdViewHolder extends RecyclerView.ViewHolder {
             starsView.setVisibility(View.GONE);
         }
 
-        NativeAdImage icon = nativeAd.getIcon();
+        NativeAd.Image icon = nativeAd.getIcon();
         if (icon == null) {
             iconView.setVisibility(View.GONE);
         } else if (icon.getDrawable() != null) {

@@ -1,9 +1,9 @@
 package org.Allah_Clock_Live_Wallpaper.utils;
 
+import android.app.WallpaperInfo;
 import android.app.WallpaperManager;
 import android.content.Context;
 import android.net.Uri;
-import android.service.wallpaper.WallpaperInfo;
 
 import java.io.File;
 import java.io.FileOutputStream;
