@@ -1,182 +1,256 @@
 package org.Allah_Clock_Live_Wallpaper.adapter;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.model.AthkarItem;
 import org.Allah_Clock_Live_Wallpaper.utils.UiMotion;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
- * Athkar reader rows on the paper page.
+ * Rows for the morning / evening reader.
  *
- * <p>The whole row is the tap target — there is no counter circle to aim at. Each tap
- * decrements the number printed beside the dhikr with a gentle tick, and reaching zero fades
- * the row and stamps it as completed. Progress is deliberately kept in memory only: a dhikr
- * session is a worship act, not user data.</p>
- *
- * <p>The rows follow the layout of the athkar list they are transcribed from: the position in
- * the list and the remaining/total count on a small header line, then the dhikr with its count
- * beside it, the translation, the reward note ("من قالها حين يصبح ...") and the source. Some
- * athkar repeat 100 times, so the count is data-driven everywhere and never assumed small.</p>
- *
- * <p><b>One language at a time.</b> The dhikr content ships with its Arabic, its transliteration
- * and its English translation side by side, so the adapter is the one place that decides which of
- * them a row is allowed to show, and it follows the app locale: an Arabic UI reads Arabic text
- * with Arabic labels only, and an English UI reads the transliteration and translation instead of
- * the Arabic script - never both at once. Only the explicit dual-language switch in the reader's
- * settings (`athkarBilingual`) asks for the two together. Both flags are read per binding, and
- * {@link #setDualLanguage(boolean)} re-binds the list in place, so the counters the reader has
- * already worked through survive the switch.</p>
+ * <p>Each row is a rounded cream card: the dhikr's Arabic text (with transliteration and
+ * translation for a Latin reader), and a bottom taupe dock holding the share button and the
+ * remaining-repeat badge. Tapping the card does one count; the count lives in memory for the
+ * session and starts full each time the reader opens, so nothing is persisted. A finished
+ * dhikr is painted in the muted completed tones: the card settles to #E8E5DF, the dock to
+ * #8E8880 and the card text to #8A857F (with darker equivalents in night reading).</p>
  */
-public class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder> {
+public final class AthkarAdapter extends RecyclerView.Adapter<AthkarAdapter.ViewHolder> {
+
+    /** The dock's share button: routes the dhikr to the host, which builds the share intent. */
+    public interface ShareListener {
+        void onShare(@NonNull AthkarItem item);
+    }
+
+    /** The card's tint palettes, day and night, cycled by the toolbar's palette button. */
+    public static final int PALETTE_COUNT = 4;
+    private static final int[] DAY_PALETTE = {
+            R.color.athkarPalette1, R.color.athkarPalette2, R.color.athkarPalette3,
+            R.color.athkarPalette4
+    };
+    private static final int[] NIGHT_PALETTE = {
+            R.color.athkarPalette1Night, R.color.athkarPalette2Night,
+            R.color.athkarPalette3Night, R.color.athkarPalette4Night
+    };
+
+    public static final class ViewHolder extends RecyclerView.ViewHolder {
+        final androidx.cardview.widget.CardView card;
+        final TextView index;
+        final TextView progress;
+        final TextView done;
+        final TextView arabic;
+        final TextView transliteration;
+        final TextView english;
+        final TextView virtue;
+        final TextView reference;
+        final View dock;
+        final TextView shareLabel;
+        final FrameLayout shareButton;
+        final TextView repeatLabel;
+        final TextView count;
+
+        ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            card = itemView.findViewById(R.id.athkarCard);
+            index = itemView.findViewById(R.id.athkarIndex);
+            progress = itemView.findViewById(R.id.athkarProgress);
+            done = itemView.findViewById(R.id.athkarDone);
+            arabic = itemView.findViewById(R.id.athkarArabic);
+            transliteration = itemView.findViewById(R.id.athkarTransliteration);
+            english = itemView.findViewById(R.id.athkarEnglish);
+            virtue = itemView.findViewById(R.id.athkarVirtue);
+            reference = itemView.findViewById(R.id.athkarReference);
+            dock = itemView.findViewById(R.id.athkarDock);
+            shareLabel = itemView.findViewById(R.id.athkarShareLabel);
+            shareButton = itemView.findViewById(R.id.athkarShareButton);
+            repeatLabel = itemView.findViewById(R.id.athkarRepeatLabel);
+            count = itemView.findViewById(R.id.athkarCount);
+        }
+    }
 
     private final List<AthkarItem> items;
-    private final Map<Integer, Integer> remaining = new HashMap<>();
-    /** The app's language, read once per adapter: it decides the whole row. */
     private final boolean arabicUi;
-    /** The reader asked for both languages at the same time; off unless they said so. */
     private boolean dualLanguage;
+    private final Map<Integer, Integer> left = new HashMap<>();
+    private final ShareListener shareListener;
+    private boolean night;
+    private float textSizeSp;
+    private int palette;
 
-    public AthkarAdapter(List<AthkarItem> items, boolean arabicUi, boolean dualLanguage) {
+    public AthkarAdapter(@NonNull List<AthkarItem> items, boolean arabicUi,
+                         boolean dualLanguage, boolean night, float textSizeSp, int palette,
+                         @NonNull ShareListener shareListener) {
         this.items = items;
         this.arabicUi = arabicUi;
         this.dualLanguage = dualLanguage;
-    }
-
-    /**
-     * Turns the dual-language display on or off and re-binds the rows in place. The in-memory
-     * repeat counters are deliberately kept: a reader who switches language mid-session must not
-     * lose the dhikr they have already counted.
-     */
-    public void setDualLanguage(boolean dualLanguage) {
-        if (this.dualLanguage == dualLanguage) {
-            return;
-        }
-        this.dualLanguage = dualLanguage;
-        notifyItemRangeChanged(0, getItemCount());
-    }
-
-    public boolean isDualLanguage() {
-        return this.dualLanguage;
-    }
-
-    /** The Arabic script is shown in an Arabic UI, or when both languages were asked for. */
-    boolean showsArabic() {
-        return this.arabicUi || this.dualLanguage;
-    }
-
-    /** The transliteration and the translation are shown in an English UI, or in dual mode. */
-    boolean showsEnglish() {
-        return !this.arabicUi || this.dualLanguage;
-    }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        private final View card;
-        private final TextView index;
-        private final TextView progress;
-        private final TextView count;
-        private final TextView arabic;
-        private final TextView transliteration;
-        private final TextView english;
-        private final TextView virtue;
-        private final TextView reference;
-        private final TextView done;
-
-        public ViewHolder(View view) {
-            super(view);
-            this.card = view.findViewById(R.id.athkarCard);
-            this.index = view.findViewById(R.id.athkarIndex);
-            this.progress = view.findViewById(R.id.athkarProgress);
-            this.count = view.findViewById(R.id.athkarCount);
-            this.arabic = view.findViewById(R.id.athkarArabic);
-            this.transliteration = view.findViewById(R.id.athkarTransliteration);
-            this.english = view.findViewById(R.id.athkarEnglish);
-            this.virtue = view.findViewById(R.id.athkarVirtue);
-            this.reference = view.findViewById(R.id.athkarReference);
-            this.done = view.findViewById(R.id.athkarDone);
-        }
+        this.night = night;
+        this.textSizeSp = textSizeSp;
+        this.palette = clampPalette(palette);
+        this.shareListener = shareListener;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_athkar, parent, false));
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_athkar, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        final AthkarItem item = this.items.get(position);
-        holder.index.setText(holder.index.getContext()
-                .getString(R.string.athkar_position, position + 1, getItemCount()));
-        // Strict language separation: the Arabic script and the English row never share the page
-        // unless the reader explicitly asked for both.
-        holder.arabic.setText(item.getArabicText());
-        holder.arabic.setVisibility(showsArabic() ? View.VISIBLE : View.GONE);
+        AthkarItem item = items.get(position);
+        int key = item.getId();
+        int repeat = item.getRepeat();
+        int current = this.left.getOrDefault(key, repeat);
 
+        boolean showArabic = this.arabicUi || this.dualLanguage;
+        boolean showEnglish = !this.arabicUi || this.dualLanguage;
+        // Strict language separation: Arabic mode is Arabic only; Latin mode shows the
+        // translation and transliteration; dual mode deliberately shows both.
+        holder.arabic.setVisibility(showArabic ? View.VISIBLE : View.GONE);
+        holder.transliteration.setVisibility(showEnglish && !item.getTransliteration().isEmpty()
+                ? View.VISIBLE : View.GONE);
+        holder.english.setVisibility(showEnglish ? View.VISIBLE : View.GONE);
+
+        holder.index.setText(holder.itemView.getContext().getString(R.string.athkar_position,
+                position + 1, this.items.size()));
+        holder.progress.setText(holder.itemView.getContext().getString(R.string.athkar_progress,
+                repeat - current, repeat));
+        holder.done.setVisibility(current == 0 ? View.VISIBLE : View.GONE);
+
+        holder.arabic.setText(item.getArabicText());
+        holder.arabic.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, this.textSizeSp);
         String transliteration = item.getTransliteration();
         holder.transliteration.setText(transliteration);
-        holder.transliteration.setVisibility(
-                showsEnglish() && !transliteration.isEmpty() ? View.VISIBLE : View.GONE);
-
         holder.english.setText(item.getEnglishText());
-        holder.english.setVisibility(showsEnglish() ? View.VISIBLE : View.GONE);
         String virtue = item.getVirtue(this.arabicUi);
         holder.virtue.setText(virtue);
         holder.virtue.setVisibility(virtue.isEmpty() ? View.GONE : View.VISIBLE);
         String reference = item.getReference(this.arabicUi);
         holder.reference.setText(reference);
         holder.reference.setVisibility(reference.isEmpty() ? View.GONE : View.VISIBLE);
+        holder.count.setText(String.valueOf(current));
 
-        final int left = leftOf(item);
-        paint(holder, item, left);
+        // Tapping the card does one count — the whole card is the counter.
+        holder.card.setOnClickListener(view -> countDown(holder, item));
+        // The share button only shares; it never counts a dhikr.
+        holder.shareButton.setOnClickListener(view -> this.shareListener.onShare(item));
 
-        holder.card.setOnClickListener(view -> {
-            int current = leftOf(item);
-            if (current <= 0) {
-                return;
-            }
-            current--;
-            this.remaining.put(item.getId(), current);
-            tick(view);
-            paint(holder, item, current);
-        });
+        paint(holder, current);
     }
 
-    private int leftOf(AthkarItem item) {
-        Integer value = this.remaining.get(item.getId());
-        return value == null ? item.getRepeat() : value;
-    }
-
-    private void paint(ViewHolder holder, AthkarItem item, int left) {
-        int remaining = Math.max(left, 0);
+    /** One count of one dhikr; a finished dhikr is inert until the reader opens again. */
+    private void countDown(@NonNull ViewHolder holder, @NonNull AthkarItem item) {
+        int key = item.getId();
+        int repeat = item.getRepeat();
+        int current = this.left.getOrDefault(key, repeat);
+        if (current <= 0) {
+            return;
+        }
+        int remaining = current - 1;
+        this.left.put(key, remaining);
+        // The same very short, gentle tick the tasbeeh uses: one count, one bead.
+        UiMotion.tick(holder.itemView);
+        holder.progress.setText(holder.itemView.getContext().getString(R.string.athkar_progress,
+                repeat - remaining, repeat));
         holder.count.setText(String.valueOf(remaining));
-        holder.progress.setText(holder.progress.getContext()
-                .getString(R.string.athkar_progress, remaining, item.getRepeat()));
-        boolean finished = left <= 0;
-        // Fading is the only state change the paper page allows itself: no colour, no badge.
-        holder.card.setAlpha(finished ? 0.4f : 1f);
-        holder.done.setVisibility(finished ? View.VISIBLE : View.GONE);
+        holder.done.setVisibility(remaining == 0 ? View.VISIBLE : View.GONE);
+        paint(holder, remaining);
     }
 
-    /** The same very short, gentle tick the floating tasbeeh uses; one implementation, in UiMotion. */
-    private void tick(View source) {
-        UiMotion.tick(source);
+    /**
+     * Paints one card from its state: fresh (the active palette and the taupe dock) or
+     * completed (the muted done tones the design specifies).
+     */
+    private void paint(@NonNull ViewHolder holder, int remaining) {
+        boolean done = remaining <= 0;
+        android.content.Context context = holder.itemView.getContext();
+
+        holder.card.setCardBackgroundColor(ContextCompat.getColor(context,
+                done ? (this.night ? R.color.athkarNightCardDone : R.color.athkarCardDone)
+                     : (this.night ? NIGHT_PALETTE[this.palette] : DAY_PALETTE[this.palette])));
+        holder.dock.setBackgroundColor(ContextCompat.getColor(context,
+                done ? (this.night ? R.color.athkarNightDockDone : R.color.athkarDockDone)
+                     : (this.night ? R.color.athkarNightDock : R.color.athkarDockTaupe)));
+
+        // The card's text: ink on a fresh card, the muted done tone once finished.
+        holder.arabic.setTextColor(ContextCompat.getColor(context,
+                done ? (this.night ? R.color.athkarNightDoneText : R.color.athkarDoneText)
+                     : (this.night ? R.color.athkarNightInk : R.color.athkarInk)));
+        int bodyColor = ContextCompat.getColor(context,
+                done ? (this.night ? R.color.athkarNightDoneText : R.color.athkarDoneText)
+                     : (this.night ? R.color.athkarNightBody : R.color.athkarBody));
+        holder.transliteration.setTextColor(bodyColor);
+        holder.english.setTextColor(bodyColor);
+        int mutedColor = ContextCompat.getColor(context,
+                done ? (this.night ? R.color.athkarNightDoneText : R.color.athkarDoneText)
+                     : (this.night ? R.color.athkarNightMuted : R.color.athkarMuted));
+        holder.virtue.setTextColor(mutedColor);
+        holder.index.setTextColor(mutedColor);
+        holder.reference.setTextColor(mutedColor);
+        holder.progress.setTextColor(mutedColor);
+        holder.done.setTextColor(mutedColor);
+
+        // The dock labels sit on the taupe: white while fresh, a soft stone once done.
+        int dockLabel = done
+                ? (this.night ? ContextCompat.getColor(context, R.color.athkarNightDoneText)
+                              : 0xFFDAD6CF)
+                : 0xFFFFFFFF;
+        holder.shareLabel.setTextColor(dockLabel);
+        holder.repeatLabel.setTextColor(dockLabel);
+        // The counter number sits on its white badge, so it stays dark ink.
+        holder.count.setTextColor(ContextCompat.getColor(context,
+                this.night ? R.color.athkarNightInk : R.color.athkarInk));
+    }
+
+    private static int clampPalette(int palette) {
+        return Math.max(0, Math.min(PALETTE_COUNT - 1, palette));
+    }
+
+    /** The reader's type size moved: rebind so every Arabic block takes the new size. */
+    public void setTextSizeSp(float textSizeSp) {
+        this.textSizeSp = textSizeSp;
+        notifyDataSetChanged();
+    }
+
+    /** The card colour moved: rebind the whole list in place. */
+    public void setPalette(int palette) {
+        this.palette = clampPalette(palette);
+        notifyDataSetChanged();
+    }
+
+    /** Night reading toggled: repaint every card, keeping each session's counts. */
+    public void setNight(boolean night) {
+        this.night = night;
+        notifyDataSetChanged();
+    }
+
+    public boolean isDualLanguage() {
+        return this.dualLanguage;
+    }
+
+    /** The reader's dual-language switch moved: rebind, keeping each session's counts. */
+    public void setDualLanguage(boolean dualLanguage) {
+        this.dualLanguage = dualLanguage;
+        notifyDataSetChanged();
     }
 
     @Override
     public int getItemCount() {
-        return this.items == null ? 0 : this.items.size();
+        return items.size();
     }
 }

@@ -162,7 +162,7 @@ python3 tools/build_package.py           # إعادة بناء حزمة Android 
 | `java.time` أو APIs أعلى من minSdk 23 بلا حماية | لا يوجد |
 | AdMob/UMP | المعرّفات اختبارية ومتسقة بين `AdConfig` وManifest، و`MobileAds.initialize` **بعد** تدفق الموافقة |
 | التبعيات | appcompat 1.8.0 · recyclerview 1.4.0 · cardview 1.0.0 · play-services-ads 25.4.0 · UMP 4.0.0 · glide 4.16.0 · gson 2.14.0 · colorpicker (jitpack) |
-| بيانات القرآن | **114 سورة / 6,236 آية / 604 صفحة مدنية / 30 جزءًا**؛ مصدر Tanzil Uthmani 1.1، البصمات والنسبة مُتحققة |
+| بيانات القرآن | **114 سورة / 6,236 آية / 604 صفحة مدنية / 30 جزءًا**؛ مصدر Uthmanic Hafs، البصمات والنسبة مُتحققة |
 
 ### ثلاثة أمور صُحّحت أثناء هذا الفحص
 1. **`bundle.language.enableSplit` كان `true`** → مع مبدّل اللغة داخل التطبيق، كان Play قد

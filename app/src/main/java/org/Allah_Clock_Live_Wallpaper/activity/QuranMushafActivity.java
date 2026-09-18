@@ -2,14 +2,9 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.text.TextPaint;
-import android.util.TypedValue;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,16 +14,15 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.core.graphics.drawable.DrawableCompat;
-import androidx.viewpager2.widget.ViewPager2;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import org.Allah_Clock_Live_Wallpaper.R;
-import org.Allah_Clock_Live_Wallpaper.adapter.QuranMushafAdapter;
+import org.Allah_Clock_Live_Wallpaper.adapter.QuranFlowAdapter;
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
+import org.Allah_Clock_Live_Wallpaper.model.QuranBookmark;
 import org.Allah_Clock_Live_Wallpaper.model.QuranJuz;
-import org.Allah_Clock_Live_Wallpaper.model.QuranPage;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSurah;
-import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
-import org.Allah_Clock_Live_Wallpaper.utils.QuranPageBuilder;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranRepository;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranStore;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranTheme;
@@ -36,20 +30,22 @@ import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Page-by-page Quran reading using the 604 canonical Madani-page boundaries, flipped sideways.
+ * Mushaf mode: the complete 604-page Madani Mushaf as one continuous, smooth vertical scroll.
  *
- * <p>One {@code ViewPager2} page per printed page: swiping (or the buttons) turns to the previous
- * and next page exactly like leafing through a Mushaf, rather than scrolling a list of ayah cards.
- * The canonical page boundaries are untouched — the text inside a page is reflowed for the screen
- * (this is not a scanned Mushaf glyph layout), but which ayahs belong to page 42 is the printed
- * answer.</p>
- *
- * <p>Every page carries the same saved-mark behaviour and the same night reading switch as the
- * surah reader, driven by the shared {@link QuranTheme} and {@link QuranStore}.</p>
+ * <p>Surahs open with their authentic heading (name + juz), Madani page boundaries are marked by
+ * a hairline carrying the printed page number, and the footer's page-number pill follows the
+ * position under the reader's finger. Tapping a verse saves or clears its bookmark; tapping the
+ * pill or the juz chip scrolls to the chosen page or juz. Rotation is absorbed by the manifest's
+ * {@code configChanges}, so the scroll keeps its place, and the night reading switch repaints
+ * the column in place through the shared {@link QuranTheme}.</p>
  */
 public final class QuranMushafActivity extends AppCompatActivity {
 
@@ -60,22 +56,20 @@ public final class QuranMushafActivity extends AppCompatActivity {
     private QuranRepository repository;
     private QuranStore store;
     private QuranTheme theme;
-    private TextPaint paint;
-    private float lineSpacingExtraPx;
+    private QuranFlowAdapter adapter;
 
     private View root;
-    private ViewPager2 pager;
-    private QuranMushafAdapter adapter;
+    private RecyclerView list;
     private View loading;
     private TextView error;
-    private TextView pageLabel;
-    private TextView range;
-    private TextView juzLabel;
-    private Button previous;
-    private Button next;
+    private TextView surahName;
+    private TextView juzChip;
+    private TextView pagePill;
 
     private int textSizeSp;
     private int pendingPage = -1;
+    /** Row of every Madani page boundary, for the page and juz pickers. */
+    private final Map<Integer, Integer> pageToRow = new HashMap<>();
 
     @NonNull
     public static Intent createIntent(@NonNull Context context, int pageNumber) {
@@ -93,58 +87,49 @@ public final class QuranMushafActivity extends AppCompatActivity {
         TinyDB preferences = new TinyDB(this);
         this.theme = new QuranTheme(this, this.store.isNightMode(preferences));
         this.textSizeSp = this.store.getTextSizeSp();
-        this.paint = this.theme.newTextPaint(spToPx(this.textSizeSp));
-        this.lineSpacingExtraPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                QuranPageBuilder.LINE_SPACING_EXTRA_DP, getResources().getDisplayMetrics());
 
         this.root = findViewById(R.id.quranMushafRoot);
-        this.pager = findViewById(R.id.quranMushafPager);
+        this.list = findViewById(R.id.quranMushafList);
         this.loading = findViewById(R.id.quranMushafLoading);
         this.error = findViewById(R.id.quranMushafError);
-        this.pageLabel = findViewById(R.id.quranMushafPageLabel);
-        this.range = findViewById(R.id.quranMushafRange);
-        this.juzLabel = findViewById(R.id.quranMushafJuz);
-        this.previous = findViewById(R.id.quranMushafPrevious);
-        this.next = findViewById(R.id.quranMushafNext);
+        this.surahName = findViewById(R.id.quranMushafSurahName);
+        this.juzChip = findViewById(R.id.quranMushafJuz);
+        this.pagePill = findViewById(R.id.quranMushafPagePill);
 
-        findViewById(R.id.quranMushafBack).setOnClickListener(view -> finish());
-        ImageButton textSize = findViewById(R.id.quranMushafTextSize);
-        textSize.setOnClickListener(view -> showTextSizePicker());
-        ImageButton night = findViewById(R.id.quranMushafNight);
-        night.setOnClickListener(view -> toggleNightMode());
-        ImageButton bookmarks = findViewById(R.id.quranMushafBookmarks);
-        bookmarks.setOnClickListener(view -> startActivity(new Intent(this,
-                QuranBookmarksActivity.class)));
-        this.previous.setOnClickListener(view -> showPage(currentPage() - 1));
-        this.next.setOnClickListener(view -> showPage(currentPage() + 1));
-        this.pageLabel.setOnClickListener(view -> showPagePicker());
-        this.juzLabel.setOnClickListener(view -> showJuzPicker());
-
-        this.pager.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
-        this.pager.setOffscreenPageLimit(1);
-        this.pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+        this.list.setLayoutManager(new LinearLayoutManager(this));
+        this.list.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onPageSelected(int position) {
-                onPageShown(QuranMushafAdapter.pageAt(position));
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    updateHeaderForTopAyah();
+                }
+            }
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                if (dy != 0) {
+                    updateHeaderForTopAyah();
+                }
             }
         });
+
+        findViewById(R.id.quranMushafBack).setOnClickListener(view -> finish());
+        findViewById(R.id.quranMushafNight).setOnClickListener(view -> toggleNightMode());
+        findViewById(R.id.quranMushafTextSize).setOnClickListener(view -> showTextSizePicker());
+        findViewById(R.id.quranMushafBookmarks).setOnClickListener(view -> startActivity(
+                new Intent(this, QuranBookmarksActivity.class)));
+        this.juzChip.setOnClickListener(view -> showJuzPicker());
+        this.pagePill.setOnClickListener(view -> showPagePicker());
 
         applyTheme();
         loadRepository();
     }
 
     @Override
-    public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        // Only the amount of text per page changed, not the canonical boundaries.
-        this.pager.post(() -> showPage(currentPage()));
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         if (this.adapter != null) {
-            this.adapter.notifyDataSetChanged();
+            this.adapter.refreshTheme();
         }
     }
 
@@ -170,130 +155,148 @@ public final class QuranMushafActivity extends AppCompatActivity {
             return;
         }
         this.repository = loaded;
+
+        // One row per verse of the complete Mushaf, with the surah headings and the Madani page
+        // boundaries interleaved exactly where the printed book has them.
+        List<QuranFlowAdapter.Row> rows = new ArrayList<>(QuranRepository.AYAH_COUNT
+                + QuranRepository.SURAH_COUNT + QuranRepository.PAGE_COUNT);
+        this.pageToRow.clear();
+        int previousPage = 0;
+        for (QuranSurah surah : loaded.getSurahs()) {
+            QuranAyah first = loaded.getAyah(surah.getNumber(), 1);
+            rows.add(QuranFlowAdapter.Row.surah(surah, first == null ? 1 : first.getJuz()));
+            for (QuranAyah ayah : loaded.getAyahs(surah.getNumber())) {
+                if (ayah.getMushafPage() != previousPage) {
+                    rows.add(QuranFlowAdapter.Row.page(ayah.getMushafPage()));
+                    this.pageToRow.put(ayah.getMushafPage(), rows.size() - 1);
+                    previousPage = ayah.getMushafPage();
+                }
+                rows.add(QuranFlowAdapter.Row.ayah(ayah));
+            }
+        }
+
         int requested = getIntent().getIntExtra(EXTRA_PAGE, -1);
-        if (loaded.getPage(requested) == null) {
-            org.Allah_Clock_Live_Wallpaper.model.QuranBookmark last = this.store.getLastReading();
+        if (!loaded.hasPage(requested)) {
+            QuranBookmark last = this.store.getLastReading();
             if (last != null) {
                 requested = loaded.getPageForAyah(last.getSurahNumber(), last.getAyahNumber());
             }
         }
-        installPager();
-        showPage(requested > 0 ? requested : 1);
-    }
+        this.pendingPage = requested > 0 ? requested : 1;
 
-    /** Builds the 604-page pager; pages are rendered on demand from the bundled text. */
-    private void installPager() {
-        this.adapter = new QuranMushafAdapter(this.repository, this.store, this.theme, this.paint,
-                this.lineSpacingExtraPx, LocaleHelper.isArabic(this), this::toggleVerse);
-        this.pager.setAdapter(this.adapter);
+        this.adapter = new QuranFlowAdapter(rows, this.theme, this.store, this.textSizeSp,
+                this::toggleVerse);
+        this.list.setAdapter(this.adapter);
+        scrollToPage(this.pendingPage, false);
+
         this.loading.setVisibility(View.GONE);
         this.error.setVisibility(View.GONE);
-        this.pager.setVisibility(View.VISIBLE);
+        this.list.setVisibility(View.VISIBLE);
+        updateHeaderForTopAyah();
     }
 
-    /** Turns to a canonical page; out-of-range requests are ignored rather than clamped. */
-    private void showPage(int pageNumber) {
-        if (this.repository == null || this.repository.getPage(pageNumber) == null) {
-            return;
+    // ══════════════════════════════ header and pill ══════════════════════════════
+
+    /** The row of the first ayah at or under the top of the visible area, or -1. */
+    private int topAyahRow() {
+        if (this.adapter == null || this.adapter.getItemCount() == 0) {
+            return -1;
         }
-        saveVisiblePosition();
-        this.pendingPage = pageNumber;
-        this.pager.setCurrentItem(QuranMushafAdapter.positionOfPage(pageNumber), false);
-        onPageShown(pageNumber);
+        LinearLayoutManager layout = (LinearLayoutManager) this.list.getLayoutManager();
+        if (layout == null) {
+            return -1;
+        }
+        int position = layout.findFirstVisibleItemPosition();
+        if (position == RecyclerView.NO_POSITION) {
+            return -1;
+        }
+        int last = this.adapter.getItemCount() - 1;
+        while (position <= last
+                && this.adapter.getItemViewType(position) != QuranFlowAdapter.TYPE_AYAH) {
+            position++;
+        }
+        return position <= last ? position : -1;
     }
 
-    private int currentPage() {
-        return QuranMushafAdapter.pageAt(this.pager.getCurrentItem());
+    private QuranAyah ayahAtRow(int row) {
+        if (this.adapter == null || row < 0 || row >= this.adapter.getItemCount()) {
+            return null;
+        }
+        return this.adapter.getRows().get(row).ayah;
     }
 
-    /** Refreshes the header of the page that is now open. */
-    private void onPageShown(int pageNumber) {
-        if (this.repository == null) {
+    /** Refreshes the authentic header (surah + juz) and the footer pill from the top verse. */
+    private void updateHeaderForTopAyah() {
+        QuranAyah ayah = ayahAtRow(topAyahRow());
+        if (ayah == null || this.repository == null) {
             return;
         }
-        QuranPage page = this.repository.getPage(pageNumber);
-        if (page == null) {
-            return;
-        }
-        this.pendingPage = pageNumber;
-        this.pageLabel.setText(getString(R.string.quran_page_number, pageNumber,
+        QuranSurah surah = this.repository.getSurah(ayah.getSurahNumber());
+        this.surahName.setText(surah == null ? "" : surah.getArabicName());
+        this.juzChip.setText(getString(R.string.quran_juz_number, ayah.getJuz()));
+        this.pagePill.setText(getString(R.string.quran_page_number, ayah.getMushafPage(),
                 QuranRepository.PAGE_COUNT));
-        this.range.setText(pageRange(page));
-        int firstJuz = this.repository.getJuzForAyah(page.getFirstAyah().getSurahNumber(),
-                page.getFirstAyah().getAyahNumber());
-        int lastJuz = this.repository.getJuzForAyah(page.getLastAyah().getSurahNumber(),
-                page.getLastAyah().getAyahNumber());
-        this.juzLabel.setText(firstJuz <= 0 ? "" : firstJuz == lastJuz
-                ? getString(R.string.quran_juz_number, firstJuz)
-                : getString(R.string.quran_juz_range, firstJuz, lastJuz));
-        boolean hasPrevious = pageNumber > 1;
-        boolean hasNext = pageNumber < QuranRepository.PAGE_COUNT;
-        this.previous.setEnabled(hasPrevious);
-        this.previous.setAlpha(hasPrevious ? 1f : 0.42f);
-        this.next.setEnabled(hasNext);
-        this.next.setAlpha(hasNext ? 1f : 0.42f);
-        this.juzLabel.setEnabled(firstJuz > 0);
-
-        this.store.saveLastReading(page.getFirstAyah().getSurahNumber(),
-                page.getFirstAyah().getAyahNumber());
+        this.pendingPage = ayah.getMushafPage();
     }
 
-    @NonNull
-    private String pageRange(@NonNull QuranPage page) {
-        boolean arabicUi = LocaleHelper.isArabic(this);
-        QuranSurah firstSurah = this.repository.getSurah(page.getFirstAyah().getSurahNumber());
-        QuranSurah lastSurah = this.repository.getSurah(page.getLastAyah().getSurahNumber());
-        String firstName = firstSurah == null ? "" : firstSurah.getDisplayName(arabicUi);
-        String lastName = lastSurah == null ? "" : lastSurah.getDisplayName(arabicUi);
-        return getString(R.string.quran_page_range, firstName, page.getFirstAyah().getAyahNumber(),
-                lastName, page.getLastAyah().getAyahNumber());
-    }
-
-    // ══════════════════════════════ marks, theme, size ══════════════════════════════
-
-    /** A tap saves or clears the verse it landed on; the page itself never moves. */
-    private void toggleVerse(int ayahNumber) {
-        int surahNumber = surahOfAyah(ayahNumber);
-        if (surahNumber <= 0) {
+    /** Turns to a Madani page; out-of-range requests are ignored rather than clamped. */
+    private void scrollToPage(int pageNumber, boolean smooth) {
+        Integer row = this.pageToRow.get(pageNumber);
+        if (row == null || this.adapter == null) {
             return;
         }
-        boolean added = this.store.toggleBookmark(surahNumber, ayahNumber);
+        this.pendingPage = pageNumber;
+        if (smooth) {
+            this.list.smoothScrollToPosition(row);
+        } else {
+            this.list.scrollToPosition(row);
+        }
+    }
+
+    /** Writes the verse the reader is on, so reopening the Mushaf resumes there. */
+    private void saveVisiblePosition() {
+        if (this.store == null || this.repository == null) {
+            return;
+        }
+        QuranAyah ayah = ayahAtRow(topAyahRow());
+        if (ayah != null) {
+            this.store.saveLastReading(ayah.getSurahNumber(), ayah.getAyahNumber());
+        }
+    }
+
+    // ══════════════════════════════ bookmarks and theme ══════════════════════════════
+
+    /** A tap toggles the save of one verse; it never moves the reading position by itself. */
+    private void toggleVerse(@NonNull QuranAyah ayah) {
+        boolean added = this.store.toggleBookmark(ayah.getSurahNumber(), ayah.getAyahNumber());
         if (this.adapter != null) {
-            this.adapter.notifyDataSetChanged();
+            for (int position = 0; position < this.adapter.getItemCount(); position++) {
+                QuranAyah bound = ayahAtRow(position);
+                if (bound != null && bound.getSurahNumber() == ayah.getSurahNumber()
+                        && bound.getAyahNumber() == ayah.getAyahNumber()) {
+                    this.adapter.refreshAyah(position);
+                    break;
+                }
+            }
         }
         Toast.makeText(this, added ? R.string.quran_bookmark_added : R.string.quran_bookmark_removed,
                 Toast.LENGTH_SHORT).show();
     }
 
-    /** The surah an ayah number belongs to on the open page (an ayah number shows up once). */
-    private int surahOfAyah(int ayahNumber) {
-        if (this.repository == null) {
-            return -1;
-        }
-        for (QuranAyah ayah : this.repository.getAyahsForPage(currentPage())) {
-            if (ayah.getAyahNumber() == ayahNumber) {
-                return ayah.getSurahNumber();
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * Swaps the palette in place. Because the page builders read their colours from the shared
-     * theme when they are bound, re-binding the visible pages is all a theme change needs.
-     */
+    /** Swaps the palette in place: the column repaints without losing its position. */
     private void toggleNightMode() {
         boolean night = !this.theme.isNight();
         this.theme.apply(this, night);
         this.store.saveNightMode(new TinyDB(this), night);
         applyTheme();
         if (this.adapter != null) {
-            this.adapter.notifyDataSetChanged();
+            this.adapter.refreshTheme();
         }
         Toast.makeText(this, night ? R.string.quran_night_enabled : R.string.quran_day_enabled,
                 Toast.LENGTH_SHORT).show();
     }
 
+    /** Paints every surface of the screen from the active theme. */
     private void applyTheme() {
         if (this.theme == null) {
             return;
@@ -301,7 +304,6 @@ public final class QuranMushafActivity extends AppCompatActivity {
         this.root.setBackgroundColor(this.theme.paper);
         getWindow().setBackgroundDrawableResource(this.theme.isNight()
                 ? R.color.quranNightPaper : R.color.quranPaper);
-        this.paint.setColor(this.theme.ink);
 
         GradientDrawable card = new GradientDrawable();
         card.setShape(GradientDrawable.RECTANGLE);
@@ -313,17 +315,9 @@ public final class QuranMushafActivity extends AppCompatActivity {
         GradientDrawable chip = new GradientDrawable();
         chip.setShape(GradientDrawable.RECTANGLE);
         chip.setColor(this.theme.softGreen);
-        chip.setCornerRadius(UiCompat.dp(this, 12f));
-        this.pageLabel.setBackground(chip);
-        this.juzLabel.setBackground(chip);
-
-        GradientDrawable button = new GradientDrawable();
-        button.setShape(GradientDrawable.RECTANGLE);
-        button.setColor(this.theme.softGreen);
-        button.setCornerRadius(UiCompat.dp(this, 12f));
-        button.setStroke(UiCompat.dp(this, 1f), this.theme.line);
-        this.previous.setBackground(button);
-        this.next.setBackground(button);
+        chip.setCornerRadius(UiCompat.dp(this, 8f));
+        this.juzChip.setBackground(chip);
+        this.pagePill.setBackground(chip);
 
         tint(R.id.quranMushafBack, this.theme.ink);
         tint(R.id.quranMushafNight, this.theme.isNight() ? this.theme.gold : this.theme.green);
@@ -331,20 +325,18 @@ public final class QuranMushafActivity extends AppCompatActivity {
         tint(R.id.quranMushafBookmarks, this.theme.green);
         tint(R.id.quranMushafTitle, this.theme.ink);
 
-        this.pageLabel.setTextColor(this.theme.greenDark);
-        this.juzLabel.setTextColor(this.theme.greenDark);
-        this.range.setTextColor(this.theme.muted);
-        this.previous.setTextColor(this.theme.greenDark);
-        this.next.setTextColor(this.theme.greenDark);
-        ((TextView) findViewById(R.id.quranMushafSource)).setTextColor(this.theme.muted);
+        this.surahName.setTextColor(this.theme.ink);
+        this.juzChip.setTextColor(this.theme.greenDark);
+        ((TextView) findViewById(R.id.quranMushafHint)).setTextColor(this.theme.muted);
+        this.pagePill.setTextColor(this.theme.greenDark);
     }
 
     private void tint(int viewId, int colour) {
         View view = findViewById(viewId);
-        if (!(view instanceof AppCompatImageButton)) {
+        if (!(view instanceof ImageButton)) {
             return;
         }
-        AppCompatImageButton button = (AppCompatImageButton) view;
+        ImageButton button = (ImageButton) view;
         android.graphics.drawable.Drawable icon = button.getDrawable();
         if (icon != null) {
             android.graphics.drawable.Drawable wrapped = DrawableCompat.wrap(icon.mutate());
@@ -352,6 +344,8 @@ public final class QuranMushafActivity extends AppCompatActivity {
             button.setImageDrawable(wrapped);
         }
     }
+
+    // ═══════════════════════════════ pickers and size ═══════════════════════════════
 
     private void showTextSizePicker() {
         if (this.store == null || this.adapter == null) {
@@ -369,31 +363,29 @@ public final class QuranMushafActivity extends AppCompatActivity {
                     int selected = picker.getValue();
                     this.textSizeSp = selected;
                     this.store.saveTextSizeSp(selected);
-                    this.paint.setTextSize(spToPx(selected));
-                    this.adapter.notifyDataSetChanged();
-                    showPage(this.pendingPage > 0 ? this.pendingPage : currentPage());
+                    this.adapter.setTextSizeSp(selected);
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
     private void showJuzPicker() {
-        if (this.repository == null) {
+        if (this.repository == null || this.adapter == null) {
             return;
         }
         NumberPicker picker = new NumberPicker(this);
         picker.setMinValue(1);
         picker.setMaxValue(QuranRepository.JUZ_COUNT);
-        int currentJuz = this.repository.getJuzForPage(currentPage());
+        int currentJuz = this.repository.getJuzForPage(this.pendingPage);
         picker.setValue(currentJuz > 0 ? currentJuz : 1);
         picker.setWrapSelectorWheel(false);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.quran_choose_juz)
                 .setView(picker)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
-                    QuranJuz juz = repository.getJuz(picker.getValue());
+                    QuranJuz juz = this.repository.getJuz(picker.getValue());
                     if (juz != null) {
-                        showPage(juz.getPageNumber());
+                        scrollToPage(juz.getPageNumber(), true);
                     }
                 })
                 .setNegativeButton(R.string.cancel, null)
@@ -401,37 +393,21 @@ public final class QuranMushafActivity extends AppCompatActivity {
     }
 
     private void showPagePicker() {
-        if (this.repository == null) {
+        if (this.repository == null || this.adapter == null) {
             return;
         }
         NumberPicker picker = new NumberPicker(this);
         picker.setMinValue(1);
         picker.setMaxValue(QuranRepository.PAGE_COUNT);
-        picker.setValue(Math.max(1, currentPage()));
+        picker.setValue(Math.max(1, this.pendingPage));
         picker.setWrapSelectorWheel(false);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.quran_choose_page)
                 .setView(picker)
-                .setPositiveButton(R.string.ok, (dialog, which) -> showPage(picker.getValue()))
+                .setPositiveButton(R.string.ok, (dialog, which) ->
+                        scrollToPage(picker.getValue(), true))
                 .setNegativeButton(R.string.cancel, null)
                 .show();
-    }
-
-    private void saveVisiblePosition() {
-        if (this.store == null || this.repository == null) {
-            return;
-        }
-        QuranPage page = this.repository.getPage(this.pendingPage);
-        if (page == null) {
-            return;
-        }
-        QuranAyah first = page.getFirstAyah();
-        this.store.saveLastReading(first.getSurahNumber(), first.getAyahNumber());
-    }
-
-    private float spToPx(int sp) {
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp,
-                getResources().getDisplayMetrics());
     }
 
     private void showLoadError() {
@@ -439,7 +415,7 @@ public final class QuranMushafActivity extends AppCompatActivity {
             return;
         }
         this.loading.setVisibility(View.GONE);
-        this.pager.setVisibility(View.GONE);
+        this.list.setVisibility(View.GONE);
         this.error.setVisibility(View.VISIBLE);
     }
 

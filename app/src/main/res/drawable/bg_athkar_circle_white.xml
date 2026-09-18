@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The white circular disc behind the dock's share icon and counter number: pure white so it
+  reads on the earthy taupe dock in both the fresh and the completed (darker taupe) states.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="#FFFFFFFF" />
+</shape>

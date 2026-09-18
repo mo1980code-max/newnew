@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The athkar reader as a classic paper page: opaque, monochrome, no live wallpaper
-  behind it and no bottom-sheet chrome. UiCompat.applyEdgeToEdge() keeps the top bar
-  clear of the status bar, and AthkarActivity paints the window background with the
-  same paper so the system-bar area does not show a different colour.
+  Morning / evening athkar.
+
+  A consistent top toolbar: the back arrow and the window's title — "أذكار الصباح" in sky
+  blue (#03A9F4) with a sun, "أذكار المساء" in deep blue (#1E88E5) with a moon — whose action
+  buttons switch night reading, resize the text (ض) and cycle the card colour. Below it, every
+  dhikr is a rounded cream card with its earthy taupe dock (share + remaining counts); see
+  item_athkar.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/athkarRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,77 +17,122 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/athkarBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
+        android:background="@color/athkarBarMorning"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="6dp"
-        android:paddingEnd="6dp">
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
+
+        <ImageButton
+            android:id="@+id/athkarBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_athkar_bar_button"
+            android:contentDescription="@string/cd_back"
+            android:padding="10dp"
+            android:src="@drawable/ic_back"
+            app:tint="#FFFFFFFF" />
 
         <ImageView
-            android:id="@+id/athkarClose"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/cd_athkar_close"
-            android:padding="16dp"
-            android:src="@drawable/ic_cancel" />
+            android:id="@+id/athkarWindowIcon"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_marginStart="6dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_sun"
+            app:tint="#FFFFFFFF" />
+
+        <ImageView
+            android:id="@+id/athkarCloudIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="2dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_cloud"
+            android:visibility="gone"
+            app:tint="#FFFFFFFF" />
 
         <TextView
             android:id="@+id/athkarTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:ellipsize="end"
             android:fontFamily="@font/myfont"
             android:maxLines="1"
-            android:text="@string/athkar_morning_title"
-            android:textColor="@color/athkarInk"
-            android:textSize="19sp" />
+            android:textColor="#FFFFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-        <!-- How many athkar this list holds: 31 in the morning, 30 in the evening. -->
         <TextView
             android:id="@+id/athkarCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/athkarMuted"
-            android:textSize="12sp" />
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="4dp"
+            android:textColor="#E6FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
-        <ImageView
+        <ImageButton
+            android:id="@+id/athkarNight"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_athkar_bar_button"
+            android:contentDescription="@string/athkar_cd_night"
+            android:padding="10dp"
+            android:src="@drawable/ic_quran_night"
+            app:tint="#FFFFFFFF" />
+
+        <TextView
+            android:id="@+id/athkarFontButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_athkar_bar_button"
+            android:clickable="true"
+            android:contentDescription="@string/athkar_cd_font"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/athkar_font_letter"
+            android:textColor="#FFFFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/athkarPalette"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_athkar_bar_button"
+            android:contentDescription="@string/athkar_cd_palette"
+            android:padding="10dp"
+            android:src="@drawable/ic_color"
+            app:tint="#FFFFFFFF" />
+
+        <ImageButton
             android:id="@+id/athkarSettings"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_athkar_bar_button"
             android:contentDescription="@string/athkar_settings"
-            android:padding="13dp"
+            android:padding="10dp"
             android:src="@drawable/ic_options"
-            android:tint="@color/athkarInk" />
+            app:tint="#FFFFFFFF" />
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/athkarHairline" />
-
-    <!--
-      Shown only when the reader is opened from the home tile outside both windows: the tile is
-      permanent, so the reader must say which set it is showing instead of opening silently.
-    -->
     <TextView
         android:id="@+id/athkarOutsideNote"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="14dp"
-        android:background="@drawable/bg_athkar_note"
-        android:paddingStart="14dp"
-        android:paddingTop="9dp"
-        android:paddingEnd="14dp"
-        android:paddingBottom="9dp"
-        android:textColor="@color/athkarBody"
+        android:gravity="center"
+        android:paddingStart="20dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="6dp"
+        android:textColor="@color/athkarMuted"
         android:textSize="12sp"
         android:visibility="gone" />
 
@@ -93,6 +142,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingBottom="10dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="18dp"
         android:scrollbars="vertical" />
 </LinearLayout>
