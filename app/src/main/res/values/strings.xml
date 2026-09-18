@@ -12,6 +12,37 @@
     <string name="tile_digital_clock">Digital\nClock</string>
     <string name="tile_smart_clock">Smart\nClock</string>
 
+    <!-- Clock AM/PM Markers -->
+    <string name="clock_am">AM</string>
+    <string name="clock_pm">PM</string>
+
+    <!-- Days of Week Array (Starting with Sunday) -->
+    <string-array name="clock_days">
+        <item>SUN</item>
+        <item>MON</item>
+        <item>TUE</item>
+        <item>WED</item>
+        <item>THU</item>
+        <item>FRI</item>
+        <item>SAT</item>
+    </string-array>
+
+    <!-- Months of Year Array -->
+    <string-array name="clock_months">
+        <item>JAN</item>
+        <item>FEB</item>
+        <item>MAR</item>
+        <item>APR</item>
+        <item>MAY</item>
+        <item>JUN</item>
+        <item>JUL</item>
+        <item>AUG</item>
+        <item>SEP</item>
+        <item>OCT</item>
+        <item>NOV</item>
+        <item>DEC</item>
+    </string-array>
+
     <!-- ── Editor ────────────────────────────────────────────────────── -->
     <string name="choose_color">Choose color</string>
     <string name="ok">OK</string>
