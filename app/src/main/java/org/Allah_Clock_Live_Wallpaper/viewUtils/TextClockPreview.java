@@ -8,6 +8,8 @@ import android.graphics.Typeface;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
+
+import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import java.util.Calendar;
 import java.util.Locale;
@@ -1051,9 +1053,13 @@ public class TextClockPreview extends View {
 
     /** ص / م in Arabic, AM / PM otherwise - read from resources so the faces localise too. */
     private String amPmMarker() {
-        return getResources().getString(this.mCalendar.get(Calendar.AM_PM) == Calendar.AM
-                ? R.string.clock_am
-                : R.string.clock_pm);
+        try {
+            return getResources().getString(this.mCalendar.get(Calendar.AM_PM) == Calendar.AM
+                    ? R.string.clock_am
+                    : R.string.clock_pm);
+        } catch (Throwable t) {
+            return this.mCalendar.get(Calendar.AM_PM) == Calendar.AM ? "AM" : "PM";
+        }
     }
 
     /**
@@ -1064,13 +1070,22 @@ public class TextClockPreview extends View {
      */
     private void Calendar_data() {
         Calendar instance = Calendar.getInstance();
-        String[] months = getResources().getStringArray(R.array.clock_months);
-        String[] days = getResources().getStringArray(R.array.clock_days);
-        int monthIndex = instance.get(Calendar.MONTH);
-        int dayIndex = instance.get(Calendar.DAY_OF_WEEK) - 1;
         this.useddate = String.format(Locale.US, "%02d", instance.get(Calendar.DAY_OF_MONTH));
-        this.usedmonth = months[monthIndex >= 0 && monthIndex < months.length ? monthIndex : 0];
-        this.usedweekday = days[dayIndex >= 0 && dayIndex < days.length ? dayIndex : 0];
+        try {
+            String[] months = getResources().getStringArray(R.array.clock_months);
+            String[] days = getResources().getStringArray(R.array.clock_days);
+            int monthIndex = instance.get(Calendar.MONTH);
+            int dayIndex = instance.get(Calendar.DAY_OF_WEEK) - 1;
+            this.usedmonth = (months != null && monthIndex >= 0 && monthIndex < months.length)
+                    ? months[monthIndex]
+                    : (months != null && months.length > 0 ? months[0] : "JAN");
+            this.usedweekday = (days != null && dayIndex >= 0 && dayIndex < days.length)
+                    ? days[dayIndex]
+                    : (days != null && days.length > 0 ? days[0] : "SUN");
+        } catch (Throwable t) {
+            this.usedmonth = "JAN";
+            this.usedweekday = "SUN";
+        }
     }
 
     public void setTextFace() {

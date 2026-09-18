@@ -115,10 +115,12 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
     /** Returns from the system image picker. */
     private final ActivityResultLauncher<Intent> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
-                    return;
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    Uri imageUri = result.getData().getData();
+                    if (imageUri != null) {
+                        importPickedImage(imageUri);
+                    }
                 }
-                importPickedImage(result.getData());
             });
 
     @Override
