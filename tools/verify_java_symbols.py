@@ -17,11 +17,11 @@ script therefore does the next best thing: it builds a symbol table out of every
   3. every `extends` / `implements` of a project type resolves, so a deleted base class is
      caught even when nothing imports it directly;
   4. every component named in AndroidManifest.xml resolves to a real class in the tree;
-  5. a short guard for SDK calls that were *removed* in newer major versions of a dependency -
-     the class of build error a static checker over the app's own code cannot see otherwise.
-     `AppOpenAd.load` is the one that bit us: the four-argument overload was deprecated in
-     Google Mobile Ads SDK 21 and removed in a later major, so the orientation argument is
-     mandatory now.
+  5. a short guard for SDK calls whose signature changed in newer major versions of a
+     dependency - the class of build error a static checker over the app's own code cannot see
+     otherwise. `AppOpenAd.load` is the one that bit us: Google Mobile Ads SDK 24.0.0 removed
+     the orientation-carrying overloads (along with `APP_OPEN_AD_ORIENTATION_PORTRAIT`), so
+     against `play-services-ads` 24+/25+ the call takes 4 arguments and no orientation.
 
 Exit code is non-zero when anything fails, so it can gate a commit - run it next to
 `tools/verify_resources.py`.
@@ -445,10 +445,10 @@ def argument_count(text, open_paren_index):
 
 
 SDK_GUARDS = [
-    ('AppOpenAd.load', 5, 5,
-     'the plain four-argument overload was deprecated in Google Mobile Ads SDK 21 and removed in '
-     'a later major - pass AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT (or LANDSCAPE) as the '
-     'fourth argument'),
+    ('AppOpenAd.load', 4, 4,
+     'Google Mobile Ads SDK 24.0.0 removed the orientation-carrying overloads together with '
+     'AppOpenAd.APP_OPEN_AD_ORIENTATION_* and the AppOpenAdOrientation enum - the signature on '
+     'play-services-ads 24+/25+ is load(Context, String, AdRequest, AppOpenAdLoadCallback)'),
     ('InterstitialAd.load', 4, 4, 'the SDK signature is load(Context, String, AdRequest, callback)'),
     ('RewardedAd.load', 4, 4, 'the SDK signature is load(Context, String, AdRequest, callback)'),
 ]
@@ -489,8 +489,8 @@ SELF_TEST_PLAN = [
      'AdManager.isFullScreenAdActiveRenamed()',
      'renamed method'),
     ('ads/AppOpenAdController.java',
-     'new AdRequest.Builder().build(), AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT,',
      'new AdRequest.Builder().build(),',
+     'new AdRequest.Builder().build(), AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT,',
      'removed SDK overload'),
 ]
 

@@ -28,10 +28,12 @@ public final class WallpaperHelper {
         try {
             WallpaperManager manager = WallpaperManager.getInstance(context.getApplicationContext());
             WallpaperInfo info = manager.getWallpaperInfo();
+            // WallpaperInfo.getPackageName() is the wallpaper service's own package (API 1+).
+            // info.getService() returns a ResolveInfo, and ResolveInfo has no getPackageName()
+            // at all — only serviceInfo.packageName — so going through it does not compile.
             return info != null
-                    && info.getService() != null
-                    && info.getService().getPackageName() != null
-                    && context.getPackageName().equals(info.getService().getPackageName());
+                    && info.getPackageName() != null
+                    && context.getPackageName().equals(info.getPackageName());
         } catch (Throwable ignored) {
             return false;
         }

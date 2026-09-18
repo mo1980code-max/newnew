@@ -1272,3 +1272,18 @@ effectively-final) فلا يراها محلّل نحوي، وقد روجعت ي�
    المحفوظة يدويًا في `proguard-rules.pro`).
 4. إن ظهر `cannot find symbol` فليس سببه R8 (يعمل بعد الترجمة)؛ شغّل
    `python3 tools/verify_java_symbols.py`.
+
+---
+
+## 24) إصلاح أخطاء التجميع في Android Studio (18 سبتمبر 2026)
+
+معالجة خمسة أخطاء تجميع مباشرة كانت تمنع إكمال البناء في Android Studio:
+
+1. **`QuranReaderActivity.java`**: إضافة استيراد `import android.widget.ImageButton;` لدعم فحص الـ instance في `tint()`.
+2. **`AppOpenAdController.java`**: تحديث استدعاء `AppOpenAd.load` ليأخذ 4 معاملات بحذف `AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT`، حيث أُزيلت هذه المعاملة والـ enum الخاص بها في إصدارات Google Mobile Ads SDK الحديثة (24+/25+).
+3. **`RewardedUnlockHelper.java`**: استبدال التعبير `PremiumManager::unlock` بتعبير لامبدا `act -> PremiumManager.unlock()` لتوافق توقيع الواجهة `Reward.grant(Activity)` مع دالة `unlock()` عديمة المعاملات.
+4. **`CustomWallpaper.java` و `LiveClockWallpaper.java`**: إضافة استيراد `android.util.Log` وتعريف الثابت `TAG` في الصنف الأساسي لكل خدمة حتى يتمكن الصنف الداخلي `ClockEngine` من تسجيل استثناءات رسم الـ Canvas دون خطأ عدم العثور على رمز `TAG`.
+5. **`WallpaperHelper.java`**: في دالة `isOurLiveWallpaperSet`، استبدال `info.getService().getPackageName()` بـ `info.getPackageName()` مباشرة، لأن `WallpaperInfo` يوفّر `getPackageName()`، بينما كائن `ResolveInfo` العائد من `getService()` لا يحتوي على دالة `getPackageName()`.
+
+تحديث مدقق رموز جافا `tools/verify_java_symbols.py` ليعكس التوقيع الرباعي لـ `AppOpenAd.load` واجتياز الاختبار الذاتي `--self-test`، وإعادة بناء الحزمة الجاهزة `Allah-Clock-Live-Wallpaper-android-studio.zip`.
+
