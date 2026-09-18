@@ -469,11 +469,11 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
 .quranHeader .meta { font-size: 12px; color: var(--quranMuted); }
 .quranHeader .hint { margin-top: 4px; font-size: 12px; line-height: 1.8; color: var(--quranBody); }
 /* One page at a time: the active sheet fades in, the others stay hidden. The app swipes with a
-   ViewPager2; the mock shows the same discrete pages. */
+   the mock keeps discrete preview segments while the app uses one continuous RecyclerView. */
 .quranPager { flex: 1; position: relative; overflow: hidden; }
-.quranPageView { position: absolute; inset: 0 16px 0 16px; overflow-y: auto; opacity: 0;
+.quranScrollPage { position: absolute; inset: 0 16px 0 16px; overflow-y: auto; opacity: 0;
   transform: translateX(8%); transition: opacity .26s ease, transform .26s ease; pointer-events: none; }
-.quranPageView.on { opacity: 1; transform: none; pointer-events: auto; }
+.quranScrollPage.on { opacity: 1; transform: none; pointer-events: auto; }
 .quranFooter { display: flex; align-items: center; gap: 8px; padding: 8px 16px 0; }
 .pageArrow {
   width: 44px; height: 40px; border-radius: 12px; border: 1px solid var(--quranLine);
@@ -508,20 +508,7 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
 .quranSheet .basmalah { text-align: center; color: var(--quranGold); margin-bottom: 10px; }
 .verse { cursor: pointer; border-radius: 6px; }
 .verse.saved { background: rgba(201, 162, 39, 0.2); }
-/* The end-of-ayah rosette: AyahBadgeSpan draws a 16-petal ornament in the app, so the mock
-   draws the same rosette in CSS around the Arabic-Indic number instead of the bare ۝ glyph. */
-.ayahBadge {
-  display: inline-grid; place-items: center; width: 1.45em; height: 1.45em; vertical-align: -0.3em;
-  color: var(--quranGold); position: relative;
-}
-.ayahBadge::before {
-  content: ''; position: absolute; inset: 0; border-radius: 50%;
-  border: 1px solid currentColor;
-  clip-path: polygon(50% 0%, 61% 15%, 79% 9%, 81% 28%, 100% 34%, 91% 50%, 100% 66%, 81% 72%,
-    79% 91%, 61% 85%, 50% 100%, 39% 85%, 21% 91%, 19% 72%, 0% 66%, 9% 50%, 0% 34%, 19% 28%,
-    21% 9%, 39% 15%);
-}
-.ayahBadge i { font-style: normal; font-size: 0.62em; }
+/* End-of-ayah numbers are the source text's own U+06DD glyph and Arabic-Indic digits. */
 .quranSource {
   padding: 6px 20px 10px; text-align: center; font-size: 10px;
   color: var(--quranMuted);

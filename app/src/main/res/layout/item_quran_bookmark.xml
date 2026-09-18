@@ -39,11 +39,17 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <!-- The saved ayah's own number, printed inside the end-of-ayah ornament. -->
-            <include
-                layout="@layout/view_ayah_number_badge"
+            <!-- The saved ayah's number is ordinary text; the reader itself uses the source
+                 text's built-in end-of-ayah glyph, so this list needs no custom positioning. -->
+            <TextView
+                android:id="@+id/quranBookmarkAyahNumber"
                 android:layout_width="40dp"
-                android:layout_height="40dp" />
+                android:layout_height="40dp"
+                android:background="@drawable/bg_quran_number"
+                android:gravity="center"
+                android:textColor="@color/quranGreenDark"
+                android:textSize="13sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <TextView

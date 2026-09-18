@@ -96,59 +96,83 @@ print('athkar: %d items (%d morning / %d evening)'
 
 
 # ══════════════════════════════════ quran ══════════════════════════════════
-# The reader shows the Tanzil Uthmani text verbatim, so the mock loads the same two files the
-# app bundles: the 114-surah metadata and every one of the 6236 ayahs.
+# The reader shows the official Uthmanic text (Hafs reading) verbatim, so the mock loads the
+# same two assets the app bundles: the edition text and the repository's companion metadata
+# (surah names, the 604 Madani pages, the 30 juzs).
+ASSETS_DIR = os.path.join(MAIN, 'assets')
+edition = json.load(open(os.path.join(ASSETS_DIR, 'quran.json'), encoding='utf-8'))
+metadata = json.load(open(os.path.join(ASSETS_DIR, 'quran_info.json'), encoding='utf-8'))
+
+
+def display_surah_name(official):
+    """Mirror of QuranText.displaySurahName(): drop the leading "سورة" and the diacritics."""
+    value = official.strip()
+    prefix = 'سورة'
+    letters, cursor = 0, 0
+    while cursor < len(value) and letters < len(prefix):
+        char = value[cursor]
+        if 0x064B <= ord(char) <= 0x065F or 0x06D6 <= ord(char) <= 0x06ED:
+            cursor += 1
+            continue
+        if char != prefix[letters]:
+            break
+        letters += 1
+        cursor += 1
+    if letters == len(prefix):
+        value = value[cursor:].strip()
+    if not value:
+        return official.strip()
+    plain = ''.join(c for c in value
+                    if not (0x064B <= ord(c) <= 0x065F or 0x06D6 <= ord(c) <= 0x06ED
+                            or c in '\u0670\u0640'))
+    return plain.strip() or official.strip()
+
+
 surahs = []
-for line in open(os.path.join(RES, 'raw', 'quran_surahs.tsv'), encoding='utf-8'):
-    line = line.rstrip('\n')
-    if not line or line.startswith('#'):
-        continue
-    number, _offset, count, arabic, transliteration, meaning, revelation = line.split('|')
+for chapter in metadata['chapters']:
     surahs.append({
-        'n': int(number),
-        'ayahs': int(count),
-        'arabic': arabic,
-        'translit': transliteration,
-        'meaning': meaning,
-        'meccan': revelation == 'Meccan',
+        'n': chapter['chapter'],
+        'ayahs': len(chapter['verses']),
+        'arabic': display_surah_name(chapter['arabicname']),
+        'translit': chapter['name'],
+        'meaning': chapter['englishname'],
+        'meccan': chapter['revelation'] == 'Mecca',
     })
 
 ayahs = {}
-for line in open(os.path.join(RES, 'raw', 'quran_uthmani.txt'), encoding='utf-8'):
-    line = line.rstrip('\n')
-    if not line or line.startswith('#'):
-        continue
-    surah, ayah, text = line.split('|', 2)
-    ayahs.setdefault(int(surah), []).append(text)
+for row in edition['quran']:
+    ayahs.setdefault(row['chapter'], []).append(row['text'])
 
 assert len(surahs) == 114, 'the Quran metadata must hold 114 surahs'
 assert sum(len(v) for v in ayahs.values()) == 6236, 'the Quran text must hold 6236 ayahs'
 data['quran'] = {'surahs': surahs, 'ayahs': ayahs}
 print('quran: %d surahs, %d ayahs (%d KB of text)'
       % (len(surahs), sum(len(v) for v in ayahs.values()),
-         os.path.getsize(os.path.join(RES, 'raw', 'quran_uthmani.txt')) // 1024))
+         os.path.getsize(os.path.join(ASSETS_DIR, 'quran.json')) // 1024))
 
 
 # ══════════════════════════════ the reader's page breaks ══════════════════════════════
-# QuranPageBuilder closes every verse with " U+06DD<number> " and the paginator cuts the run into
-# pages at the line boxes the text engine reports. The mock mirrors those two rules using the
-# app's own constants, so it never has to guess where a page ends.
-qbuilder = open(os.path.join(JAVA, 'utils', 'QuranPageBuilder.java'), encoding='utf-8').read()
-assert "append('\\u06DD')" in qbuilder, 'QuranPageBuilder no longer marks verses with U+06DD'
+# QuranText.withEndGlyph closes every verse with U+06DD followed by the verse number in
+# Arabic-Indic digits; the continuous column breaks its visual pages there. The mock mirrors
+# that rule, so it never has to guess where a page ends.
 PAGE_SEPARATOR = chr(0x06DD)
+
+
+def arabic_indic(value):
+    return ''.join(chr(0x0660 + int(digit)) for digit in str(value))
+
 
 surah_by_number = {s['n']: s for s in surahs}
 TARGET_SURAH, TARGET_AYAH = 1, 1      # Al-Fatiha: its Basmalah is verse 1, so there is no opening
 run, page_breaks = '', []
 for index, text in enumerate(ayahs[TARGET_SURAH]):
-    mark = ' ' + PAGE_SEPARATOR + str(index + 1) + ' '
-    # Exactly the two appends of QuranPageBuilder.appendAyah().
+    mark = ' ' + PAGE_SEPARATOR + arabic_indic(index + 1) + ' '
     run += text + mark
     # The page may break right after the marker, never inside the verse that owns it. Searching
     # from the previous break proves the string only occurs at the marker and not in the text.
     found = run.find(mark, page_breaks[-1] if page_breaks else 0)
     assert found == len(run) - len(mark), (
-        'the marker of verse %d is not where appendAyah() puts it' % (index + 1))
+        'the marker of verse %d is not where withEndGlyph() puts it' % (index + 1))
     page_breaks.append(len(run))
 assert run.count(PAGE_SEPARATOR) == len(page_breaks) == surah_by_number[TARGET_SURAH]['ayahs']
 data['quranPages'] = {'surah': TARGET_SURAH, 'firstAyah': TARGET_AYAH, 'breaks': page_breaks}

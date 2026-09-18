@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The Quran reader: a Mushaf you flip, not a column you scroll.
+  The Quran reader: one surah as one continuous, smooth vertical scroll (RecyclerView).
 
-  Verses are laid out as one continuous run of text - each closed by the numbered end-of-ayah
-  ornament - and the run is cut into screen-sized pages by QuranPaginator. The ViewPager2 below
-  turns those pages horizontally, in both directions, exactly like the printed book; the sheet,
-  the ornaments and every colour come from QuranTheme, so the night reading switch changes the
-  whole screen in place without the page being rebuilt.
+  The authentic Mushaf header opens the screen: the surah's name and its juz. The verses run as
+  one flowing column, each closed by its built-in end-of-ayah glyph, and the footer carries the
+  page-number pill — the Madani page of the verse under the reader's finger, updated while they
+  scroll. The night reading switch and the text-size picker repaint in place; a rotation is
+  absorbed by the manifest's configChanges, so the scroll never loses its place.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -20,7 +20,9 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp">
 
         <ImageButton
             android:id="@+id/quranReaderBack"
@@ -74,35 +76,57 @@
             app:tint="@color/quranGreen" />
     </LinearLayout>
 
+    <!-- The authentic Mushaf header: the surah's name and its juz. -->
     <LinearLayout
         android:id="@+id/quranReaderHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="4dp"
         android:background="@drawable/bg_quran_card"
+        android:gravity="center_horizontal"
         android:orientation="vertical"
         android:paddingStart="16dp"
-        android:paddingTop="10dp"
+        android:paddingTop="13dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="10dp">
+        android:paddingBottom="13dp">
+
+        <TextView
+            android:id="@+id/quranReaderSurahName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="serif"
+            android:gravity="center"
+            android:textColor="@color/quranInk"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/quranReaderJuz"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/bg_quran_tag"
+            android:gravity="center"
+            android:minWidth="72dp"
+            android:paddingStart="12dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="4dp"
+            android:textColor="@color/quranGreenDark"
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/quranReaderMeta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
             android:textColor="@color/quranMuted"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/quranReaderHint"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/quran_flip_hint"
-            android:textColor="@color/quranBody"
-            android:textSize="12sp" />
+            android:textSize="11sp" />
     </LinearLayout>
 
     <FrameLayout
@@ -110,10 +134,14 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/quranReaderPager"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/quranReaderList"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingTop="4dp"
+            android:paddingBottom="8dp"
+            android:scrollbars="vertical" />
 
         <LinearLayout
             android:id="@+id/quranReaderLoading"
@@ -141,90 +169,27 @@
             android:visibility="gone" />
     </FrameLayout>
 
-    <!--
-      Turning the page by button as well as by swipe: a reader with wet or shaky hands, or one
-      who simply prefers a control, gets the same journey. The centre label states which ayahs
-      the open page carries, so a flipped page can never lose the reader's place.
-    -->
-    <LinearLayout
-        android:id="@+id/quranReaderFooter"
+    <!-- The footer: the Madani page-number pill of the verse the reader is on. -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="6dp"
-        android:layout_marginEnd="16dp"
-        android:background="@drawable/bg_quran_card"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingTop="6dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="6dp">
-
-        <Button
-            android:id="@+id/quranReaderPrevious"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_quran_page_button"
-            android:text="@string/quran_previous_page"
-            android:textAllCaps="false"
-            android:textColor="@color/quranGreenDark"
-            android:textSize="13sp" />
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="10dp">
 
         <TextView
-            android:id="@+id/quranReaderRange"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1.3"
+            android:id="@+id/quranReaderPagePill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:background="@drawable/bg_quran_tag"
             android:gravity="center"
+            android:minWidth="132dp"
+            android:paddingStart="18dp"
+            android:paddingTop="7dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="7dp"
             android:textColor="@color/quranGreenDark"
             android:textSize="12sp"
             android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/quranReaderNext"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_quran_page_button"
-            android:text="@string/quran_next_page"
-            android:textAllCaps="false"
-            android:textColor="@color/quranGreenDark"
-            android:textSize="13sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="2dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="5dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/quranReaderMushaf"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
-            android:background="@drawable/bg_quran_icon_button"
-            android:contentDescription="@string/cd_quran_mushaf"
-            android:padding="9dp"
-            android:src="@drawable/ic_quran"
-            app:tint="@color/quranGold" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="@string/quran_text_source_short"
-            android:textColor="@color/quranMuted"
-            android:textSize="10sp" />
-    </LinearLayout>
+    </FrameLayout>
 </LinearLayout>

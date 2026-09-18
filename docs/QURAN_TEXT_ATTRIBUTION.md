@@ -1,62 +1,38 @@
 # Quran reader text: source, integrity, and attribution
 
-The offline Quran reader ships the complete **Uthmani Quran text** in
-`app/src/main/res/raw/quran_uthmani.txt`.
+The offline Quran reader ships the complete **Uthmanic Quran text (Hafs reading, fully
+vowel-marked)** in `app/src/main/assets/quran.json`, together with the same repository's
+companion metadata in `app/src/main/assets/quran_info.json`.
 
-- **Source:** Tanzil Project — <https://tanzil.net>
-- **Text version:** Uthmani, Version 1.1
-- **Copyright:** Copyright (C) 2007–2024 Tanzil Project
-- **License:** Creative Commons Attribution 3.0
-- **Reviewed source copy:** `acfatah/tanzil` commit
-  [`052b515f3a24dfacbe4cafc3b89f0681a447f462`](https://github.com/acfatah/tanzil/tree/052b515f3a24dfacbe4cafc3b89f0681a447f462)
-- **SHA-256:** `f64fe7657dbe2e185e9995e14f7a67ee6cf1a30773f39184883d7a763d70fb19`
+- **Source repository:** fawazahmed0/quran-api, branch `1` — <https://github.com/fawazahmed0/quran-api>
+- **Text file (upstream path):** `editions/ara-quranuthmanihaf.json` — edition "Quran Uthmani
+  Hafs" (Version 13, sourced from the King Fahd Quran Complex,
+  <https://qurancomplex.gov.sa/>), one of the repository's official editions
+- **Metadata file (upstream path):** `info.json` — surah names, revelation types, and for every
+  ayah its Madani page (1–604), its juz (1–30) and its position on the printed page
+- **Repository license:** The Unlicense (public domain) — <https://unlicense.org>
+- **Upstream blobs reviewed and pinned (git SHA-1):**
+  - `quran.json` — `8c4aadbff424a69370db89d74267147a6dcd2717`
+  - `quran_info.json` — `93b2aa5b00fb4f3337a219340e699ec77efd20fa`
 
-The text asset is a byte-identical copy of the reviewed source. The application parses the
-`surah|ayah|text` rows only to display them; it does not alter Quran text. The original Tanzil
-notice is retained at the end of the text asset and copied in full to
-`app/src/main/res/raw/quran_uthmani_license.txt`.
+Both bundled files are byte-identical copies of the reviewed upstream blobs. The application
+parses them only to display them; it does not alter the Quran text. The only addition the app
+makes is closing each ayah with its end-of-ayah glyph: the ARABIC END OF AYAH character
+(U+06DD) followed by the ayah's number in Arabic-Indic digits, exactly the shape the edition's
+rendered text uses — the ornament is a character of the text, so no position is ever computed
+or painted by hand.
 
-## Madani page and juz navigation metadata
+## Surah headings and navigation metadata
 
-`app/src/main/res/raw/quran_pages.tsv` records the first `surah|ayah` reference for each of the
-**604** traditional Madani Mushaf page divisions. `app/src/main/res/raw/quran_juz.tsv` records the
-starts of the **30** traditional juz (parts). Both are derived from `QuranData.Page` and
-`QuranData.Juz` in the same reviewed Tanzil source copy above. Their SHA-256 values are,
-respectively:
+`quran_info.json` records the 114 surahs with their official names and revelation type, and the
+starts of the **604** traditional Madani Mushaf page divisions and the **30** traditional juz.
+The app uses this metadata only for the reader's header (surah name + juz), the footer's
+page-number pill, the page/juz pickers and resume behavior. It does not change or supplement
+the Quran text.
 
-```text
-946e458e8866da0621c172579e825c352d86b892f530b282ff2636276d37088a
-9c9b80824ddc8bfa16da5bbb59433441f233611843f0ee4d1c44fc05b3794f18
-```
-
-Each upstream JavaScript array uses an empty zero index and ends with `[115, 1]`, a
-one-past-the-end sentinel. Neither is a navigation start; the bundled TSVs contain precisely
-pages 1 through 604 and juzs 1 through 30. This metadata does not change or supplement the Quran
-text. The app uses it only to group the verified Uthmani rows for navigation and resume behavior.
-
-The page-reading UI deliberately reflows those text rows for the reader's screen and chosen text
-size. It is **not** a scanned/PDF reproduction of a printed Mushaf or a claim that its glyph layout
-matches a particular physical edition. That distinction remains important until the user's actual
-Mushaf file is supplied and independently reviewed for rights and integration.
-
-## Tanzil notice
-
-> Tanzil Quran Text (Uthmani, Version 1.1
-> Copyright (C) 2007-2024 Tanzil Project
-> License: Creative Commons Attribution 3.0
->
-> This copy of the Quran text is carefully produced, highly verified and continuously monitored
-> by a group of specialists at Tanzil Project.
->
-> Permission is granted to copy and distribute verbatim copies of this text, but changing it is
-> not allowed. This Quran text can be used in any website or application, provided that its
-> source (Tanzil Project) is clearly indicated, and a link is made to tanzil.net to enable users
-> to keep track of changes. This copyright notice shall be included in all verbatim copies of the
-> text, and shall be reproduced appropriately in all works derived from or containing substantial
-> portions of this text.
-
-See the exact notice in `app/src/main/res/raw/quran_uthmani_license.txt` and check
-<http://tanzil.net/updates/> before intentionally changing the bundled text.
+The continuous reader deliberately reflows the verified Uthmanic text for the reader's screen
+and chosen text size. It is **not** a scanned/PDF reproduction of a printed Mushaf and does not
+claim that its glyph layout matches a particular physical edition.
 
 ## Verification before release
 
@@ -66,15 +42,17 @@ Run the normal static verifier after any project change:
 python3 tools/verify_resources.py
 ```
 
-In addition to Android resources, it verifies all of the following Quran-data invariants:
+In addition to the Android resources, it verifies all of the following Quran-data invariants:
 
-1. exactly 114 surahs and 6,236 ayahs;
-2. sequential ayah numbering and metadata counts for every surah;
-3. exactly 604 ordered page starts and 30 ordered juz starts, each covering every ayah exactly
-   once;
-4. the reviewed SHA-256 checksums for the text plus both navigation metadata assets; and
-5. the mandatory Tanzil attribution and license asset.
+1. the two bundled assets match the pinned upstream git blobs byte for byte;
+2. exactly 114 surahs and 6,236 ayahs, with the canonical ayah count of every surah;
+3. every ayah carries a valid Madani page (1–604), juz (1–30) and page position, and the 604
+   page references plus the 30 juz references are ordered, start at 1:1 and agree with the
+   per-ayah values;
+4. the bundled text contains no pre-existing end-of-ayah glyph (the app is the only place one
+   may be added); and
+5. the metadata's per-surah verse lists match the text file's rows one for one.
 
-If a verified upstream Tanzil update is intentionally adopted, update the text asset, navigation
-metadata, checksums in `tools/verify_resources.py`, and this document together only after an
-independent review.
+If a verified upstream update is intentionally adopted, update both assets, the pinned blobs in
+`tools/verify_resources.py`, and this document together — only after an independent review of
+the new text.

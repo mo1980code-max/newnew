@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -30,7 +31,13 @@ import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 import java.util.List;
 
 /**
- * Reader for the morning / evening athkar, as a classic paper page.
+ * Reader for the morning / evening athkar: rounded cream cards with an earthy taupe dock.
+ *
+ * <p>The top toolbar carries the window's identity — "أذكار الصباح" in sky blue with a sun,
+ * "أذكار المساء" in deep blue with a moon — and its three reading switches: night reading,
+ * the text size (ض) and the card colour. Each dhikr's card does the counting (a tap does one
+ * count, a finished dhikr settles into the muted completed tones), and its dock shares the
+ * dhikr with one tap.</p>
  *
  * <p>It recomputes the window on entry so a stale badge can never show the wrong list. The
  * wallpaper badge and the athkar chip only appear inside the matching window, so they always
@@ -38,22 +45,32 @@ import java.util.List;
  * window it wants: outside both windows the closest set is opened with a short note saying so
  * (see {@link PrayerWindow#windowOrUpcoming}), and a caller that passes nothing still closes
  * the screen instead.</p>
- *
- * <p>An opaque page rather than a sheet floating over the live wallpaper: the wallpaper is a
- * mosque photograph, and behind 31 athkar of dense vowel-marked text it competed with the
- * reading instead of framing it. The page is ink on paper with no accent colours, closed by
- * an explicit button (there is no "tap outside" area left to tap).</p>
  */
 public class AthkarActivity extends AppCompatActivity {
 
     /** The window the caller wants opened when "now" is outside both windows. */
     private static final String EXTRA_WINDOW = "athkar_window";
 
-    /** Preference key: show the Arabic text together with the translation. */
+    /** Preference keys for the toolbar's three reading switches. */
     private static final String PREF_BILINGUAL = "athkarBilingual";
+    private static final String PREF_NIGHT = "athkarNightMode";
+    private static final String PREF_FONT_SP = "athkarFontSp";
+    private static final String PREF_PALETTE = "athkarPalette";
+
+    /** The ض button cycles the Arabic type through this range. */
+    private static final int FONT_MIN_SP = 18;
+    private static final int FONT_MAX_SP = 26;
+    private static final int FONT_STEP_SP = 2;
+    private static final int FONT_DEFAULT_SP = 20;
 
     private TinyDB tinyDB;
     private AthkarAdapter adapter;
+    private TextView outsideNote;
+    private View root;
+    private boolean night;
+    private int fontSp;
+    private int palette;
+    private int window;
 
     /** Opens the reader for the window that is active now, or closes it when there is none. */
     @NonNull
@@ -75,47 +92,65 @@ public class AthkarActivity extends AppCompatActivity {
         super.onCreate(bundle);
         this.tinyDB = new TinyDB(this);
 
-        int window = PrayerWindow.currentWindow(this, this.tinyDB, System.currentTimeMillis());
-        boolean outsideWindow = window == PrayerWindow.NONE;
+        int activeWindow = PrayerWindow.currentWindow(this, this.tinyDB, System.currentTimeMillis());
+        boolean outsideWindow = activeWindow == PrayerWindow.NONE;
         int requested = getIntent().getIntExtra(EXTRA_WINDOW, PrayerWindow.NONE);
         if (outsideWindow) {
             if (requested == PrayerWindow.NONE) {
                 finish();
                 return;
             }
-            window = requested;
+            activeWindow = requested;
         }
-        List<AthkarItem> items = AthkarRepository.forWindow(this, window);
+        this.window = activeWindow;
+        List<AthkarItem> items = AthkarRepository.forWindow(this, this.window);
         if (items.isEmpty()) {
             finish();
             return;
         }
 
+        this.night = this.tinyDB.getBoolean(PREF_NIGHT, false);
+        this.fontSp = Math.max(FONT_MIN_SP, Math.min(FONT_MAX_SP,
+                this.tinyDB.getInt(PREF_FONT_SP, FONT_DEFAULT_SP)));
+        this.palette = this.tinyDB.getInt(PREF_PALETTE, 0);
+
         setContentView(R.layout.activity_athkar);
         UiCompat.applyEdgeToEdge(this);
-        // applyEdgeToEdge paints the window white for the list screens; the paper page needs
-        // its own tone behind the status bar, or the strip above the top bar changes colour.
-        getWindow().setBackgroundDrawableResource(R.color.athkarPaper);
+
+        this.root = findViewById(R.id.athkarRoot);
+        this.outsideNote = findViewById(R.id.athkarOutsideNote);
+        // applyEdgeToEdge paints the window white for the list screens; this page needs its
+        // own tone behind the status bar, or the strip above the top bar changes colour.
+        applyScreenTheme();
+
+        // The bar's identity: sky blue with a sun for the morning, deep blue with a moon for
+        // the evening.
+        View bar = findViewById(R.id.athkarBar);
+        bar.setBackgroundColor(ContextCompat.getColor(this, this.window == PrayerWindow.MORNING
+                ? R.color.athkarBarMorning : R.color.athkarBarEvening));
+        ImageView windowIcon = findViewById(R.id.athkarWindowIcon);
+        boolean evening = this.window == PrayerWindow.EVENING;
+        windowIcon.setImageResource(evening ? R.drawable.ic_moon : R.drawable.ic_sun);
+        findViewById(R.id.athkarCloudIcon).setVisibility(evening ? View.VISIBLE : View.GONE);
 
         TextView title = findViewById(R.id.athkarTitle);
-        title.setText(window == PrayerWindow.MORNING
-                ? R.string.athkar_morning_title
-                : R.string.athkar_evening_title);
+        title.setText(this.window == PrayerWindow.MORNING
+                ? R.string.athkar_morning_title : R.string.athkar_evening_title);
 
         TextView count = findViewById(R.id.athkarCount);
         count.setText(getString(R.string.athkar_count, items.size()));
 
-        findViewById(R.id.athkarClose).setOnClickListener(view -> finish());
-        ImageView settings = findViewById(R.id.athkarSettings);
-        settings.setOnClickListener(view -> showSettingsDialog());
+        findViewById(R.id.athkarBack).setOnClickListener(view -> finish());
+        findViewById(R.id.athkarNight).setOnClickListener(view -> toggleNight());
+        findViewById(R.id.athkarFontButton).setOnClickListener(view -> cycleFont());
+        findViewById(R.id.athkarPalette).setOnClickListener(view -> cyclePalette());
+        findViewById(R.id.athkarSettings).setOnClickListener(view -> showSettingsDialog());
 
-        TextView outsideNote = findViewById(R.id.athkarOutsideNote);
         if (outsideWindow) {
-            outsideNote.setText(getString(R.string.athkar_outside_window,
-                    getString(window == PrayerWindow.MORNING
-                            ? R.string.athkar_morning_title
-                            : R.string.athkar_evening_title)));
-            outsideNote.setVisibility(View.VISIBLE);
+            this.outsideNote.setText(getString(R.string.athkar_outside_window,
+                    getString(this.window == PrayerWindow.MORNING
+                            ? R.string.athkar_morning_title : R.string.athkar_evening_title)));
+            this.outsideNote.setVisibility(View.VISIBLE);
         }
 
         RecyclerView list = findViewById(R.id.athkarList);
@@ -123,8 +158,71 @@ public class AthkarActivity extends AppCompatActivity {
         // Strict single language: the app locale decides whether a row is Arabic or English.
         // The dual-language display only happens when the reader switched it on themselves.
         this.adapter = new AthkarAdapter(items, LocaleHelper.isArabic(this),
-                this.tinyDB.getBoolean(PREF_BILINGUAL, false));
+                this.tinyDB.getBoolean(PREF_BILINGUAL, false), this.night, this.fontSp,
+                this.palette, this::shareDhikr);
         list.setAdapter(this.adapter);
+    }
+
+    // ═══════════════════════════════ the toolbar's switches ═══════════════════════════════
+
+    /** Night reading on / off: the page darkens in place, the cards repaint with it. */
+    private void toggleNight() {
+        this.night = !this.night;
+        this.tinyDB.putBoolean(PREF_NIGHT, this.night);
+        applyScreenTheme();
+        if (this.adapter != null) {
+            this.adapter.setNight(this.night);
+        }
+        Toast.makeText(this, this.night ? R.string.athkar_night_on : R.string.athkar_night_off,
+                Toast.LENGTH_SHORT).show();
+    }
+
+    /** The ض button: one step up the type range, wrapping back to the start at the top. */
+    private void cycleFont() {
+        this.fontSp = this.fontSp + FONT_STEP_SP > FONT_MAX_SP ? FONT_MIN_SP
+                : this.fontSp + FONT_STEP_SP;
+        this.tinyDB.putInt(PREF_FONT_SP, this.fontSp);
+        if (this.adapter != null) {
+            this.adapter.setTextSizeSp(this.fontSp);
+        }
+        Toast.makeText(this, getString(R.string.athkar_font_size, this.fontSp),
+                Toast.LENGTH_SHORT).show();
+    }
+
+    /** The palette button: the next card tint, wrapping after the last one. */
+    private void cyclePalette() {
+        this.palette = (this.palette + 1) % AthkarAdapter.PALETTE_COUNT;
+        this.tinyDB.putInt(PREF_PALETTE, this.palette);
+        if (this.adapter != null) {
+            this.adapter.setPalette(this.palette);
+        }
+        Toast.makeText(this, R.string.athkar_palette_changed, Toast.LENGTH_SHORT).show();
+    }
+
+    /** Paints the page's surfaces from the active theme. */
+    private void applyScreenTheme() {
+        int paper = this.night ? R.color.athkarNightPaper : R.color.athkarPaper;
+        this.root.setBackgroundColor(ContextCompat.getColor(this, paper));
+        getWindow().setBackgroundDrawableResource(paper);
+        if (this.outsideNote != null) {
+            this.outsideNote.setTextColor(ContextCompat.getColor(this, this.night
+                    ? R.color.athkarNightMuted : R.color.athkarMuted));
+        }
+    }
+
+    // ══════════════════════════════════════ sharing ══════════════════════════════════════
+
+    /** The dock's share button: the dhikr's text, with the translation for a Latin reader. */
+    private void shareDhikr(@NonNull AthkarItem item) {
+        StringBuilder text = new StringBuilder(item.getArabicText());
+        String translation = item.getEnglishText();
+        if (!LocaleHelper.isArabic(this) && !translation.isEmpty()) {
+            text.append('\n').append('\n').append(translation);
+        }
+        Intent send = new Intent(Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(Intent.EXTRA_TEXT, text.toString());
+        startActivity(Intent.createChooser(send, getString(R.string.athkar_share)));
     }
 
     // ═══════════════════════════════ timing settings ═══════════════════════════════

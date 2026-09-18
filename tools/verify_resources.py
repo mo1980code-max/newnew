@@ -17,14 +17,15 @@ catch - and that a hand-edited bilingual app makes often:
   5. every @type/name referenced from a layout or drawable resolves;
   6. every findViewById(R.id.x) has a matching @+id/x in some layout;
   7. Java braces balance (a crude syntax sniff, but it catches a bad edit fast);
-  8. the bundled Quran asset has all 114 surahs / 6,236 ayahs; its 604 canonical Madani
-     page starts and 30 juz starts cover every ayah exactly once; every reviewed navigation
-     asset retains the required Tanzil attribution and checksum.
+  8. the bundled Quran assets are byte-identical to the reviewed upstream repository (git blob
+     SHAs pinned), carry all 114 surahs / 6,236 ayahs, and their 604 Madani pages and 30 juzs
+     cover every ayah exactly once.
 
 Exit code is non-zero when anything fails, so it can gate a commit.
 """
 import glob
 import hashlib
+import json
 import os
 import re
 import sys
@@ -257,173 +258,166 @@ for path in java_files:
             err('findViewById(R.id.%s) in %s has no @+id/%s in any layout' % (name, rel, name))
 
 # ══════════════════════════ 8. Quran reader asset integrity ══════════════════════════
-# The reader displays Tanzil Uthmani text verbatim.  A checksum deliberately catches an
-# accidental edit to the sacred text; intentional upstream updates must update this value and
+# The reader displays the official Uthmanic text (Hafs reading) of the fawazahmed0/quran-api
+# repository verbatim, together with that repository's companion metadata (surah names, the
+# 604 Madani pages, the 30 juzs). The git blob SHAs below pin the two files to the exact
+# upstream blobs, so an accidental edit to the sacred text is caught the way the old the upstream Quran source
+# checksums did; an intentional upstream update must refresh these SHAs and
 # docs/QURAN_TEXT_ATTRIBUTION.md together after independent review.
-QURAN_TEXT = os.path.join(RES, 'raw', 'quran_uthmani.txt')
-QURAN_META = os.path.join(RES, 'raw', 'quran_surahs.tsv')
-QURAN_PAGES = os.path.join(RES, 'raw', 'quran_pages.tsv')
-QURAN_JUZ = os.path.join(RES, 'raw', 'quran_juz.tsv')
-QURAN_LICENSE = os.path.join(RES, 'raw', 'quran_uthmani_license.txt')
-QURAN_SHA256 = 'f64fe7657dbe2e185e9995e14f7a67ee6cf1a30773f39184883d7a763d70fb19'
-QURAN_PAGES_SHA256 = '946e458e8866da0621c172579e825c352d86b892f530b282ff2636276d37088a'
-QURAN_JUZ_SHA256 = '9c9b80824ddc8bfa16da5bbb59433441f233611843f0ee4d1c44fc05b3794f18'
+#
+# Upstream: https://github.com/fawazahmed0/quran-api (branch 1)
+#   editions/ara-quranuthmanihaf.json  ->  app/src/main/assets/quran.json
+#   info.json                          ->  app/src/main/assets/quran_info.json
+QURAN_TEXT = os.path.join(MAIN, 'assets', 'quran.json')
+QURAN_INFO = os.path.join(MAIN, 'assets', 'quran_info.json')
+QURAN_TEXT_BLOB = '8c4aadbff424a69370db89d74267147a6dcd2717'
+QURAN_INFO_BLOB = '93b2aa5b00fb4f3337a219340e699ec77efd20fa'
+SURAH_AYAH_COUNTS = [
+    7, 286, 200, 176, 120, 165, 206, 75, 129, 109,
+    123, 111, 43, 52, 99, 128, 111, 110, 98, 135,
+    112, 78, 118, 64, 77, 227, 93, 88, 69, 60,
+    34, 30, 73, 54, 45, 83, 182, 88, 75, 85,
+    54, 53, 89, 59, 37, 35, 38, 29, 18, 45,
+    60, 49, 62, 55, 78, 96, 29, 22, 24, 13,
+    14, 11, 11, 18, 12, 12, 30, 52, 52, 44,
+    28, 28, 20, 56, 40, 31, 50, 40, 46, 42,
+    29, 19, 36, 25, 22, 17, 19, 26, 30, 20,
+    15, 21, 11, 8, 8, 19, 5, 8, 8, 11,
+    11, 8, 3, 9, 5, 4, 7, 3, 6, 3,
+    5, 4, 5, 6,
+]
+
+
+def git_blob_sha(path):
+    """The SHA-1 git stores for a file: sha1('blob <len>\\0<content>')."""
+    data = open(path, 'rb').read()
+    digest = hashlib.sha1()
+    digest.update(('blob %d\x00' % len(data)).encode('ascii'))
+    digest.update(data)
+    return digest.hexdigest()
+
+
 try:
-    raw_bytes = open(QURAN_TEXT, 'rb').read()
-    actual_sha = hashlib.sha256(raw_bytes).hexdigest()
-    if actual_sha != QURAN_SHA256:
-        err('quran_uthmani.txt checksum differs from the reviewed Tanzil source')
-    quran_rows = []
-    for line_no, line in enumerate(raw_bytes.decode('utf-8').splitlines(), 1):
-        if not line or line.startswith('#'):
-            continue
-        pieces = line.split('|', 2)
-        if len(pieces) != 3 or not pieces[2]:
-            err('invalid Quran row at line %d' % line_no)
-            continue
-        try:
-            quran_rows.append((int(pieces[0]), int(pieces[1])))
-        except ValueError:
-            err('non-numeric Quran reference at line %d' % line_no)
+    if git_blob_sha(QURAN_TEXT) != QURAN_TEXT_BLOB:
+        err('quran.json no longer matches the reviewed upstream edition '
+            '(editions/ara-quranuthmanihaf.json) byte for byte')
+    if git_blob_sha(QURAN_INFO) != QURAN_INFO_BLOB:
+        err('quran_info.json no longer matches the reviewed upstream metadata (info.json) '
+            'byte for byte')
 
-    metadata = {}
-    for line_no, line in enumerate(open(QURAN_META, encoding='utf-8'), 1):
-        line = line.rstrip('\n')
-        if not line or line.startswith('#'):
-            continue
-        pieces = line.split('|')
-        if len(pieces) != 7:
-            err('invalid Quran metadata row at line %d' % line_no)
-            continue
-        try:
-            number, ayah_count = int(pieces[0]), int(pieces[2])
-        except ValueError:
-            err('non-numeric Quran metadata at line %d' % line_no)
-            continue
-        metadata[number] = ayah_count
-
-    if len(metadata) != 114:
-        err('Quran metadata must contain 114 surahs, found %d' % len(metadata))
-    if len(quran_rows) != 6236:
-        err('Quran text must contain 6236 ayahs, found %d' % len(quran_rows))
+    text = json.load(open(QURAN_TEXT, encoding='utf-8'))
+    rows = text.get('quran') if isinstance(text, dict) else None
+    if not isinstance(rows, list):
+        err('quran.json has no "quran" array')
+        rows = []
+    if len(rows) != 6236:
+        err('Quran text must contain 6236 ayahs, found %d' % len(rows))
     seen_counts = {}
-    for surah, ayah in quran_rows:
-        seen_counts[surah] = seen_counts.get(surah, 0) + 1
-        if ayah != seen_counts[surah]:
+    for index, row in enumerate(rows):
+        surah, ayah = row.get('chapter'), row.get('verse')
+        verse = row.get('text')
+        if not isinstance(surah, int) or not isinstance(ayah, int) or not isinstance(verse, str) \
+                or not verse:
+            err('invalid Quran row at index %d' % index)
+            continue
+        expected = seen_counts.get(surah, 0) + 1
+        if ayah != expected:
             err('Quran ayah sequence breaks at %d:%d' % (surah, ayah))
             break
+        seen_counts[surah] = expected
+        if '\u06DD' in verse:
+            err('Quran text at %d:%d already carries an end-of-ayah glyph; the app '
+                'is the only place one may be added' % (surah, ayah))
     if set(seen_counts) != set(range(1, 115)):
         err('Quran text must cover surahs 1 through 114')
-    for number, expected in metadata.items():
+    for number, expected in enumerate(SURAH_AYAH_COUNTS, 1):
         if seen_counts.get(number) != expected:
             err('Quran surah %d expected %d ayahs, found %d'
                 % (number, expected, seen_counts.get(number, 0)))
 
-    page_bytes = open(QURAN_PAGES, 'rb').read()
-    actual_pages_sha = hashlib.sha256(page_bytes).hexdigest()
-    if actual_pages_sha != QURAN_PAGES_SHA256:
-        err('quran_pages.tsv checksum differs from the reviewed Tanzil page metadata')
-    page_starts = []
-    for line_no, line in enumerate(page_bytes.decode('utf-8').splitlines(), 1):
-        if not line or line.startswith('#'):
+    info = json.load(open(QURAN_INFO, encoding='utf-8'))
+    chapters = info.get('chapters') if isinstance(info, dict) else None
+    if not isinstance(chapters, list) or len(chapters) != 114:
+        err('Quran metadata must contain 114 surahs, found %s'
+            % (len(chapters) if isinstance(chapters, list) else 'none'))
+        chapters = []
+    verse_meta = {}
+    for chapter in chapters:
+        number = chapter.get('chapter')
+        verses = chapter.get('verses')
+        if number is None or not isinstance(verses, list) \
+                or len(verses) != SURAH_AYAH_COUNTS[number - 1]:
+            err('Quran metadata surah %s has the wrong ayah count' % number)
             continue
-        pieces = line.split('|')
-        if len(pieces) != 3:
-            err('invalid Quran page metadata row at line %d' % line_no)
-            continue
-        try:
-            page, surah, ayah = (int(piece) for piece in pieces)
-        except ValueError:
-            err('non-numeric Quran page metadata at line %d' % line_no)
-            continue
-        if page != len(page_starts) + 1 or page <= 0 or surah <= 0 or ayah <= 0:
-            err('Quran page numbering breaks at line %d' % line_no)
-            continue
-        page_starts.append((surah, ayah))
+        for verse in verses:
+            page = verse.get('page')
+            juz = verse.get('juz')
+            line = verse.get('line')
+            if not (isinstance(page, int) and 1 <= page <= 604) \
+                    or not (isinstance(juz, int) and 1 <= juz <= 30) \
+                    or not (isinstance(line, int) and line >= 1):
+                err('Quran navigation is out of range at %d:%s' % (number, verse.get('verse')))
+            verse_meta[(number, verse.get('verse'))] = (page, juz, line)
+    if len(verse_meta) != 6236:
+        err('Quran metadata must describe 6236 ayahs, found %d' % len(verse_meta))
 
-    row_index = {reference: index for index, reference in enumerate(quran_rows)}
-    page_indexes = []
-    for page, reference in enumerate(page_starts, 1):
-        index = row_index.get(reference)
-        if index is None:
-            err('Quran page %d starts at missing ayah %d:%d' % (page, reference[0], reference[1]))
+    pages = (info.get('pages') or {}).get('references') if isinstance(info, dict) else None
+    if not isinstance(pages, list) or len(pages) != 604:
+        err('Quran page metadata must contain 604 Madani pages, found %s'
+            % (len(pages) if isinstance(pages, list) else 'none'))
+        pages = []
+    for page_number, reference in enumerate(pages, 1):
+        if reference.get('page') != page_number:
+            err('Quran page numbering breaks at page %d' % page_number)
+            break
+        start = (reference['start']['chapter'], reference['start']['verse'])
+        end = (reference['end']['chapter'], reference['end']['verse'])
+        if start not in verse_meta or end not in verse_meta:
+            err('Quran page %d references a missing ayah' % page_number)
             continue
-        page_indexes.append(index)
-    if len(page_starts) != 604:
-        err('Quran page metadata must contain 604 starts, found %d' % len(page_starts))
-    if page_indexes and page_indexes[0] != 0:
+        if verse_meta[start][0] != page_number or verse_meta[end][0] != page_number:
+            err('Quran page %d disagrees with the per-ayah page values' % page_number)
+    if pages and pages[0]['start'] != {'chapter': 1, 'verse': 1}:
         err('Quran page 1 must start at ayah 1:1')
-    if any(later <= earlier for earlier, later in zip(page_indexes, page_indexes[1:])):
-        err('Quran page metadata is not in strictly increasing ayah order')
-    if len(page_indexes) == 604 and len(quran_rows) == 6236:
-        coverage = [0] * len(quran_rows)
-        for page_index, start in enumerate(page_indexes):
-            end = (page_indexes[page_index + 1] - 1
-                   if page_index + 1 < len(page_indexes) else len(quran_rows) - 1)
-            for ayah_index in range(start, end + 1):
-                coverage[ayah_index] += 1
-        if any(count != 1 for count in coverage):
-            err('Quran page metadata must cover every ayah exactly once')
-    if 'Tanzil Project' not in page_bytes.decode('utf-8') or 'tanzil.net' not in page_bytes.decode('utf-8'):
-        err('Quran page metadata is missing its Tanzil attribution')
+    if pages and len(verse_meta) == 6236:
+        last_reference = None
+        for reference in pages:
+            start = (reference['start']['chapter'], reference['start']['verse'])
+            if last_reference is not None and start <= last_reference:
+                err('Quran page references are not in strictly increasing ayah order')
+                break
+            last_reference = start
 
-    juz_bytes = open(QURAN_JUZ, 'rb').read()
-    actual_juz_sha = hashlib.sha256(juz_bytes).hexdigest()
-    if actual_juz_sha != QURAN_JUZ_SHA256:
-        err('quran_juz.tsv checksum differs from the reviewed Tanzil juz metadata')
-    juz_starts = []
-    for line_no, line in enumerate(juz_bytes.decode('utf-8').splitlines(), 1):
-        if not line or line.startswith('#'):
+    juzs = (info.get('juzs') or {}).get('references') if isinstance(info, dict) else None
+    if not isinstance(juzs, list) or len(juzs) != 30:
+        err('Quran juz metadata must contain the 30 juzs, found %s'
+            % (len(juzs) if isinstance(juzs, list) else 'none'))
+        juzs = []
+    for juz_number, reference in enumerate(juzs, 1):
+        if reference.get('juz') != juz_number:
+            err('Quran juz numbering breaks at juz %d' % juz_number)
+            break
+        start = (reference['start']['chapter'], reference['start']['verse'])
+        if start not in verse_meta:
+            err('Quran juz %d starts at a missing ayah' % juz_number)
             continue
-        pieces = line.split('|')
-        if len(pieces) != 3:
-            err('invalid Quran juz metadata row at line %d' % line_no)
-            continue
-        try:
-            juz, surah, ayah = (int(piece) for piece in pieces)
-        except ValueError:
-            err('non-numeric Quran juz metadata at line %d' % line_no)
-            continue
-        if juz != len(juz_starts) + 1 or juz <= 0 or surah <= 0 or ayah <= 0:
-            err('Quran juz numbering breaks at line %d' % line_no)
-            continue
-        juz_starts.append((surah, ayah))
-
-    juz_indexes = []
-    for juz, reference in enumerate(juz_starts, 1):
-        index = row_index.get(reference)
-        if index is None:
-            err('Quran juz %d starts at missing ayah %d:%d' % (juz, reference[0], reference[1]))
-            continue
-        juz_indexes.append(index)
-    if len(juz_starts) != 30:
-        err('Quran juz metadata must contain 30 starts, found %d' % len(juz_starts))
-    if juz_indexes and juz_indexes[0] != 0:
+        if verse_meta[start][1] != juz_number:
+            err('Quran juz %d disagrees with the per-ayah juz values' % juz_number)
+    if juzs and juzs[0]['start'] != {'chapter': 1, 'verse': 1}:
         err('Quran juz 1 must start at ayah 1:1')
-    if any(later <= earlier for earlier, later in zip(juz_indexes, juz_indexes[1:])):
-        err('Quran juz metadata is not in strictly increasing ayah order')
-    if len(juz_indexes) == 30 and len(quran_rows) == 6236:
-        coverage = [0] * len(quran_rows)
-        for juz_index, start in enumerate(juz_indexes):
-            end = (juz_indexes[juz_index + 1] - 1
-                   if juz_index + 1 < len(juz_indexes) else len(quran_rows) - 1)
-            for ayah_index in range(start, end + 1):
-                coverage[ayah_index] += 1
-        if any(count != 1 for count in coverage):
-            err('Quran juz metadata must cover every ayah exactly once')
-    if 'Tanzil Project' not in juz_bytes.decode('utf-8') or 'tanzil.net' not in juz_bytes.decode('utf-8'):
-        err('Quran juz metadata is missing its Tanzil attribution')
+    if juzs and len(verse_meta) == 6236:
+        last_reference = None
+        for reference in juzs:
+            start = (reference['start']['chapter'], reference['start']['verse'])
+            if last_reference is not None and start <= last_reference:
+                err('Quran juz references are not in strictly increasing ayah order')
+                break
+            last_reference = start
 
-    license = open(QURAN_LICENSE, encoding='utf-8').read()
-    text = raw_bytes.decode('utf-8')
-    if 'Tanzil Quran Text (Uthmani, Version 1.1)' not in license:
-        err('Quran license asset is missing the Tanzil notice')
-    if 'Tanzil Project' not in text or 'tanzil.net' not in text:
-        err('Quran text asset is missing its required Tanzil attribution')
-    print('quran data: %d surahs, %d ayahs, %d Madani pages, %d juzs, Tanzil checksums %s… / %s… / %s…'
-          % (len(metadata), len(quran_rows), len(page_starts), len(juz_starts), actual_sha[:12],
-             actual_pages_sha[:12], actual_juz_sha[:12]))
-except (OSError, UnicodeDecodeError) as exc:
+    print('quran data: %d surahs, %d ayahs, %d Madani pages, %d juzs, upstream blobs %s… / %s…'
+          % (len(chapters), len(rows), len(pages), len(juzs), QURAN_TEXT_BLOB[:12],
+             QURAN_INFO_BLOB[:12]))
+except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
     err('could not verify Quran reader data: %s' % exc)
 
 # ══════════════════════════ report ══════════════════════════
