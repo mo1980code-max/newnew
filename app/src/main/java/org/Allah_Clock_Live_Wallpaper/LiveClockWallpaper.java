@@ -28,6 +28,10 @@ import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 
 
 public class LiveClockWallpaper extends WallpaperService {
+
+    /** Logcat tag; the clock engine reports its canvas failures under it. */
+    private static final String TAG = "LiveClockWallpaper";
+
     protected TextClockPreview cat1Clock;
     private Context context;
     int height;

@@ -58,7 +58,10 @@ public final class RewardedUnlockHelper {
         }
         showExplanation(activity, R.string.premium_dialog_title, R.string.premium_dialog_message,
                 R.string.premium_dialog_watch, R.string.premium_unlocked,
-                R.string.premium_not_unlocked, callback, PremiumManager::unlock);
+                // A lambda, not PremiumManager::unlock — the reward takes the Activity that hosts
+                // the video, while unlock() is a static that takes nothing, so the method
+                // reference has no signature to bind to and javac rejects it.
+                R.string.premium_not_unlocked, callback, act -> PremiumManager.unlock());
     }
 
     // ═════════════════════════════ premium backgrounds ═════════════════════════════

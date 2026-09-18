@@ -10,6 +10,7 @@ import android.os.Looper;
 import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 import android.service.wallpaper.WallpaperService;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -20,6 +21,10 @@ import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 
 
 public class CustomWallpaper extends WallpaperService {
+
+    /** Logcat tag; the clock engine reports its canvas failures under it. */
+    private static final String TAG = "CustomWallpaper";
+
     private Context context;
     int height;
     protected ImageView imageView;
