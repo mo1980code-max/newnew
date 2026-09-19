@@ -158,6 +158,13 @@ public final class NativeAdListAdapter extends RecyclerView.Adapter<RecyclerView
         return position;
     }
 
+    public int toOuterPosition(int innerPosition) {
+        if (nativeAd != null && innerPosition >= adPosition) {
+            return innerPosition + 1;
+        }
+        return innerPosition;
+    }
+
     @Override
     public int getItemCount() {
         return inner.getItemCount() + (nativeAd != null ? 1 : 0);
