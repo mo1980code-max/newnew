@@ -1,11 +1,13 @@
 package org.Allah_Clock_Live_Wallpaper.utils;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
 import org.Allah_Clock_Live_Wallpaper.model.QuranJuz;
@@ -102,7 +104,15 @@ public final class QuranRepository {
     @NonNull
     private static List<TextAyah> readTexts(@NonNull Context context) throws IOException {
         String body = readAsset(context, ASSET_TEXT);
-        TextFile file = new Gson().fromJson(body, TextFile.class);
+        TextFile file;
+        try {
+            file = new Gson().fromJson(body, TextFile.class);
+        } catch (RuntimeException | OutOfMemoryError e) {
+            // A corrupt asset must surface as the IOException the app already translates,
+            // never as a raw Gson exception or an OOM crash in production.
+            Log.e("CRITICAL_DEBUG", "Gson failed to parse " + ASSET_TEXT, e);
+            throw new IOException("The bundled Quran text could not be parsed", e);
+        }
         if (file == null || file.quran == null) {
             throw new IOException("The bundled Quran text has no verses");
         }
@@ -112,7 +122,13 @@ public final class QuranRepository {
     @NonNull
     private static Info readInfo(@NonNull Context context) throws IOException {
         String body = readAsset(context, ASSET_INFO);
-        Info info = new Gson().fromJson(body, Info.class);
+        Info info;
+        try {
+            info = new Gson().fromJson(body, Info.class);
+        } catch (RuntimeException | OutOfMemoryError e) {
+            Log.e("CRITICAL_DEBUG", "Gson failed to parse " + ASSET_INFO, e);
+            throw new IOException("The bundled Quran metadata could not be parsed", e);
+        }
         if (info == null) {
             throw new IOException("The bundled Quran metadata is missing");
         }
@@ -186,6 +202,7 @@ public final class QuranRepository {
         }
 
         int cursor = 0;
+        int sajdaAyahs = 0;
         for (int surahIndex = 0; surahIndex < SURAH_COUNT; surahIndex++) {
             Chapter chapter = info.chapters.get(surahIndex);
             List<QuranAyah> ayahs = ayahsBySurah.get(chapter.chapter);
@@ -210,10 +227,20 @@ public final class QuranRepository {
                 ayahs.add(ayah);
                 globalAyahIndexes.put(ayah.getKey(), allAyahs.size());
                 allAyahs.add(ayah);
+                if (verseMeta.hasSajda()) {
+                    sajdaAyahs++;
+                }
             }
         }
         if (cursor != texts.size()) {
             throw new IOException("Quran metadata and text cover different ayah counts");
+        }
+        if (info.sajdas == null || info.sajdas.count != sajdaAyahs) {
+            // The inline per-verse flags and the summary sajdas block must agree, or the
+            // bundled metadata is not the reviewed upstream file.
+            throw new IOException("Quran metadata must count " + sajdaAyahs
+                    + " sajda ayahs, found "
+                    + (info.sajdas == null ? "none" : info.sajdas.count));
         }
 
         if (info.pages != null && info.pages.references != null) {
@@ -545,6 +572,7 @@ public final class QuranRepository {
     private static final class Info {
         CountOnly verses;
         List<Chapter> chapters;
+        CountOnly sajdas;
         CountRef<PageRef> pages;
         CountRef<JuzRef> juzs;
     }
@@ -575,7 +603,24 @@ public final class QuranRepository {
         int page;
         int ruku;
         int maqra;
-        boolean sajda;
+
+        /**
+         * Polymorphic in assets/quran_info.json: {@code false} on the 6221 ayahs without a
+         * prostration and an object {@code {"no":n,"recommended":b,"obligatory":b}} on the
+         * 15 ayahs of prostration (the first is 7:206), so it must stay a {@link JsonElement}.
+         */
+        JsonElement sajda;
+
+        /** True exactly for the ayahs the metadata flags as a prostration ayah. */
+        boolean hasSajda() {
+            if (sajda == null || sajda.isJsonNull()) {
+                return false;
+            }
+            if (sajda.isJsonPrimitive()) {
+                return sajda.getAsBoolean();
+            }
+            return sajda.isJsonObject();
+        }
     }
 
     private static final class PageRef {

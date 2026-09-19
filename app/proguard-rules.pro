@@ -26,6 +26,9 @@
 
 # ── Gson (TinyDB persists the selected Clocks model; AthkarRepository parses athkar.json) ──
 -keep class org.Allah_Clock_Live_Wallpaper.model.** { *; }
+# QuranRepository reflects the bundled quran.json / quran_info.json into its private nested
+# classes (TextFile, Info, Chapter, Verse, …); R8 must not strip or rename them.
+-keep class org.Allah_Clock_Live_Wallpaper.utils.QuranRepository$* { *; }
 -keepclassmembers,allowobfuscation class * {
     @com.google.gson.annotations.SerializedName <fields>;
 }
