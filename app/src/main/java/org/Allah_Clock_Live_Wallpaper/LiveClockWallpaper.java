@@ -384,11 +384,11 @@ public class LiveClockWallpaper extends WallpaperService {
                 }
                 Log.e("aa", "=" + aa);
                 return decoded;
-            } catch (Throwable e) {
-                Log.e(TAG, "decode failed: " + path, e);
-                return null;
             } catch (OutOfMemoryError e) {
                 Log.e(TAG, "OOM decoding: " + path, e);
+                return null;
+            } catch (Throwable e) {
+                Log.e(TAG, "decode failed: " + path, e);
                 return null;
             }
         }

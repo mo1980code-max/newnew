@@ -322,11 +322,11 @@ public class CustomWallpaper extends WallpaperService {
                     return null;
                 }
                 return BitmapFactory.decodeFile(path);
-            } catch (Throwable e) {
-                Log.e(TAG, "decode failed: " + path, e);
-                return null;
             } catch (OutOfMemoryError e) {
                 Log.e(TAG, "OOM decoding: " + path, e);
+                return null;
+            } catch (Throwable e) {
+                Log.e(TAG, "decode failed: " + path, e);
                 return null;
             }
         }
