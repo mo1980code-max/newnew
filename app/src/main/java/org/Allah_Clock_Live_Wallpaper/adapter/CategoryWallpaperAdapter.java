@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.model.WallpaperCategory;
+import org.Allah_Clock_Live_Wallpaper.utils.UiMotion;
 
 import java.util.List;
 
@@ -51,22 +52,26 @@ public class CategoryWallpaperAdapter
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        return new ViewHolder(LayoutInflater.from(viewGroup.getContext())
+        ViewHolder holder = new ViewHolder(LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.item_cat_wallpaper, viewGroup, false));
+        UiMotion.pressable(holder.itemView);
+        return holder;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder viewHolder, final int i) {
-        WallpaperCategory category = this.items.get(i);
+    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
+        WallpaperCategory category = this.items.get(position);
         viewHolder.viewStub.setImageResource(category.getCoverRes());
         viewHolder.textName.setText(category.getTitleRes());
 
-        viewHolder.viewStub.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (CategoryWallpaperAdapter.this.clickListener != null) {
-                    CategoryWallpaperAdapter.this.clickListener.setClick(i);
-                }
+        viewHolder.itemView.setOnClickListener(view -> {
+            int pos = viewHolder.getBindingAdapterPosition();
+            if (pos == RecyclerView.NO_POSITION) {
+                return;
+            }
+            UiMotion.tick(view);
+            if (CategoryWallpaperAdapter.this.clickListener != null) {
+                CategoryWallpaperAdapter.this.clickListener.setClick(pos);
             }
         });
     }

@@ -152,6 +152,7 @@
         <!-- Offline Quran reading surfaces intentionally contain no banner or native ads. -->
         <activity
             android:name=".activity.QuranIndexActivity"
+            android:configChanges="orientation|screenSize"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.QuranReader"
@@ -159,27 +160,33 @@
         <!--
           The two readers are continuous vertical scrolls: rotation is handled in place
           (configChanges) so the activity is never recreated and the scroll keeps its place —
-          the column simply re-lays out for the new width. They are therefore not locked
-          portrait.
+          the column simply re-lays out for the new width. portrait is kept as a stable default
+          and configChanges absorbs the rare multi-window size change without recreation.
         -->
         <activity
             android:name=".activity.QuranReaderActivity"
             android:configChanges="orientation|screenSize"
             android:exported="false"
-            android:theme="@style/AppTheme.QuranReader" />
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.QuranReader"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
         <activity
             android:name=".activity.QuranMushafActivity"
             android:configChanges="orientation|screenSize"
             android:exported="false"
-            android:theme="@style/AppTheme.QuranReader" />
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.QuranReader"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
         <activity
             android:name=".activity.QuranSearchActivity"
+            android:configChanges="orientation|screenSize"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.QuranReader"
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
         <activity
             android:name=".activity.QuranBookmarksActivity"
+            android:configChanges="orientation|screenSize"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.QuranReader"

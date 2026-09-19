@@ -207,7 +207,12 @@ public class SetWallpaperActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.save_failed, Toast.LENGTH_LONG).show();
             return;
         }
-        this.tinyDB.putString("isWallpaper", this.localFile.getAbsolutePath());
+        String abs = this.localFile.getAbsolutePath();
+        this.tinyDB.putString("isWallpaper", abs);
+        this.tinyDB.putString("ImageString", abs);
+        this.tinyDB.putBoolean("isImage", true);
+        this.tinyDB.putBoolean("isCustomBg", false);
+        this.tinyDB.putInt("customBg", 0);
         Intent intent = new Intent("android.service.wallpaper.CHANGE_LIVE_WALLPAPER");
         intent.putExtra("android.service.wallpaper.extra.LIVE_WALLPAPER_COMPONENT",
                 new ComponentName(this, CustomWallpaper.class));

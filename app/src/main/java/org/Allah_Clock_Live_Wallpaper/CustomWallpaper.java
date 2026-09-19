@@ -1,14 +1,13 @@
 package org.Allah_Clock_Live_Wallpaper;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.os.Looper;
-
-import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
-import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -16,9 +15,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
+import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 
-
+import java.io.File;
 
 public class CustomWallpaper extends WallpaperService {
 
@@ -61,6 +62,17 @@ public class CustomWallpaper extends WallpaperService {
 
     @Override
     public void onDestroy() {
+        try {
+            if (imageView != null) {
+                imageView.setImageDrawable(null);
+                imageView.setImageBitmap(null);
+            }
+            if (widgetGroup != null) {
+                widgetGroup.removeAllViews();
+            }
+        } catch (Throwable ignored) {
+        }
+        mHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
@@ -68,8 +80,6 @@ public class CustomWallpaper extends WallpaperService {
     public Engine onCreateEngine() {
         return new ClockEngine();
     }
-
-
 
     public static class WidgetGroup extends ViewGroup {
         private final String TAG = getClass().getSimpleName();
@@ -85,8 +95,6 @@ public class CustomWallpaper extends WallpaperService {
         }
     }
 
-
-
     class ClockEngine extends Engine {
         private final Runnable mDrawClock = new Runnable() {
             @Override
@@ -95,6 +103,7 @@ public class CustomWallpaper extends WallpaperService {
             }
         };
         private boolean mVisible;
+        private Bitmap cachedBackground;
 
         ClockEngine() {
             super();
@@ -109,6 +118,20 @@ public class CustomWallpaper extends WallpaperService {
         public void onDestroy() {
             super.onDestroy();
             CustomWallpaper.this.mHandler.removeCallbacks(this.mDrawClock);
+            try {
+                if (cachedBackground != null && !cachedBackground.isRecycled()) {
+                    cachedBackground.recycle();
+                }
+            } catch (Throwable ignored) {
+            }
+            cachedBackground = null;
+            try {
+                if (CustomWallpaper.this.imageView != null) {
+                    CustomWallpaper.this.imageView.setImageDrawable(null);
+                    CustomWallpaper.this.imageView.setImageBitmap(null);
+                }
+            } catch (Throwable ignored) {
+            }
         }
 
         @Override
@@ -193,10 +216,142 @@ public class CustomWallpaper extends WallpaperService {
 
         public void firstClock(Canvas canvas) {
             CustomWallpaper.this.widgetGroup.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
-            CustomWallpaper.this.imageView.setImageBitmap(BitmapFactory.decodeFile(CustomWallpaper.this.tinyDB.getString("isWallpaper")));
+            applyBackground();
             CustomWallpaper.this.imageView.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
             CustomWallpaper.this.overlayView.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
             CustomWallpaper.this.widgetGroup.draw(canvas);
+        }
+
+        /**
+         * Smart descending compatibility chain for every legacy TinyDB state.
+         * Order: isImage -> ImageString / isWallpaper file, then isCustomBg -> customBg drawable,
+         * then legacy isWallpaper file, then customBg fallback, then solid bgColor.
+         * Every file check validates existence before decode to avoid wasted I/O on missing paths.
+         */
+        private void applyBackground() {
+            ImageView iv = CustomWallpaper.this.imageView;
+            TinyDB db = CustomWallpaper.this.tinyDB;
+            if (iv == null || db == null) {
+                return;
+            }
+            // Clear previous drawable to prevent recycled bitmap reuse
+            try {
+                iv.setImageDrawable(null);
+            } catch (Throwable ignored) {
+            }
+
+            boolean isImage = false;
+            boolean isCustomBg = false;
+            try { isImage = db.getBoolean("isImage"); } catch (Throwable ignored) {}
+            try { isCustomBg = db.getBoolean("isCustomBg"); } catch (Throwable ignored) {}
+            String imageString = "";
+            String wallpaperPath = "";
+            try { imageString = db.getString("ImageString"); } catch (Throwable ignored) {}
+            try { wallpaperPath = db.getString("isWallpaper"); } catch (Throwable ignored) {}
+            int customBg = 0;
+            try { customBg = db.getInt("customBg"); } catch (Throwable ignored) {}
+            if (imageString == null) imageString = "";
+            if (wallpaperPath == null) wallpaperPath = "";
+
+            // 1) isImage -> file
+            if (isImage) {
+                String path = !imageString.isEmpty() ? imageString : wallpaperPath;
+                Bitmap bmp = safeDecode(path);
+                if (bmp != null) {
+                    replaceBitmap(bmp);
+                    return;
+                }
+                // Fallback to drawable if file missing
+                if (customBg != 0) {
+                    try {
+                        iv.setImageResource(customBg);
+                        clearCachedBitmap();
+                        return;
+                    } catch (Throwable ignored) {}
+                }
+            } else if (isCustomBg) {
+                // 2) isCustomBg -> drawable
+                if (customBg != 0) {
+                    try {
+                        iv.setImageResource(customBg);
+                        clearCachedBitmap();
+                        return;
+                    } catch (Throwable ignored) {}
+                }
+                String path = !wallpaperPath.isEmpty() ? wallpaperPath : imageString;
+                Bitmap bmp = safeDecode(path);
+                if (bmp != null) {
+                    replaceBitmap(bmp);
+                    return;
+                }
+            } else {
+                // 3) Neither flag: try legacy file paths and drawable
+                String path = !wallpaperPath.isEmpty() ? wallpaperPath : imageString;
+                if (!path.isEmpty()) {
+                    Bitmap bmp = safeDecode(path);
+                    if (bmp != null) {
+                        replaceBitmap(bmp);
+                        return;
+                    }
+                }
+                if (customBg != 0) {
+                    try {
+                        iv.setImageResource(customBg);
+                        clearCachedBitmap();
+                        return;
+                    } catch (Throwable ignored) {}
+                }
+            }
+            // 4) Solid color fallback
+            iv.setImageResource(0);
+            clearCachedBitmap();
+            int bg = Color.WHITE;
+            try { bg = db.getInt("bgColor"); } catch (Throwable ignored) {}
+            // 0 is transparent - fallback to white for visibility
+            if (bg == 0) bg = Color.WHITE;
+            try { iv.setBackgroundColor(bg); } catch (Throwable ignored) {}
+        }
+
+        private Bitmap safeDecode(String path) {
+            if (path == null || path.isEmpty()) {
+                return null;
+            }
+            try {
+                File f = new File(path);
+                if (!f.exists() || f.length() == 0) {
+                    return null;
+                }
+                return BitmapFactory.decodeFile(path);
+            } catch (Throwable e) {
+                Log.e(TAG, "decode failed: " + path, e);
+                return null;
+            } catch (OutOfMemoryError e) {
+                Log.e(TAG, "OOM decoding: " + path, e);
+                return null;
+            }
+        }
+
+        private void replaceBitmap(Bitmap bmp) {
+            try {
+                if (cachedBackground != null && cachedBackground != bmp && !cachedBackground.isRecycled()) {
+                    cachedBackground.recycle();
+                }
+            } catch (Throwable ignored) {}
+            cachedBackground = bmp;
+            try {
+                CustomWallpaper.this.imageView.setImageBitmap(bmp);
+            } catch (Throwable e) {
+                Log.e(TAG, "setImageBitmap failed", e);
+            }
+        }
+
+        private void clearCachedBitmap() {
+            try {
+                if (cachedBackground != null && !cachedBackground.isRecycled()) {
+                    cachedBackground.recycle();
+                }
+            } catch (Throwable ignored) {}
+            cachedBackground = null;
         }
     }
 }
