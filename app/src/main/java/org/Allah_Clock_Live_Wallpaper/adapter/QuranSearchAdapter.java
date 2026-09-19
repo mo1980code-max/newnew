@@ -13,6 +13,8 @@ import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSearchResult;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSurah;
+import org.Allah_Clock_Live_Wallpaper.utils.AyahNumberSpan;
+import org.Allah_Clock_Live_Wallpaper.utils.QuranText;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +79,9 @@ public final class QuranSearchAdapter extends RecyclerView.Adapter<QuranSearchAd
         } else {
             final int ayahNumber = ayah.getAyahNumber();
             holder.type.setText(R.string.quran_search_type_ayah);
-            holder.text.setText(ayah.getText());
+            holder.text.setText(QuranText.withAyahNumber(ayah.getText(), ayah.getAyahNumber(),
+                    holder.text.getResources().getDisplayMetrics().density,
+                    AyahNumberSpan.PRIMARY_GREEN));
             holder.reference.setText(holder.itemView.getContext().getString(
                     R.string.quran_ayah_reference, surah.getNumber(), name, ayahNumber));
             holder.itemView.setOnClickListener(view -> listener.onOpenResult(surah, ayahNumber));

@@ -152,32 +152,18 @@ print('quran: %d surahs, %d ayahs (%d KB of text)'
 
 
 # ══════════════════════════════ the reader's page breaks ══════════════════════════════
-# QuranText.withEndGlyph closes every verse with U+06DD followed by the verse number in
-# Arabic-Indic digits; the continuous column breaks its visual pages there. The mock mirrors
-# that rule, so it never has to guess where a page ends.
-PAGE_SEPARATOR = chr(0x06DD)
-
-
-def arabic_indic(value):
-    return ''.join(chr(0x0660 + int(digit)) for digit in str(value))
-
-
-surah_by_number = {s['n']: s for s in surahs}
-TARGET_SURAH, TARGET_AYAH = 1, 1      # Al-Fatiha: its Basmalah is verse 1, so there is no opening
-run, page_breaks = '', []
-for index, text in enumerate(ayahs[TARGET_SURAH]):
-    mark = ' ' + PAGE_SEPARATOR + arabic_indic(index + 1) + ' '
-    run += text + mark
-    # The page may break right after the marker, never inside the verse that owns it. Searching
-    # from the previous break proves the string only occurs at the marker and not in the text.
-    found = run.find(mark, page_breaks[-1] if page_breaks else 0)
-    assert found == len(run) - len(mark), (
-        'the marker of verse %d is not where withEndGlyph() puts it' % (index + 1))
-    page_breaks.append(len(run))
-assert run.count(PAGE_SEPARATOR) == len(page_breaks) == surah_by_number[TARGET_SURAH]['ayahs']
-data['quranPages'] = {'surah': TARGET_SURAH, 'firstAyah': TARGET_AYAH, 'breaks': page_breaks}
-print('quran reader: surah %d, %d marked verses, breaks at %s'
-      % (TARGET_SURAH, len(page_breaks), page_breaks[:8]))
+# Group on the real Madani page metadata, never on every ayah marker.
+TARGET_SURAH, TARGET_AYAH = 1, 1  # Al-Fatiha's Basmalah is verse 1, not a separate heading.
+verses = next(c['verses'] for c in metadata['chapters'] if c['chapter'] == TARGET_SURAH)
+page_breaks, page_numbers = [], []
+for i, verse in enumerate(verses):
+    if i == len(verses) - 1 or verses[i + 1]['page'] != verse['page']:
+        page_breaks.append(verse['verse'])
+        page_numbers.append(verse['page'])
+data['quranPages'] = {'surah': TARGET_SURAH, 'firstAyah': TARGET_AYAH,
+                      'breaks': page_breaks, 'numbers': page_numbers}
+print('quran reader: surah %d, %d flowing paragraphs, ending at ayahs %s'
+      % (TARGET_SURAH, len(page_breaks), page_breaks))
 
 
 # ══════════════════════════════════ qibla ══════════════════════════════════

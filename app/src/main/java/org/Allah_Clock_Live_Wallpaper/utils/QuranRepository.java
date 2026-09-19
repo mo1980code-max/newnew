@@ -41,10 +41,8 @@ import java.util.regex.Pattern;
  * The reader therefore opens without a connection, keeps one verified text source, and never
  * changes the source text while formatting it for display.</p>
  *
- * <p>Each ayah's text is closed with its built-in end-of-ayah glyph (U+06DD) and the ayah number
- * in Arabic-Indic digits at load time, exactly the shape the edition's rendered text uses, so the
- * reader prints the glyph as an ordinary character instead of painting an ornament at computed
- * coordinates.</p>
+ * <p>Ayah text stays identical to the asset. The display layer appends an
+ * {@link AyahNumberSpan}; presentation markers never enter search or persistence.</p>
  *
  * <p>Both files are byte-identical to the upstream repository: {@code tools/verify_resources.py}
  * pins the git blob SHAs, and {@code docs/QURAN_TEXT_ATTRIBUTION.md} records the source and the
@@ -221,7 +219,7 @@ public final class QuranRepository {
                             + chapter.chapter + ":" + verseMeta.verse);
                 }
                 QuranAyah ayah = new QuranAyah(chapter.chapter, verseMeta.verse,
-                        QuranText.withEndGlyph(text.text, verseMeta.verse),
+                        text.text,
                         normalizeForSearch(text.text), verseMeta.page, verseMeta.juz,
                         verseMeta.line);
                 ayahs.add(ayah);
@@ -271,12 +269,6 @@ public final class QuranRepository {
         }
         if (juzs.size() != JUZ_COUNT) {
             throw new IOException("Quran metadata must contain the 30 juzs");
-        }
-        for (QuranAyah ayah : allAyahs) {
-            String suffix = "\u06DD" + QuranText.arabicIndic(ayah.getAyahNumber());
-            if (!ayah.getText().endsWith(suffix)) {
-                throw new IOException("Every ayah must carry its end-of-ayah glyph and number");
-            }
         }
     }
 

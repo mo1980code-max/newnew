@@ -17,10 +17,11 @@ companion metadata in `app/src/main/assets/quran_info.json`.
 
 Both bundled files are byte-identical copies of the reviewed upstream blobs. The application
 parses them only to display them; it does not alter the Quran text. The only addition the app
-makes is closing each ayah with its end-of-ayah glyph: the ARABIC END OF AYAH character
-(U+06DD) followed by the ayah's number in Arabic-Indic digits, exactly the shape the edition's
-rendered text uses — the ornament is a character of the text, so no position is ever computed
-or painted by hand.
+makes is a display-only `AyahNumberSpan` after each ayah: a circular border with the ayah's
+Arabic-Indic number centered inside it. No Unicode ornament is concatenated with the digits.
+The repository keeps the exact raw verse text; the readers, bookmarks and search results use
+`QuranText.withAyahNumber()` to append the replacement span without modifying the assets,
+search normalization, navigation metadata or stored bookmarks.
 
 ## Surah headings and navigation metadata
 
@@ -56,3 +57,37 @@ In addition to the Android resources, it verifies all of the following Quran-dat
 If a verified upstream update is intentionally adopted, update both assets, the pinned blobs in
 `tools/verify_resources.py`, and this document together — only after an independent review of
 the new text.
+
+## Ayah marker rendering checks
+
+With a configured JDK/Android SDK and a device or emulator, run:
+
+```bash
+./gradlew connectedDebugAndroidTest
+```
+
+`AyahNumberSpanTest` checks span boundaries, Arabic-Indic numbers (1–286), horizontal and
+font-metric vertical centering, border/padding bounds, density and font-size scaling, unchanged
+surrounding paint, night-marker color, and RTL placement. Before release, also inspect long
+wrapped verses in both reader themes at the largest text size, plus bookmarks and search
+results on an Arabic and an English device locale. The HTML preview is only a visual mock,
+not a substitute for testing Android's font and bidi layout engine.
+
+## Continuous RTL page layout
+
+Both readers now use one `QuranParagraph` / `SpannableStringBuilder` per Madani page fragment,
+not one TextView per ayah. A fragment ends only at an authentic page boundary or a surah heading.
+Consecutive ayahs are separated by a single space, without inserted newlines. The existing
+non-breaking space before each atomic `AyahNumberSpan` keeps it with the final word.
+
+The reading TextView explicitly uses `layoutDirection="rtl"`, `textDirection="rtl"`,
+`textAlignment="viewStart"` and `gravity="start|top"`. Android 8+ enables inter-word
+justification; Android 6–7 retains right-aligned RTL text. Headers, loading indicators and
+page-number controls may still be centered; they are not the Quran body.
+
+Verse character ranges retain independent click/bookmark highlights and let resume, search
+navigation, text zoom and the visible-position footer locate an ayah inside a wrapped paragraph.
+`QuranParagraphTest` covers all 6,236 ayahs across 604 page boundaries, Al-Fatiha in a single
+paragraph, verse offsets/clicks, RTL settings, and marker placement in narrow justified layouts.
+Test on an API 23 device and an API 26+ device with both English and Arabic UI locales; scroll
+within a long page, save/reopen a verse, resize the text and toggle the night theme.

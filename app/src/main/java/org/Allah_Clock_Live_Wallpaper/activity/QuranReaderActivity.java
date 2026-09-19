@@ -40,7 +40,7 @@ import java.util.concurrent.Executors;
  * The Quran reader: one surah as one continuous, smooth vertical scroll.
  *
  * <p>The authentic Mushaf header opens the screen with the surah's name and its juz; the verses
- * flow as one column, each closed by its built-in end-of-ayah glyph; and the footer carries the
+ * flow as RTL paragraphs with inline ayah-number spans; and the footer carries the
  * page-number pill of the Madani page under the reader's finger. Tapping a verse saves or clears
  * its bookmark, and a saved verse stays tinted while it is saved.</p>
  *
@@ -75,8 +75,6 @@ public final class QuranReaderActivity extends AppCompatActivity {
 
     private int surahNumber;
     private int textSizeSp;
-    /** Row the reader was asked to open at; consumed once the column is bound. */
-    private int initialRow = -1;
 
     public static Intent createIntent(@NonNull Context context, int surahNumber, int ayahNumber) {
         return new Intent(context, QuranReaderActivity.class)
@@ -118,9 +116,7 @@ public final class QuranReaderActivity extends AppCompatActivity {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 // The pill must follow the finger, not wait for the scroll to settle.
-                if (dy != 0) {
-                    updateFooterForTopAyah();
-                }
+                updateFooterForTopAyah();
             }
         });
 
@@ -195,17 +191,12 @@ public final class QuranReaderActivity extends AppCompatActivity {
         this.meta.setText(getString(R.string.quran_surah_metadata, surah.getAyahCount(),
                 revelation));
 
-        List<QuranFlowAdapter.Row> rows = new ArrayList<>(surah.getAyahCount() + 1);
-        rows.add(QuranFlowAdapter.Row.surah(surah, juz));
-        for (QuranAyah ayah : loaded.getAyahs(surah.getNumber())) {
-            rows.add(QuranFlowAdapter.Row.ayah(ayah));
-        }
-        this.initialRow = 1 + Math.max(0, start.getAyahNumber() - 1);
-
+        List<QuranFlowAdapter.Row> rows = new ArrayList<>();
+        QuranFlowAdapter.appendSurahRows(rows, surah, loaded.getAyahs(surah.getNumber()), false);
         this.adapter = new QuranFlowAdapter(rows, this.theme, this.store, this.textSizeSp,
                 this::toggleVerse);
         this.list.setAdapter(this.adapter);
-        this.list.scrollToPosition(Math.min(this.initialRow, rows.size() - 1));
+        this.adapter.scrollToAyah(this.list, start.getSurahNumber(), start.getAyahNumber());
 
             this.loading.setVisibility(View.GONE);
             this.error.setVisibility(View.GONE);
@@ -221,37 +212,13 @@ public final class QuranReaderActivity extends AppCompatActivity {
 
     // ══════════════════════════ header, pill and position ══════════════════════════
 
-    /** The row of the first ayah at or under the top of the visible area, or -1. */
-    private int topAyahRow() {
-        if (this.adapter == null || this.adapter.getItemCount() == 0) {
-            return -1;
-        }
-        LinearLayoutManager layout = (LinearLayoutManager) this.list.getLayoutManager();
-        if (layout == null) {
-            return -1;
-        }
-        int position = layout.findFirstVisibleItemPosition();
-        if (position == RecyclerView.NO_POSITION) {
-            return -1;
-        }
-        int last = this.adapter.getItemCount() - 1;
-        while (position <= last
-                && this.adapter.getItemViewType(position) != QuranFlowAdapter.TYPE_AYAH) {
-            position++;
-        }
-        return position <= last ? position : -1;
-    }
-
-    private QuranAyah ayahAtRow(int row) {
-        if (this.adapter == null || row < 0 || row >= this.adapter.getItemCount()) {
-            return null;
-        }
-        return this.adapter.getRows().get(row).ayah;
+    private QuranAyah topVisibleAyah() {
+        return this.adapter == null ? null : this.adapter.topVisibleAyah(this.list);
     }
 
     /** Refreshes the footer's page-number pill from the verse the reader is on. */
     private void updateFooterForTopAyah() {
-        QuranAyah ayah = ayahAtRow(topAyahRow());
+        QuranAyah ayah = topVisibleAyah();
         if (ayah == null) {
             return;
         }
@@ -264,7 +231,7 @@ public final class QuranReaderActivity extends AppCompatActivity {
         if (this.store == null || this.surahNumber <= 0) {
             return;
         }
-        QuranAyah ayah = ayahAtRow(topAyahRow());
+        QuranAyah ayah = topVisibleAyah();
         if (ayah != null) {
             this.store.saveLastReading(ayah.getSurahNumber(), ayah.getAyahNumber());
         }
@@ -276,15 +243,9 @@ public final class QuranReaderActivity extends AppCompatActivity {
     private void toggleVerse(@NonNull QuranAyah ayah) {
         boolean added = this.store.toggleBookmark(ayah.getSurahNumber(), ayah.getAyahNumber());
         if (this.adapter != null) {
-            for (int position = 0; position < this.adapter.getItemCount(); position++) {
-                QuranAyah bound = ayahAtRow(position);
-                if (bound != null && bound.getSurahNumber() == ayah.getSurahNumber()
-                        && bound.getAyahNumber() == ayah.getAyahNumber()) {
-                    this.adapter.refreshAyah(position);
-                    break;
-                }
-            }
+            this.adapter.refreshAyah(ayah.getSurahNumber(), ayah.getAyahNumber());
         }
+
         Toast.makeText(this, added ? R.string.quran_bookmark_added : R.string.quran_bookmark_removed,
                 Toast.LENGTH_SHORT).show();
     }
@@ -371,10 +332,15 @@ public final class QuranReaderActivity extends AppCompatActivity {
                 .setView(picker)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
                     int selected = picker.getValue();
+                    QuranAyah anchor = topVisibleAyah();
                     this.textSizeSp = selected;
                     this.store.saveTextSizeSp(selected);
                     if (this.adapter != null) {
                         this.adapter.setTextSizeSp(selected);
+                        if (anchor != null) {
+                            this.adapter.scrollToAyah(this.list, anchor.getSurahNumber(),
+                                    anchor.getAyahNumber());
+                        }
                     }
                 })
                 .setNegativeButton(R.string.cancel, null)
