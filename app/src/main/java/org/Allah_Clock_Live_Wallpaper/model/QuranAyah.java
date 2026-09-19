@@ -5,11 +5,9 @@ import androidx.annotation.NonNull;
 /**
  * One immutable ayah of the bundled Uthmanic text.
  *
- * <p>{@link #getText()} is the exact upstream Uthmanic text closed by its built-in end-of-ayah
- * glyph: the ARABIC END OF AYAH character (U+06DD) immediately followed by the ayah's number in
- * Arabic-Indic digits, the way the official edition's rendered text carries it. The glyph and the
- * digits are ordinary text characters, so the system font draws them — no ornament is painted at
- * guessed coordinates.</p>
+ * <p>{@link #getText()} is the exact upstream Uthmanic text, without presentation markers.
+ * The display layer draws the ayah number in a replacement span, leaving this model and its
+ * normalized search text independent of fonts and layout.</p>
  *
  * <p>The mushaf fields ({@code page}, {@code juz}, {@code line}) come from the official
  * companion metadata of the same repository: the 604 Madani pages, the 30 juzs and the position

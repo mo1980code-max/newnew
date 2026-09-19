@@ -88,6 +88,9 @@ android {
 
 dependencies {
 
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+
     // ---- AndroidX -----------------------------------------------------------------
     // material / constraintlayout / spinKit were removed: nothing in res/ or java/ uses them.
     implementation 'androidx.appcompat:appcompat:1.8.0'

@@ -13,6 +13,7 @@ import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
 import org.Allah_Clock_Live_Wallpaper.model.QuranBookmark;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSurah;
+import org.Allah_Clock_Live_Wallpaper.utils.AyahNumberSpan;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranRepository;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranText;
 
@@ -90,7 +91,9 @@ public final class QuranBookmarkAdapter
                         ayah.getAyahNumber(), page)
                 : holder.itemView.getContext().getString(title, surah.getNumber(), name,
                         ayah.getAyahNumber()));
-        holder.text.setText(ayah.getText());
+        holder.text.setText(QuranText.withAyahNumber(ayah.getText(), ayah.getAyahNumber(),
+                holder.text.getResources().getDisplayMetrics().density,
+                AyahNumberSpan.PRIMARY_GREEN));
         holder.ayahNumber.setText(QuranText.arabicIndic(ayah.getAyahNumber()));
         holder.remove.setContentDescription(holder.itemView.getContext().getString(
                 R.string.quran_remove_bookmark, ayah.getAyahNumber()));

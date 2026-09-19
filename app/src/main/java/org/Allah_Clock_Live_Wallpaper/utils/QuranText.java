@@ -1,5 +1,9 @@
 package org.Allah_Clock_Live_Wallpaper.utils;
 
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -27,14 +31,26 @@ public final class QuranText {
     }
 
     /**
-     * Closes one raw Uthmanic text with its built-in end-of-ayah glyph: the ARABIC END OF AYAH
-     * character (U+06DD) directly followed by the ayah number in Arabic-Indic digits. This is the
-     * same shape the official edition's rendered text uses, so the reader prints the glyph and
-     * the number as plain characters with no manual positioning.
+     * Appends an intact verse and one atomic marker to an RTL-compatible text run. The
+     * non-breaking space keeps the marker with the verse's last word; the object replacement
+     * character is bidi-neutral, so Android lays it out in the surrounding Arabic direction.
+     * The span itself supplies both the border and digits, not a Unicode ornament + number.
      */
+    public static void appendAyah(@NonNull SpannableStringBuilder out, @NonNull String rawText,
+                                  int ayahNumber, float density, @ColorInt int markerColor) {
+        out.append(rawText).append('\u00A0');
+        int markerStart = out.length();
+        out.append('\uFFFC');
+        out.setSpan(new AyahNumberSpan(ayahNumber, density, markerColor), markerStart,
+                out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
     @NonNull
-    public static String withEndGlyph(@NonNull String rawText, int ayahNumber) {
-        return rawText + '\u06DD' + arabicIndic(ayahNumber);
+    public static SpannableStringBuilder withAyahNumber(@NonNull String rawText, int ayahNumber,
+                                                        float density, @ColorInt int markerColor) {
+        SpannableStringBuilder out = new SpannableStringBuilder();
+        appendAyah(out, rawText, ayahNumber, density, markerColor);
+        return out;
     }
 
     /**

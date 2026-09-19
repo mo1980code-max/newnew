@@ -503,12 +503,19 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
 }
 .quranSheet p {
   margin: 0; font-family: var(--arabic); font-size: 23px; line-height: 2.05;
-  color: var(--quranInk); text-align: justify; text-align-last: right;
+  color: var(--quranInk); direction: rtl; text-align: justify; text-align-last: right;
 }
-.quranSheet .basmalah { text-align: center; color: var(--quranGold); margin-bottom: 10px; }
+.quranSheet .basmalah { text-align: right; color: var(--quranGold); margin-bottom: 10px; }
 .verse { cursor: pointer; border-radius: 6px; }
 .verse.saved { background: rgba(201, 162, 39, 0.2); }
-/* End-of-ayah numbers are the source text's own U+06DD glyph and Arabic-Indic digits. */
+/* Visual mock of AyahNumberSpan; the Android span does its own font-metric centering. */
+.ayahNumber {
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; width: 2em; height: 2em; margin-inline: 3px;
+  border: 1.5px solid currentColor; border-radius: 50%;
+  font: 0.55em sans-serif; color: #1B4332; vertical-align: middle;
+}
+#quranNightScreen .ayahNumber { color: var(--quranGold); }
 .quranSource {
   padding: 6px 20px 10px; text-align: center; font-size: 10px;
   color: var(--quranMuted);

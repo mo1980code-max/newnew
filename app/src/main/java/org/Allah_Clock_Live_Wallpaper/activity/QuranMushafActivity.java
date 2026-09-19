@@ -108,9 +108,7 @@ public final class QuranMushafActivity extends AppCompatActivity {
 
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                if (dy != 0) {
-                    updateHeaderForTopAyah();
-                }
+                updateHeaderForTopAyah();
             }
         });
 
@@ -166,30 +164,27 @@ public final class QuranMushafActivity extends AppCompatActivity {
             }
             this.repository = loaded;
 
-        // One row per verse of the complete Mushaf, with the surah headings and the Madani page
-        // boundaries interleaved exactly where the printed book has them.
-        List<QuranFlowAdapter.Row> rows = new ArrayList<>(QuranRepository.AYAH_COUNT
-                + QuranRepository.SURAH_COUNT + QuranRepository.PAGE_COUNT);
+        // One flowing paragraph per page/surah fragment, with real boundaries between blocks.
+        List<QuranFlowAdapter.Row> rows = new ArrayList<>();
         this.pageToRow.clear();
-        int previousPage = 0;
         for (QuranSurah surah : loaded.getSurahs()) {
-            QuranAyah first = loaded.getAyah(surah.getNumber(), 1);
-            rows.add(QuranFlowAdapter.Row.surah(surah, first == null ? 1 : first.getJuz()));
-            for (QuranAyah ayah : loaded.getAyahs(surah.getNumber())) {
-                if (ayah.getMushafPage() != previousPage) {
-                    rows.add(QuranFlowAdapter.Row.page(ayah.getMushafPage()));
-                    this.pageToRow.put(ayah.getMushafPage(), rows.size() - 1);
-                    previousPage = ayah.getMushafPage();
-                }
-                rows.add(QuranFlowAdapter.Row.ayah(ayah));
+            QuranFlowAdapter.appendSurahRows(rows, surah, loaded.getAyahs(surah.getNumber()), true);
+        }
+        for (int i = 0; i < rows.size(); i++) {
+            if (rows.get(i).type == QuranFlowAdapter.TYPE_PAGE) {
+                this.pageToRow.put(rows.get(i).page, i);
             }
         }
 
         int requested = getIntent().getIntExtra(EXTRA_PAGE, -1);
+        QuranBookmark resume = null;
         if (!loaded.hasPage(requested)) {
             QuranBookmark last = this.store.getLastReading();
             if (last != null) {
                 requested = loaded.getPageForAyah(last.getSurahNumber(), last.getAyahNumber());
+                if (loaded.hasPage(requested)) {
+                    resume = last;
+                }
             }
         }
         this.pendingPage = requested > 0 ? requested : 1;
@@ -197,7 +192,11 @@ public final class QuranMushafActivity extends AppCompatActivity {
         this.adapter = new QuranFlowAdapter(rows, this.theme, this.store, this.textSizeSp,
                 this::toggleVerse);
         this.list.setAdapter(this.adapter);
-        scrollToPage(this.pendingPage, false);
+        if (resume == null) {
+            scrollToPage(this.pendingPage, false);
+        } else {
+            this.adapter.scrollToAyah(this.list, resume.getSurahNumber(), resume.getAyahNumber());
+        }
 
         this.loading.setVisibility(View.GONE);
         this.error.setVisibility(View.GONE);
@@ -211,37 +210,13 @@ public final class QuranMushafActivity extends AppCompatActivity {
 
     // ══════════════════════════════ header and pill ══════════════════════════════
 
-    /** The row of the first ayah at or under the top of the visible area, or -1. */
-    private int topAyahRow() {
-        if (this.adapter == null || this.adapter.getItemCount() == 0) {
-            return -1;
-        }
-        LinearLayoutManager layout = (LinearLayoutManager) this.list.getLayoutManager();
-        if (layout == null) {
-            return -1;
-        }
-        int position = layout.findFirstVisibleItemPosition();
-        if (position == RecyclerView.NO_POSITION) {
-            return -1;
-        }
-        int last = this.adapter.getItemCount() - 1;
-        while (position <= last
-                && this.adapter.getItemViewType(position) != QuranFlowAdapter.TYPE_AYAH) {
-            position++;
-        }
-        return position <= last ? position : -1;
-    }
-
-    private QuranAyah ayahAtRow(int row) {
-        if (this.adapter == null || row < 0 || row >= this.adapter.getItemCount()) {
-            return null;
-        }
-        return this.adapter.getRows().get(row).ayah;
+    private QuranAyah topVisibleAyah() {
+        return this.adapter == null ? null : this.adapter.topVisibleAyah(this.list);
     }
 
     /** Refreshes the authentic header (surah + juz) and the footer pill from the top verse. */
     private void updateHeaderForTopAyah() {
-        QuranAyah ayah = ayahAtRow(topAyahRow());
+        QuranAyah ayah = topVisibleAyah();
         if (ayah == null || this.repository == null) {
             return;
         }
@@ -272,7 +247,7 @@ public final class QuranMushafActivity extends AppCompatActivity {
         if (this.store == null || this.repository == null) {
             return;
         }
-        QuranAyah ayah = ayahAtRow(topAyahRow());
+        QuranAyah ayah = topVisibleAyah();
         if (ayah != null) {
             this.store.saveLastReading(ayah.getSurahNumber(), ayah.getAyahNumber());
         }
@@ -284,15 +259,9 @@ public final class QuranMushafActivity extends AppCompatActivity {
     private void toggleVerse(@NonNull QuranAyah ayah) {
         boolean added = this.store.toggleBookmark(ayah.getSurahNumber(), ayah.getAyahNumber());
         if (this.adapter != null) {
-            for (int position = 0; position < this.adapter.getItemCount(); position++) {
-                QuranAyah bound = ayahAtRow(position);
-                if (bound != null && bound.getSurahNumber() == ayah.getSurahNumber()
-                        && bound.getAyahNumber() == ayah.getAyahNumber()) {
-                    this.adapter.refreshAyah(position);
-                    break;
-                }
-            }
+            this.adapter.refreshAyah(ayah.getSurahNumber(), ayah.getAyahNumber());
         }
+
         Toast.makeText(this, added ? R.string.quran_bookmark_added : R.string.quran_bookmark_removed,
                 Toast.LENGTH_SHORT).show();
     }
@@ -375,9 +344,14 @@ public final class QuranMushafActivity extends AppCompatActivity {
                 .setView(picker)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
                     int selected = picker.getValue();
+                    QuranAyah anchor = topVisibleAyah();
                     this.textSizeSp = selected;
                     this.store.saveTextSizeSp(selected);
                     this.adapter.setTextSizeSp(selected);
+                    if (anchor != null) {
+                        this.adapter.scrollToAyah(this.list, anchor.getSurahNumber(),
+                                anchor.getAyahNumber());
+                    }
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();

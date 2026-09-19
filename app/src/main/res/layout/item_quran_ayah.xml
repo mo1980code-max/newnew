@@ -1,19 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  One verse of the continuous scroll.
-
-  The text is the exact Uthmanic ayah closed by its built-in end-of-ayah glyph (U+06DD with the
-  ayah number in Arabic-Indic digits), so the ornament flows with the line like a printed Mushaf:
-  no custom drawing or coordinate math. Tapping the row toggles the verse's bookmark; the
-  adapter paints the saved tint as a soft rounded highlight behind the text.
--->
+<!-- One continuous Madani-page/surah fragment, NOT one row per ayah. Verse-level spans
+     handle taps and saved highlights; no parent click target or forced inter-verse breaks. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/quranAyahRow"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:clickable="true"
-    android:focusable="true"
-    android:foreground="?android:attr/selectableItemBackground"
+    android:layoutDirection="rtl"
     android:orientation="vertical"
     android:paddingStart="20dp"
     android:paddingTop="8dp"
@@ -25,7 +17,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="serif"
-        android:gravity="end"
+        android:gravity="start|top"
+        android:layoutDirection="rtl"
+        android:textAlignment="viewStart"
+        android:breakStrategy="simple"
+        android:hyphenationFrequency="none"
         android:lineSpacingExtra="10dp"
         android:textColor="@color/quranInk"
         android:textDirection="rtl"

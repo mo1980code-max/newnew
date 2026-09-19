@@ -151,32 +151,35 @@ setTimeout(() => {
     JSON.stringify(text('quranTitle')));
   check('the reader opens on the first page',
     vm.runInContext('state.page', sandbox) === 0, String(vm.runInContext('state.page', sandbox)));
-  check('the page breaks come from the app\'s own constants',
-    D.quranPages.surah === 1 && D.quranPages.breaks.length === 7,
+  check('the page breaks come from Madani metadata',
+    D.quranPages.surah === 1 && D.quranPages.breaks.length === 1 && D.quranPages.breaks[0] === 7,
     JSON.stringify(D.quranPages));
   const fatiha = html('quranPages');
   check('all 7 verses of Al-Fatiha are on the pages',
     (fatiha.match(/class="verse/g) || []).length === 7,
     String((fatiha.match(/class="verse/g) || []).length));
-  check('the preview preserves the 7 marked ayah segments',
-    (fatiha.match(/class="quranScrollPage/g) || []).length === 7,
+  check('all seven verses share one flowing page paragraph',
+    (fatiha.match(/class="quranScrollPage/g) || []).length === 1
+      && (fatiha.match(/<p>/g) || []).length === 1 && fatiha.indexOf("<br") < 0,
     String((fatiha.match(/class="quranScrollPage/g) || []).length));
   check('one page is on screen at a time',
     (fatiha.match(/class="quranScrollPage on"/g) || []).length === 1,
     String((fatiha.match(/class="quranScrollPage on"/g) || []).length));
-  const mark7 = String.fromCharCode(0x06DD) + vm.runInContext('arabicIndic(7)', sandbox);
-  check('a verse closes with U+06DD and an Arabic-Indic number',
-    fatiha.indexOf(mark7) >= 0,
+  const mark7 = '<span class="ayahNumber">' + vm.runInContext('arabicIndic(7)', sandbox) + '</span>';
+  check('a verse closes with a bordered Arabic-Indic number, not U+06DD',
+    fatiha.indexOf(mark7) >= 0 && fatiha.indexOf(String.fromCharCode(0x06DD)) < 0,
     'marker ' + mark7 + ' not found');
+  check('each verse has one atomic bordered marker',
+    (fatiha.match(/class="ayahNumber"/g) || []).length === 7,
+    'expected seven markers');
   check('Al-Fatiha gets no separate Basmalah line (it is verse 1)',
     fatiha.indexOf('class="basmalah"') < 0, 'a Basmalah line was added');
-  // The mock prints one verse per page (see buildQuranPages), so page 1 carries ayah 1 alone;
-  // the string is still the app's own quran_page_number.
-  check('the footer states the ayah range with the real string',
-    text('quranRange') === D.ar.quran_page_number.replace('%1$d', '1').replace('%2$d', '1'),
+  // Al-Fatiha is one actual Madani page containing all seven verses.
+  check('the footer states the Madani page with the real string',
+    text('quranRange') === D.ar.quran_page_number.replace('%1$d', '1').replace('%2$d', '604'),
     JSON.stringify(text('quranRange')));
   vm.runInContext('flipPage(1)', sandbox);
-  check('moving to the next preview segment', vm.runInContext('state.page', sandbox) === 1,
+  check('next cannot split Al-Fatiha into verse pages', vm.runInContext('state.page', sandbox) === 0,
     String(vm.runInContext('state.page', sandbox)));
   check('the day phone follows the flip too',
     (html('quranPages').match(/class="quranScrollPage on"/g) || []).length === 1,

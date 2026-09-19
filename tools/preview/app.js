@@ -112,10 +112,9 @@ function badgeOn() { return state.win !== 'none' && state.sw.badge; }
 function badgeLabel() { return t(state.win === 'evening' ? 'athkar_evening_title' : 'athkar_morning_title'); }
 
 /* ─────────── the Quran reader: one surah as a continuous scroll ───────────
-   buildQuranPages() mirrors QuranText.withEndGlyph() - the verse, then the built-in end-of-ayah
-   glyph U+06DD followed by the number in Arabic-Indic digits - and cuts the run at
-   D.quranPages.breaks, which build_assets.py derives the same way. The app's reader is a
-   vertical RecyclerView; the mock keeps its paged preview of the same marked text. */
+   The bordered inline number mirrors Android's AyahNumberSpan visually; it does not rely on
+   a font combining U+06DD and digits. The app uses a vertical RecyclerView, while this mock
+   groups the same ayahs at real Madani page boundaries. */
 function arabicIndic(value) {
   return String(value).replace(/[0-9]/g, (d) => String.fromCharCode(0x0660 + Number(d)));
 }
@@ -157,9 +156,10 @@ function buildQuranPages() {
     const ayah = i + 1;
     const saved = isMarked(n, ayah) ? ' saved' : '';
     html += '<span class="verse' + saved + '" data-surah="' + n + '" data-ayah="' + ayah + '">'
-      + text + ' ' + String.fromCharCode(0x06DD) + arabicIndic(ayah) + '</span> ';
-    if (breaks[i] !== undefined) {
-      pages.push({ html: html, first: first, last: ayah });
+      + text + '\u00A0<span class="ayahNumber">' + arabicIndic(ayah) + '</span></span> ';
+    if (breaks.indexOf(ayah) >= 0) {
+      pages.push({ html: html, first: first, last: ayah,
+        number: D.quranPages.numbers[pages.length] });
       html = '';
       first = ayah + 1;
     }
@@ -228,7 +228,7 @@ function renderQuran() {
   state.page = Math.max(0, Math.min(state.page, count - 1));
   const open = quranPage();
   const range = document.getElementById('quranRange');
-  if (range && open) range.textContent = fmt(t('quran_page_number'), open.first, open.last);
+  if (range && open) range.textContent = fmt(t('quran_page_number'), open.number, 604);
   // The chip inside the page footer and the read-out beside the demo's page stepper show the
   // same numbers; both are updated from the one place.
   const label = cap('page') + ' ' + arabicIndic(state.page + 1) + ' ' + cap('of') + ' '

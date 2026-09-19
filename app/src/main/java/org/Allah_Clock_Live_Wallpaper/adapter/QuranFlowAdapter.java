@@ -1,7 +1,12 @@
 package org.Allah_Clock_Live_Wallpaper.adapter;
 
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
+import android.text.Layout;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.BackgroundColorSpan;
+import android.text.style.ClickableSpan;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,81 +15,92 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.OneShotPreDrawListener;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSurah;
+import org.Allah_Clock_Live_Wallpaper.utils.AyahNumberSpan;
+import org.Allah_Clock_Live_Wallpaper.utils.QuranParagraph;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranStore;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranTheme;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * The continuous vertical scroll both Quran readers share: ayahs as flowing text, each closed by
- * its built-in end-of-ayah glyph, with the authentic surah headings and the Madani page
- * boundaries interleaved where the flow calls for them.
- *
- * <p>Every colour a row shows comes from the shared {@link QuranTheme}, so the night reading
- * switch repaints the whole column in place, and the saved-verse tint is a soft rounded highlight
- * behind the text — the same state the bookmark store holds.</p>
+ * Both readers share page-sized RTL paragraphs, not one row per verse. Only authentic page
+ * boundaries and surah headings split the flow. Verse spans retain taps and bookmark tints.
  */
 public final class QuranFlowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-
-    public static final int TYPE_AYAH = 0;
+    public static final int TYPE_PARAGRAPH = 0;
     public static final int TYPE_SURAH = 1;
     public static final int TYPE_PAGE = 2;
 
-    /** A tap on a verse, routed to the host so it can save or clear the bookmark. */
     public interface AyahTapListener {
         void onAyahTapped(@NonNull QuranAyah ayah);
     }
 
-    /** One line of the scroll: a verse, a surah heading or a Madani page boundary. */
     public static final class Row {
         public final int type;
-        @Nullable
-        public final QuranAyah ayah;
-        @Nullable
-        public final QuranSurah surah;
-        /** TYPE_SURAH only: the juz the surah opens in. */
+        @NonNull public final List<QuranAyah> ayahs;
+        @Nullable public final QuranSurah surah;
         public final int juz;
-        /** TYPE_PAGE only: the printed Madani page number. */
         public final int page;
 
-        private Row(int type, @Nullable QuranAyah ayah, @Nullable QuranSurah surah, int juz,
-                    int page) {
+        private Row(int type, List<QuranAyah> ayahs, QuranSurah surah, int juz, int page) {
             this.type = type;
-            this.ayah = ayah;
+            this.ayahs = Collections.unmodifiableList(new ArrayList<>(ayahs));
             this.surah = surah;
             this.juz = juz;
             this.page = page;
         }
 
-        @NonNull
-        public static Row ayah(@NonNull QuranAyah ayah) {
-            return new Row(TYPE_AYAH, ayah, null, 0, 0);
-        }
-
-        @NonNull
-        public static Row surah(@NonNull QuranSurah surah, int juz) {
-            return new Row(TYPE_SURAH, null, surah, juz, 0);
-        }
-
-        @NonNull
-        public static Row page(int page) {
-            return new Row(TYPE_PAGE, null, null, 0, page);
+        private static Row paragraph(List<QuranAyah> ayahs) {
+            QuranAyah first = ayahs.get(0);
+            return new Row(TYPE_PARAGRAPH, ayahs, null, first.getJuz(), first.getMushafPage());
         }
     }
 
-    static final class AyahHolder extends RecyclerView.ViewHolder {
-        final View row;
-        final TextView text;
+    /** Append complete page fragments, flushing only at page or surah boundaries. */
+    public static void appendSurahRows(@NonNull List<Row> rows, @NonNull QuranSurah surah,
+                                       @NonNull List<QuranAyah> ayahs, boolean pageDividers) {
+        if (ayahs.isEmpty()) {
+            return;
+        }
+        int previousPage = rows.isEmpty() ? -1 : rows.get(rows.size() - 1).page;
+        rows.add(new Row(TYPE_SURAH, Collections.emptyList(), surah, ayahs.get(0).getJuz(), 0));
+        int start = 0;
+        while (start < ayahs.size()) {
+            int page = ayahs.get(start).getMushafPage();
+            int end = start + 1;
+            while (end < ayahs.size() && ayahs.get(end).getMushafPage() == page) {
+                end++;
+            }
+            if (pageDividers && page != previousPage) {
+                rows.add(new Row(TYPE_PAGE, Collections.emptyList(), null, 0, page));
+            }
+            rows.add(Row.paragraph(ayahs.subList(start, end)));
+            previousPage = page;
+            start = end;
+        }
+    }
 
-        AyahHolder(@NonNull View itemView) {
+    static final class ParagraphHolder extends RecyclerView.ViewHolder {
+        final TextView text;
+        QuranParagraph paragraph;
+
+        ParagraphHolder(View itemView) {
             super(itemView);
-            row = itemView;
             text = itemView.findViewById(R.id.quranAyahText);
+            text.setMovementMethod(LinkMovementMethod.getInstance());
+            text.setHighlightColor(0); // Saved verses have their own per-range background.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                text.setJustificationMode(Layout.JUSTIFICATION_MODE_INTER_WORD);
+            }
         }
     }
 
@@ -92,7 +108,7 @@ public final class QuranFlowAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         final TextView name;
         final TextView meta;
 
-        SurahHolder(@NonNull View itemView) {
+        SurahHolder(View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.quranSurahHeaderName);
             meta = itemView.findViewById(R.id.quranSurahHeaderMeta);
@@ -102,26 +118,22 @@ public final class QuranFlowAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     static final class PageHolder extends RecyclerView.ViewHolder {
         final TextView number;
 
-        PageHolder(@NonNull View itemView) {
+        PageHolder(View itemView) {
             super(itemView);
             number = itemView.findViewById(R.id.quranPageDividerNumber);
         }
     }
 
-    @NonNull
     private final List<Row> rows;
-    @NonNull
     private final QuranTheme theme;
-    @NonNull
     private final QuranStore store;
-    @Nullable
-    private final AyahTapListener listener;
+    @Nullable private final AyahTapListener listener;
     private float textSizeSp;
 
     public QuranFlowAdapter(@NonNull List<Row> rows, @NonNull QuranTheme theme,
                             @NonNull QuranStore store, float textSizeSp,
                             @Nullable AyahTapListener listener) {
-        this.rows = rows;
+        this.rows = new ArrayList<>(rows);
         this.theme = theme;
         this.store = store;
         this.textSizeSp = textSizeSp;
@@ -130,7 +142,7 @@ public final class QuranFlowAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     @Override
     public int getItemViewType(int position) {
-        return this.rows.get(position).type;
+        return rows.get(position).type;
     }
 
     @NonNull
@@ -143,89 +155,149 @@ public final class QuranFlowAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         if (viewType == TYPE_PAGE) {
             return new PageHolder(inflater.inflate(R.layout.item_quran_page_divider, parent, false));
         }
-        return new AyahHolder(inflater.inflate(R.layout.item_quran_ayah, parent, false));
+        return new ParagraphHolder(inflater.inflate(R.layout.item_quran_ayah, parent, false));
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Row row = this.rows.get(position);
-        if (holder instanceof AyahHolder) {
-            bindAyah((AyahHolder) holder, row.ayah);
+        Row row = rows.get(position);
+        if (holder instanceof ParagraphHolder) {
+            bindParagraph((ParagraphHolder) holder, row);
         } else if (holder instanceof SurahHolder) {
-            bindSurah((SurahHolder) holder, row.surah, row.juz);
+            SurahHolder header = (SurahHolder) holder;
+            header.name.setText(row.surah.getArabicName());
+            header.name.setTextColor(theme.ink);
+            header.meta.setText(header.meta.getContext().getString(R.string.quran_surah_header_meta,
+                    Math.max(1, row.juz), row.surah.getAyahCount()));
+            header.meta.setTextColor(theme.muted);
         } else if (holder instanceof PageHolder) {
-            bindPage((PageHolder) holder, row.page);
+            ((PageHolder) holder).number.setText(String.valueOf(row.page));
+            ((PageHolder) holder).number.setTextColor(theme.muted);
         }
     }
 
-    private void bindAyah(@NonNull AyahHolder holder, @NonNull QuranAyah ayah) {
-        holder.text.setText(ayah.getText());
-        holder.text.setTextSize(TypedValue.COMPLEX_UNIT_SP, this.textSizeSp);
-        holder.text.setTextColor(this.theme.ink);
-        boolean saved = this.store.isBookmarked(ayah.getSurahNumber(), ayah.getAyahNumber());
-        holder.row.setBackground(highlightBackground(holder.itemView.getContext(), saved));
-        holder.itemView.setOnClickListener(view -> {
-            if (this.listener != null) {
-                this.listener.onAyahTapped(ayah);
+    private void bindParagraph(ParagraphHolder holder, Row row) {
+        QuranParagraph paragraph = new QuranParagraph(row.ayahs,
+                holder.text.getResources().getDisplayMetrics().density,
+                theme.isNight() ? theme.gold : AyahNumberSpan.PRIMARY_GREEN);
+        for (int i = 0; i < row.ayahs.size(); i++) {
+            final QuranAyah ayah = row.ayahs.get(i);
+            int start = paragraph.start(i);
+            int end = paragraph.end(i);
+            paragraph.text.setSpan(new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    if (listener != null) {
+                        listener.onAyahTapped(ayah);
+                    }
+                }
+
+                @Override
+                public void updateDrawState(@NonNull TextPaint paint) {
+                    // Keep Quran typography/colour: these are verse taps, not blue web links.
+                    paint.setUnderlineText(false);
+                }
+            }, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            if (store.isBookmarked(ayah.getSurahNumber(), ayah.getAyahNumber())) {
+                paragraph.text.setSpan(new BackgroundColorSpan(theme.verseHighlight), start, end,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+        }
+        holder.paragraph = paragraph;
+        holder.text.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSizeSp);
+        holder.text.setTextColor(theme.ink);
+        holder.text.setText(paragraph.text);
+    }
+
+    /** Locate a verse inside a block instead of treating its number as a RecyclerView row. */
+    public int rowForAyah(int surah, int ayah) {
+        for (int i = 0; i < rows.size(); i++) {
+            for (QuranAyah entry : rows.get(i).ayahs) {
+                if (entry.getSurahNumber() == surah && entry.getAyahNumber() == ayah) {
+                    return i;
+                }
+            }
+        }
+        return RecyclerView.NO_POSITION;
+    }
+
+    /** Track the verse at the first visible text line, even partway down a tall paragraph. */
+    @Nullable
+    public QuranAyah topVisibleAyah(@NonNull RecyclerView list) {
+        LinearLayoutManager manager = (LinearLayoutManager) list.getLayoutManager();
+        if (manager == null) {
+            return null;
+        }
+        int first = manager.findFirstVisibleItemPosition();
+        if (first == RecyclerView.NO_POSITION) {
+            return null;
+        }
+        for (int position = first; position < rows.size(); position++) {
+            Row row = rows.get(position);
+            if (row.type != TYPE_PARAGRAPH) {
+                continue;
+            }
+            RecyclerView.ViewHolder view = list.findViewHolderForAdapterPosition(position);
+            if (view instanceof ParagraphHolder) {
+                ParagraphHolder holder = (ParagraphHolder) view;
+                Layout layout = holder.text.getLayout();
+                if (layout != null && holder.paragraph != null) {
+                    int textTop = holder.itemView.getTop() + holder.text.getTop()
+                            + holder.text.getTotalPaddingTop();
+                    int line = layout.getLineForVertical(Math.max(0, list.getPaddingTop() - textTop));
+                    return holder.paragraph.ayahAtOffset(layout.getLineStart(line));
+                }
+            }
+            return row.ayahs.get(0);
+        }
+        return null;
+    }
+
+    /** First lay out the target page, then position its target verse's line at the viewport top. */
+    public void scrollToAyah(@NonNull RecyclerView list, int surah, int ayah) {
+        int row = rowForAyah(surah, ayah);
+        LinearLayoutManager manager = (LinearLayoutManager) list.getLayoutManager();
+        if (row == RecyclerView.NO_POSITION || manager == null) {
+            return;
+        }
+        OneShotPreDrawListener.add(list, () -> {
+            RecyclerView.ViewHolder view = list.findViewHolderForAdapterPosition(row);
+            if (!(view instanceof ParagraphHolder)) {
+                return;
+            }
+            ParagraphHolder holder = (ParagraphHolder) view;
+            Layout layout = holder.text.getLayout();
+            if (holder.paragraph == null) {
+                return;
+            }
+            int offset = holder.paragraph.offsetOf(surah, ayah);
+            if (layout != null && offset >= 0) {
+                int top = holder.text.getTop() + holder.text.getTotalPaddingTop()
+                        + layout.getLineTop(layout.getLineForOffset(offset));
+                manager.scrollToPositionWithOffset(row, -top);
             }
         });
+        manager.scrollToPositionWithOffset(row, 0);
     }
 
-    private void bindSurah(@NonNull SurahHolder holder, @NonNull QuranSurah surah, int juz) {
-        holder.name.setText(surah.getArabicName());
-        holder.name.setTextColor(this.theme.ink);
-        holder.meta.setText(holder.meta.getContext().getString(R.string.quran_surah_header_meta,
-                Math.max(1, juz), surah.getAyahCount()));
-        holder.meta.setTextColor(this.theme.muted);
-    }
-
-    private void bindPage(@NonNull PageHolder holder, int page) {
-        holder.number.setText(String.valueOf(page));
-        holder.number.setTextColor(this.theme.muted);
-    }
-
-    /** The saved-verse tint: a soft rounded highlight, or nothing at all when unsaved. */
-    @NonNull
-    private android.graphics.drawable.Drawable highlightBackground(@NonNull android.content.Context context,
-                                                                   boolean saved) {
-        if (!saved) {
-            return new ColorDrawable(0);
-        }
-        GradientDrawable tint = new GradientDrawable();
-        tint.setShape(GradientDrawable.RECTANGLE);
-        tint.setColor(this.theme.verseHighlight);
-        tint.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f,
-                context.getResources().getDisplayMetrics()));
-        return tint;
-    }
-
-    /** Sets the reader's type size and re-binds the column in place. */
     public void setTextSizeSp(float textSizeSp) {
         this.textSizeSp = textSizeSp;
         notifyDataSetChanged();
     }
 
-    /** The palette moved under the column (night switch): repaint everything in place. */
     public void refreshTheme() {
         notifyDataSetChanged();
     }
 
-    /** One verse's bookmark moved: repaint only that row. */
-    public void refreshAyah(int position) {
-        if (position >= 0 && position < this.rows.size()
-                && this.rows.get(position).type == TYPE_AYAH) {
-            notifyItemChanged(position);
+    public void refreshAyah(int surah, int ayah) {
+        int row = rowForAyah(surah, ayah);
+        if (row != RecyclerView.NO_POSITION) {
+            notifyItemChanged(row);
         }
     }
 
     @Override
     public int getItemCount() {
-        return this.rows.size();
-    }
-
-    /** The flow's rows, read-only; the host maps its own navigation targets onto them. */
-    @NonNull
-    public List<Row> getRows() {
-        return java.util.Collections.unmodifiableList(this.rows);
+        return rows.size();
     }
 }
