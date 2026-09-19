@@ -26,6 +26,8 @@ import org.Allah_Clock_Live_Wallpaper.viewUtils.TextClockPreview;
 import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
 
+import java.io.File;
+
 
 public class LiveClockWallpaper extends WallpaperService {
     protected TextClockPreview cat1Clock;
@@ -226,15 +228,24 @@ public class LiveClockWallpaper extends WallpaperService {
             Clocks clocks = (Clocks) LiveClockWallpaper.this.tinyDB.getObject("clocks", Clocks.class);
             int i = LiveClockWallpaper.this.tinyDB.getInt("textClockPosition");
             if (LiveClockWallpaper.this.tinyDB.getBoolean("isImage")) {
-                Log.e("isImage", "yes");
-                Log.e("aa", "="+aa);
+                if (aa == null) {
+                    String path = LiveClockWallpaper.this.tinyDB.getString("ImageString");
+                    aa = BitmapFactory.decodeFile(path);
+                    if (aa == null) {
+                        // decodeFile returns null for a missing, empty or unreadable file, and for
+                        // an empty path — which is what getString returns before the user has ever
+                        // picked a gallery image. Handing that null to setImageBitmap is what left
+                        // the home screen showing the clock over nothing.
+                        Log.e("CRITICAL_DEBUG", "the picked image cannot be decoded: \"" + path
+                                + "\" (exists=" + new File(path).exists() + ") — showing the"
+                                + " bundled background instead");
+                    }
+                }
                 if (aa != null) {
                     LiveClockWallpaper.this.imageView.setImageBitmap(aa);
                 } else {
-                    aa = BitmapFactory.decodeFile(LiveClockWallpaper.this.tinyDB.getString("ImageString"));
-                    LiveClockWallpaper.this.imageView.setImageBitmap(aa);
+                    LiveClockWallpaper.this.imageView.setImageResource(R.drawable.wp_kaaba_1);
                 }
-
             } else if (LiveClockWallpaper.this.tinyDB.getBoolean("isCustomBg")) {
                 Log.e("isCustomBg", "yes");
                 LiveClockWallpaper.this.imageView.setImageResource(LiveClockWallpaper.this.tinyDB.getInt("customBg"));

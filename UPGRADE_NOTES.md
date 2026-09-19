@@ -1272,3 +1272,127 @@ effectively-final) فلا يراها محلّل نحوي، وقد روجعت ي�
    المحفوظة يدويًا في `proguard-rules.pro`).
 4. إن ظهر `cannot find symbol` فليس سببه R8 (يعمل بعد الترجمة)؛ شغّل
    `python3 tools/verify_java_symbols.py`.
+
+---
+
+## 24) السبب الحقيقي لعطلَي «تعذّر فتح نص القرآن» و«الخلفيات لا تفتح» (19 سبتمبر 2026)
+
+ثلاثة أعطال حقيقية، لا واحد. الأول كان يمنع البناء أصلًا (فلا يظهر أي سلوك)، والثاني يجعل
+الخلفية فارغة وقت التشغيل، والثالث يظهر **في بناء release فقط** — ولهذا كانت كل المحاولات
+السابقة «تنجح» في Android Studio ثم يفشل التطبيق المثبّت.
+
+### 1) `CustomWallpaper.java` لم يكن يُترجم (خطأا `cannot find symbol`)
+
+```java
+Log.w(TAG, "unlockCanvasAndPost failed", e2);   // السطران 159 و169
+```
+
+* `android.util.Log` **لم يكن مستوردًا** في الملف (قائمة الاستيراد كلها 14 سطرًا، ولا واحد منها
+  `android.util.Log`)، ولا يوجد صنف `Log` في الحزمة `org.Allah_Clock_Live_Wallpaper`.
+* `TAG` معرّف في `WidgetGroup` (صنف متداخل **شقيق**) ولا يُرى من `ClockEngine` حيث يُستخدم.
+
+النتيجة: `error: cannot find symbol` مرتين ← **الوحدة كلها لا تُبنى**.
+**الإصلاح**: `import android.util.Log;` + ثابت `private static final String TAG` على مستوى الصنف،
+وحُذف `TAG` غير المستعمل من `WidgetGroup`.
+
+> لماذا لم يمسكه `verify_java_symbols.py`؟ لأنه كان يفحص مراجع **أصناف المشروع فقط**
+> (`org.Allah_Clock_Live_Wallpaper.*`) ولا ينظر إلى أسماء أصناف SDK. أُضيف له فحص سادس (§أدناه).
+
+### 2) الخلفية تُفكَّك في كل إطار، وبلا أي بديل ← شاشة رئيسية فارغة
+
+```java
+// CustomWallpaper.ClockEngine.firstClock()  — يُنفَّذ مع كل رسم
+imageView.setImageBitmap(BitmapFactory.decodeFile(tinyDB.getString("isWallpaper")));
+```
+
+* `TinyDB.getString` تُرجع `""` للمفتاح غير المكتوب، و`decodeFile("")` تُرجع `null`
+  ← `setImageBitmap(null)` ← **الساعة فوق لا شيء**. ويحدث هذا في: التثبيت الجديد، مسح بيانات
+  التطبيق، وبعد النقل/الاستعادة (Auto Backup يُرجع `SharedPreferences` ولا يُرجع
+  `files/wallpapers/wallpaper.jpg`).
+* فكّ JPEG كامل **في كل إطار** (الرسم يُعاد كل 10 ثوانٍ وعند كل تغيّر ظهور) ← ضغط ذاكرة قد يُنهي
+  عملية الخلفية الحية، وإنهاؤها يظهر هو الآخر كخلفية فارغة.
+
+**الإصلاح**: `applyBackground()` يفكّ مرة واحدة لكل مسار ويحتفظ بالـ`Bitmap`، ويتحقق من وجود
+الملف وحجمه، ويرتدّ إلى خلفية مضمّنة (`R.drawable.wp_kaaba_1`) مع تسجيل السبب في
+`CRITICAL_DEBUG`. ونفس الارتداد أُضيف إلى فرع `isImage` في `LiveClockWallpaper`.
+
+### 3) القرآن: R8 يُعيد تسمية حقول نماذج Gson ← `quran_load_failed` في release فقط
+
+`QuranRepository` يقرأ `assets/quran.json` و`assets/quran_info.json` في أصناف متداخله خاصة
+(`TextFile`, `TextAyah`, `Info`, `CountOnly`, `CountRef<T>`, `Chapter`, `Verse`, `PageRef`,
+`JuzRef`, `Ref`). قاعدة الحفظ الوحيدة كانت:
+
+```
+-keep class org.Allah_Clock_Live_Wallpaper.model.** { *; }
+```
+
+وهذه الأصناف **ليست في `model`** ولا تحمل `@SerializedName`، فـR8 (المفعّل بـ`minifyEnabled true`
+في release) يعيد تسمية حقولها، فلا يطابق Gson أي مفتاح JSON، فيرجع كائنًا كل حقوله `null`، فيعمل:
+
+```java
+if (file == null || file.quran == null) throw new IOException("The bundled Quran text has no verses");
+```
+
+وتظهر للمستخدم رسالة `quran_load_failed`: **«تعذّر فتح نص القرآن. يرجى إعادة تثبيت التطبيق.»**
+— بينما التطبيق لم يكن معطوبًا قط. بناء debug لا يشغّل R8، ولهذا كان يعمل داخل Studio.
+
+**الإصلاح**: `-keep class org.Allah_Clock_Live_Wallpaper.utils.QuranRepository$* { *; }`.
+
+### 4) تشخيص حقيقي بدل الرسالة العامة
+
+`QuranRepository` صار يسجّل السبب الفعلي قبل أي `throw`، تحت وسم واحد:
+
+```bash
+adb logcat -s CRITICAL_DEBUG
+```
+
+* اسم الأصل وحجمه المقروء وأول حرف فيه (`assets/quran.json read: 1967727 chars, starts with '{'`)؛
+* إن لم يوجد الأصل: `FileNotFoundException` **مع قائمة ما يحويه `assets/` فعلًا** (الأسماء حساسة
+  لحالة الأحرف)؛
+* إن فشل Gson: نوع الاستثناء ورسالته وعدد المحارف؛
+* وإن رجع النموذج فارغًا: **أسماء الحقول المُعلَنة فعلًا** — فإذا ظهرت `[a]` بدل `[quran]` فالسبب
+  R8 لا الملف؛
+* وأي `RuntimeException`/`OutOfMemoryError` على مسار التحميل يتحوّل إلى `IOException` بسببه
+  بدلاً من أن يقتل خيط التحميل.
+
+### 5) فحصان جديدان في `tools/verify_java_symbols.py` (مع اختبار ذاتي لهما)
+
+| الفحص | ماذا يمسك |
+|---|---|
+| **6** — كل مُستقبِل بحرف كبير في `Type.member` مستورد/معرَّف في الملف/في الحزمة/في `java.lang` | العطل (1): `Log` بلا استيراد |
+| **7** — كل صنف يُمرَّر إلى Gson مغطّى بقاعدة `-keep` في `proguard-rules.pro` | العطل (3): نموذج بلا قاعدة حفظ |
+
+```
+python3 tools/verify_java_symbols.py             # NO ERRORS — 2602 مُستقبِل · 13 هدف Gson
+python3 tools/verify_java_symbols.py --self-test # SELF-TEST PASSED: all 4 planted errors are reported
+```
+
+الاختبار الذاتي يزرع الآن **أربعة** أخطاء في نسخة مؤقتة من الشجرة (منها حذف
+`import android.util.Log;` وحذف قاعدة `QuranRepository$*`) ويجب أن يُبلَّغ الأربعة.
+
+### 6) حدود الفحص — بصراحة
+
+لا JDK ولا Android SDK في هذه البيئة، وقد مُنع تنزيلهما فعليًا:
+
+```bash
+$ java -version                                   # command not found
+$ echo $ANDROID_HOME                              # (فارغ)
+$ curl -s -o /dev/null -w '%{http_code}' https://repo1.maven.org/maven2/      # 000
+$ curl -s -o /dev/null -w '%{http_code}' https://api.adoptium.net/...         # 000
+```
+
+فلم يُشغَّل `javac` ولا `assembleDebug` ولا R8 هنا. ما فُحص فعلًا: المدقّان + `smoke.js`
++ محلّل جافا نحوي (`javalang`) مرّر الملفات الثلاثة المعدَّلة + مسح رموز مستقل أكّد أن
+حذف الاستيراد يُبلَّغ وأن الشجرة المعدَّلة نظيفة. **الترجمة الحقيقية على الجهاز:**
+`./gradlew assembleDebug` ثم `./gradlew assembleRelease`.
+
+### الملفات
+
+| المجموعة | الملفات |
+|---|---|
+| البناء | `CustomWallpaper.java` — استيراد `Log` + `TAG` على مستوى الصنف |
+| سلوك الخلفيات | `CustomWallpaper.java` (`applyBackground`/`decodeBackground`) · `LiveClockWallpaper.java` (فرع `isImage`) |
+| سلوك القرآن | `utils/QuranRepository.java` — تشخيص كامل + تحويل الأعطال إلى `IOException` |
+| البناء release | `app/proguard-rules.pro` — حفظ نماذج Gson المتداخلة |
+| الأدوات | `tools/verify_java_symbols.py` — الفحصان 6 و7 + اختبار ذاتي موسّع |
+| الحزمة | `Allah-Clock-Live-Wallpaper-android-studio.zip` أُعيد بناؤها |

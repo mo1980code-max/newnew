@@ -1,6 +1,7 @@
 package org.Allah_Clock_Live_Wallpaper.utils;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,9 +14,11 @@ import org.Allah_Clock_Live_Wallpaper.model.QuranSearchResult;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSurah;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -58,6 +61,15 @@ public final class QuranRepository {
     private static final String ASSET_TEXT = "quran.json";
     private static final String ASSET_INFO = "quran_info.json";
 
+    /**
+     * Logcat tag for every failure on the load path. The reader only ever shows the user the
+     * generic {@code quran_load_failed} string, so the real cause — a missing asset, an empty
+     * asset, an encoding problem, an {@code OutOfMemoryError} while parsing 4 MB of JSON, or a
+     * shrinking step that renamed the Gson model fields — has to be readable here:
+     * {@code adb logcat -s CRITICAL_DEBUG}.
+     */
+    private static final String LOG_TAG = "CRITICAL_DEBUG";
+
     private static final Pattern REFERENCE = Pattern.compile(
             "^\\s*(\\d{1,3})\\s*[:：]\\s*(\\d{1,3})\\s*$");
     private static volatile QuranRepository instance;
@@ -71,10 +83,25 @@ public final class QuranRepository {
     private final List<QuranJuz> juzs = new ArrayList<>();
 
     private QuranRepository(@NonNull Context context) throws IOException {
-        List<TextAyah> texts = readTexts(context);
-        Info info = readInfo(context);
-        build(texts, info);
-        validate();
+        try {
+            List<TextAyah> texts = readTexts(context);
+            Info info = readInfo(context);
+            build(texts, info);
+            validate();
+        } catch (IOException e) {
+            // Every load failure ends up behind the same generic dialog, so the exact reason is
+            // logged here once, with its stack, instead of being swallowed by the caller.
+            Log.e(LOG_TAG, "the Quran could not be loaded", e);
+            e.printStackTrace();
+            throw e;
+        } catch (RuntimeException | OutOfMemoryError e) {
+            // A model class whose fields were renamed by a shrinking step makes Gson leave them
+            // null, and the null then surfaces here as a NullPointerException rather than as the
+            // IOException it really is. Report both the same way.
+            Log.e(LOG_TAG, "the Quran loader failed unexpectedly", e);
+            e.printStackTrace();
+            throw new IOException("The Quran loader failed: " + e, e);
+        }
     }
 
     /**
@@ -102,28 +129,101 @@ public final class QuranRepository {
     @NonNull
     private static List<TextAyah> readTexts(@NonNull Context context) throws IOException {
         String body = readAsset(context, ASSET_TEXT);
-        TextFile file = new Gson().fromJson(body, TextFile.class);
+        TextFile file = parse(body, TextFile.class, ASSET_TEXT);
         if (file == null || file.quran == null) {
-            throw new IOException("The bundled Quran text has no verses");
+            // The decisive line for this failure. Gson fills fields by matching the JSON keys to
+            // the *declared field names*, so when those names are no longer "quran" / "chapter" /
+            // "verse" / "text" a shrinking step renamed them and no keep rule covers the model —
+            // the asset itself is perfectly fine. proguard-rules.pro keeps
+            // QuranRepository$* for exactly this reason.
+            Log.e(LOG_TAG, ASSET_TEXT + " was read (" + body.length()
+                    + " chars) but the parsed model is empty. Declared fields: "
+                    + TextFile.class.getName() + " = " + fieldNames(TextFile.class) + ", "
+                    + TextAyah.class.getName() + " = " + fieldNames(TextAyah.class)
+                    + ". Expected [quran] and [chapter, verse, text] — if they differ, R8 renamed"
+                    + " them and the keep rule for QuranRepository$* is missing.");
+            throw new IOException("The bundled Quran text has no verses (" + ASSET_TEXT
+                    + ", " + body.length() + " chars read)");
         }
+        Log.i(LOG_TAG, ASSET_TEXT + ": parsed " + file.quran.size() + " ayahs");
         return file.quran;
     }
 
     @NonNull
     private static Info readInfo(@NonNull Context context) throws IOException {
         String body = readAsset(context, ASSET_INFO);
-        Info info = new Gson().fromJson(body, Info.class);
+        Info info = parse(body, Info.class, ASSET_INFO);
         if (info == null) {
+            Log.e(LOG_TAG, ASSET_INFO + " parsed to null; declared fields: "
+                    + Info.class.getName() + " = " + fieldNames(Info.class));
             throw new IOException("The bundled Quran metadata is missing");
         }
+        if (info.chapters == null) {
+            Log.e(LOG_TAG, ASSET_INFO + " was read (" + body.length()
+                    + " chars) but Info.chapters is null. Declared fields: "
+                    + Info.class.getName() + " = " + fieldNames(Info.class)
+                    + ", " + Chapter.class.getName() + " = " + fieldNames(Chapter.class)
+                    + ". Expected [verses, chapters, pages, juzs] — if they differ, R8 renamed"
+                    + " them and the keep rule for QuranRepository$* is missing.");
+        } else {
+            Log.i(LOG_TAG, ASSET_INFO + ": parsed " + info.chapters.size() + " surahs");
+        }
         return info;
+    }
+
+    /**
+     * Parses one bundled asset and turns every Gson failure into an {@link IOException} that
+     * carries the real cause, after logging it. Without this the reader reports a parse problem
+     * as an unhandled {@code JsonSyntaxException} on the loading thread.
+     */
+    @Nullable
+    private static <T> T parse(@NonNull String body, @NonNull Class<T> type, @NonNull String asset)
+            throws IOException {
+        try {
+            return new Gson().fromJson(body, type);
+        } catch (RuntimeException e) { // JsonSyntaxException, JsonIOException
+            Log.e(LOG_TAG, "Gson could not parse assets/" + asset + " (" + body.length()
+                    + " chars) into " + type.getName() + ": " + e, e);
+            e.printStackTrace();
+            throw new IOException("Cannot parse assets/" + asset + ": " + e.getMessage(), e);
+        } catch (OutOfMemoryError e) {
+            // Both assets together are ~4 MB of text; on a low-memory device the StringBuilder in
+            // readAsset plus Gson's object graph can exhaust the heap. Say so instead of dying.
+            Log.e(LOG_TAG, "out of memory parsing assets/" + asset + " (" + body.length()
+                    + " chars)", e);
+            throw new IOException("Not enough memory to parse assets/" + asset, e);
+        }
+    }
+
+    /** Declared field names of a Gson model, for the log line that explains a renamed model. */
+    @NonNull
+    private static String fieldNames(@NonNull Class<?> type) {
+        StringBuilder out = new StringBuilder("[");
+        for (Field field : type.getDeclaredFields()) {
+            if (out.length() > 1) {
+                out.append(", ");
+            }
+            out.append(field.getName());
+        }
+        return out.append(']').toString();
     }
 
     /** Reads one bundled asset completely (no API 24+ stream helpers: minSdk is 23). */
     @NonNull
     private static String readAsset(@NonNull Context context, @NonNull String name)
             throws IOException {
-        try (InputStream input = context.getAssets().open(name);
+        InputStream opened;
+        try {
+            opened = context.getAssets().open(name);
+        } catch (FileNotFoundException e) {
+            // Asset names are case sensitive and live at the root of assets/ — list what the APK
+            // really contains so a renamed or missing file is obvious from logcat alone.
+            Log.e(LOG_TAG, "assets/" + name + " is not in the APK. assets/ contains: "
+                    + listAssets(context), e);
+            e.printStackTrace();
+            throw e;
+        }
+        try (InputStream input = opened;
              BufferedReader reader = new BufferedReader(
                      new InputStreamReader(input, StandardCharsets.UTF_8), 1 << 16)) {
             StringBuilder out = new StringBuilder(1 << 20);
@@ -132,7 +232,33 @@ public final class QuranRepository {
             while ((read = reader.read(buffer)) != -1) {
                 out.append(buffer, 0, read);
             }
-            return out.toString();
+            String body = out.toString();
+            if (body.isEmpty()) {
+                Log.e(LOG_TAG, "assets/" + name + " opened but is empty");
+                throw new IOException("assets/" + name + " is empty");
+            }
+            Log.i(LOG_TAG, "assets/" + name + " read: " + body.length() + " chars, starts with '"
+                    + body.charAt(0) + "'");
+            return body;
+        } catch (IOException e) {
+            // Covers a truncated asset (the stream ends early) as well as the empty case above.
+            Log.e(LOG_TAG, "cannot read assets/" + name + ": " + e, e);
+            e.printStackTrace();
+            throw e;
+        } catch (OutOfMemoryError e) {
+            Log.e(LOG_TAG, "out of memory reading assets/" + name, e);
+            throw new IOException("Not enough memory to read assets/" + name, e);
+        }
+    }
+
+    /** What the APK actually carries in {@code assets/}, for the "file not found" log line. */
+    @NonNull
+    private static String listAssets(@NonNull Context context) {
+        try {
+            String[] names = context.getAssets().list("");
+            return names == null ? "<unavailable>" : java.util.Arrays.toString(names);
+        } catch (Throwable t) {
+            return "<unavailable: " + t + ">";
         }
     }
 

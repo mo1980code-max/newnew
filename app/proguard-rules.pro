@@ -31,6 +31,22 @@
 }
 -dontwarn sun.misc.**
 
+# ── Gson models that live OUTSIDE the model package ──────────────────────────────────────
+# QuranRepository parses assets/quran.json and assets/quran_info.json into its own private
+# static nested classes (TextFile, TextAyah, Info, CountOnly, CountRef<T>, Chapter, Verse,
+# PageRef, JuzRef, Ref). None of them carries @SerializedName and none of them is inside
+# model.**, so without this rule R8 renames every one of their fields - Gson then matches no
+# JSON key at all, the parse returns an object whose fields are all null, and
+#     if (file == null || file.quran == null) throw new IOException(...)
+# fires: the reader shows quran_load_failed ("تعذّر فتح نص القرآن. يرجى إعادة تثبيت
+# التطبيق.") and tells the user to reinstall an app that was never broken.
+#
+# This is a RELEASE-ONLY failure (minifyEnabled true); a debug build does not run R8, which is
+# why the Quran opens in Android Studio and fails on an installed release build.
+# `python3 tools/verify_java_symbols.py` now fails the build check if a Gson target class is
+# ever added without a matching keep rule.
+-keep class org.Allah_Clock_Live_Wallpaper.utils.QuranRepository$* { *; }
+
 # ── Referenced by name from AndroidManifest.xml / layout XML ───────────────
 -keep class org.Allah_Clock_Live_Wallpaper.AppClass { *; }
 -keep class org.Allah_Clock_Live_Wallpaper.LiveClockWallpaper { *; }

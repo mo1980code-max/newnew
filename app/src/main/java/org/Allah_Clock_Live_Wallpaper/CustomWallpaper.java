@@ -1,11 +1,13 @@
 package org.Allah_Clock_Live_Wallpaper;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.viewUtils.WallpaperOverlayView;
@@ -17,9 +19,31 @@ import android.widget.LinearLayout;
 
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 
+import java.io.File;
+
 
 
 public class CustomWallpaper extends WallpaperService {
+
+    /** Logcat tag; {@code adb logcat -s CustomWallpaper CRITICAL_DEBUG} shows every failure. */
+    private static final String TAG = "CustomWallpaper";
+
+    /** Tag for the failures that used to leave the user with a blank home screen. */
+    private static final String CRITICAL = "CRITICAL_DEBUG";
+
+    /** Preference key holding the app-private JPEG the picked background was decoded into. */
+    private static final String PREF_BACKGROUND_PATH = "isWallpaper";
+
+    /**
+     * Shown when the stored path is missing or unreadable, so the live wallpaper is never a black
+     * rectangle with a clock on it. Any bundled wallpaper works; this one is the catalogue's
+     * first category cover.
+     */
+    private static final int FALLBACK_BACKGROUND = R.drawable.wp_kaaba_1;
+
+    /** Longest decoded side in px, so one background cannot exhaust the wallpaper process heap. */
+    private static final int MAX_BACKGROUND_SIDE = 2048;
+
     private Context context;
     int height;
     protected ImageView imageView;
@@ -28,6 +52,10 @@ public class CustomWallpaper extends WallpaperService {
     TinyDB tinyDB;
     protected WidgetGroup widgetGroup;
     int width;
+
+    /** The path {@link #backgroundBitmap} was decoded from; a change re-decodes, nothing else. */
+    private String backgroundPath;
+    private Bitmap backgroundBitmap;
 
     @Override
     public void onCreate() {
@@ -64,10 +92,87 @@ public class CustomWallpaper extends WallpaperService {
         return new ClockEngine();
     }
 
+    /**
+     * Paints the background the user picked in {@code SetWallpaperActivity}.
+     *
+     * <p>The previous implementation called {@code BitmapFactory.decodeFile(tinyDB.getString(
+     * "isWallpaper"))} on <b>every single frame</b>. Two things follow from that, and both show
+     * up as "the backgrounds do not open":</p>
+     * <ol>
+     *   <li>{@code TinyDB.getString} returns {@code ""} for a key nobody wrote yet, and
+     *       {@code decodeFile("")} returns {@code null} — so on a fresh install, after clearing
+     *       app data, or after a device transfer (Auto Backup restores {@code SharedPreferences}
+     *       but <i>not</i> {@code files/wallpapers/wallpaper.jpg}), the ImageView was handed
+     *       {@code null} and the home screen showed the clock over nothing at all;</li>
+     *   <li>a full JPEG was decoded again every frame, which on a large image is enough to get
+     *       the wallpaper process killed for memory — and a killed {@code WallpaperService} also
+     *       shows as a blank background.</li>
+     * </ol>
+     *
+     * <p>So: decode once per path, keep the bitmap, and fall back to a bundled wallpaper — with
+     * the reason in logcat — whenever the stored file cannot be used.</p>
+     */
+    void applyBackground() {
+        String path = this.tinyDB.getString(PREF_BACKGROUND_PATH);
+        if (path != null && !path.isEmpty() && path.equals(this.backgroundPath)
+                && this.backgroundBitmap != null) {
+            this.imageView.setImageBitmap(this.backgroundBitmap);
+            return;
+        }
+        Bitmap bitmap = decodeBackground(path);
+        if (bitmap != null) {
+            this.backgroundPath = path;
+            this.backgroundBitmap = bitmap;
+            this.imageView.setImageBitmap(bitmap);
+            return;
+        }
+        // Never leave the surface empty: the user still has a working wallpaper, and logcat says
+        // exactly which file was missing.
+        this.backgroundPath = null;
+        this.backgroundBitmap = null;
+        this.imageView.setImageResource(FALLBACK_BACKGROUND);
+    }
 
+    /** @return the decoded background, or {@code null} with the reason logged. */
+    private Bitmap decodeBackground(String path) {
+        if (path == null || path.isEmpty()) {
+            Log.e(CRITICAL, "no background stored under \"" + PREF_BACKGROUND_PATH
+                    + "\" — showing the bundled fallback. (Set a background from the app's"
+                    + " wallpaper screen; the live wallpaper can also be picked straight from"
+                    + " Android's own wallpaper list, before the app ever wrote this key.)");
+            return null;
+        }
+        File file = new File(path);
+        if (!file.exists() || file.length() == 0) {
+            Log.e(CRITICAL, "stored background is not readable: " + path + " (exists="
+                    + file.exists() + ", length=" + file.length() + ") — showing the bundled"
+                    + " fallback. The path survives a backup/restore but the file does not.");
+            return null;
+        }
+        try {
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(path, bounds);
+            int sample = 1;
+            while (Math.max(bounds.outWidth, bounds.outHeight) / (sample * 2)
+                    >= MAX_BACKGROUND_SIDE) {
+                sample *= 2;
+            }
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = sample;
+            Bitmap bitmap = BitmapFactory.decodeFile(path, options);
+            if (bitmap == null) {
+                Log.e(CRITICAL, "BitmapFactory could not decode " + path + " (" + bounds.outWidth
+                        + "x" + bounds.outHeight + ") — showing the bundled fallback");
+            }
+            return bitmap;
+        } catch (Throwable t) {
+            Log.e(CRITICAL, "decoding the stored background failed: " + path, t);
+            return null;
+        }
+    }
 
     public static class WidgetGroup extends ViewGroup {
-        private final String TAG = getClass().getSimpleName();
 
         public WidgetGroup(Context context) {
             super(context);
@@ -188,7 +293,7 @@ public class CustomWallpaper extends WallpaperService {
 
         public void firstClock(Canvas canvas) {
             CustomWallpaper.this.widgetGroup.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
-            CustomWallpaper.this.imageView.setImageBitmap(BitmapFactory.decodeFile(CustomWallpaper.this.tinyDB.getString("isWallpaper")));
+            CustomWallpaper.this.applyBackground();
             CustomWallpaper.this.imageView.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
             CustomWallpaper.this.overlayView.layout(0, 0, CustomWallpaper.this.width, CustomWallpaper.this.height);
             CustomWallpaper.this.widgetGroup.draw(canvas);

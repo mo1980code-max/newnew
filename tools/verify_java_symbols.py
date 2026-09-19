@@ -21,7 +21,18 @@ script therefore does the next best thing: it builds a symbol table out of every
      the class of build error a static checker over the app's own code cannot see otherwise.
      `AppOpenAd.load` is the one that bit us: the four-argument overload was deprecated in
      Google Mobile Ads SDK 21 and removed in a later major, so the orientation argument is
-     mandatory now.
+     mandatory now;
+  6. every capitalised receiver of a `Type.member` reference is imported, declared in the same
+     file, in the same package, or in java.lang. Checks 1-3 only ever looked at *project*
+     types, so an SDK class used without its import sailed through: `CustomWallpaper.java`
+     called `Log.w(TAG, …)` with no `import android.util.Log;` and no `TAG` in scope - two
+     "cannot find symbol" errors that made the whole module uncompilable;
+  7. every class this code hands to Gson is covered by a `-keep` rule in
+     `app/proguard-rules.pro`. Gson matches JSON keys to declared field names at runtime, so a
+     renamed field yields null silently - in the release build only. This is what made the
+     installed app say "تعذّر فتح نص القرآن. يرجى إعادة تثبيت التطبيق." while the same code
+     worked in Android Studio: QuranRepository's models are nested classes, and the existing
+     `-keep class …model.** { *; }` rule never covered them.
 
 Exit code is non-zero when anything fails, so it can gate a commit - run it next to
 `tools/verify_resources.py`.
@@ -465,10 +476,138 @@ for path, text in sources.items():
                     % (os.path.relpath(path, ROOT), line, call, count, hint))
 
 
+# ══════════════════ 6. every uppercase receiver resolves to an imported type ══════════════════
+# javac resolves the left side of `Foo.bar()` by looking `Foo` up as a type: an import, a type
+# declared in the same file, a type in the same package, or java.lang. Nothing else in this
+# script looks at *SDK* class names, which is exactly how CustomWallpaper.java once shipped
+# `Log.w(TAG, …)` with no `import android.util.Log;` — a plain
+# "cannot find symbol: variable Log" that only a real compile would have caught.
+JAVA_LANG_TYPES = {
+    'Boolean', 'Byte', 'Character', 'CharSequence', 'Class', 'ClassLoader', 'Double', 'Enum',
+    'Error', 'Exception', 'Float', 'Integer', 'Long', 'Math', 'Number', 'Object', 'Override',
+    'Package', 'Process', 'ProcessBuilder', 'Runnable', 'Runtime', 'Short', 'StackOverflowError',
+    'StackTraceElement', 'StrictMath', 'String', 'StringBuffer', 'StringBuilder', 'SuppressWarnings',
+    'System', 'Thread', 'Throwable', 'Void', 'Deprecated', 'FunctionalInterface', 'SafeVarargs',
+    'ArithmeticException', 'ArrayIndexOutOfBoundsException', 'ArrayStoreException',
+    'ClassCastException', 'ClassNotFoundException', 'CloneNotSupportedException',
+    'ExceptionInInitializerError', 'IllegalAccessException', 'IllegalArgumentException',
+    'IllegalStateException', 'IllegalThreadStateException', 'IndexOutOfBoundsException',
+    'InstantiationException', 'InterruptedException', 'NegativeArraySizeException',
+    'NoSuchFieldException', 'NoSuchMethodException', 'NullPointerException',
+    'NumberFormatException', 'OutOfMemoryError', 'SecurityException', 'StringIndexOutOfBounds',
+    'StringIndexOutOfBoundsException', 'UnsupportedOperationException', 'Comparable', 'Iterable',
+    'Cloneable', 'Readable', 'AutoCloseable', 'ThreadLocal', 'Character', 'ReflectiveOperationException',
+}
+ANY_IMPORT = re.compile(r'^\s*import\s+(?:static\s+)?([\w.]+(?:\.\*)?)\s*;', re.M)
+# A capitalised identifier immediately followed by `.member` — i.e. used as a type, not a value.
+TYPE_RECEIVER = re.compile(r'(?<![\w.$"\'])([A-Z][A-Za-z0-9_]*)\s*\.\s*[a-zA-Z_$]')
+receivers_checked = 0
+for path, text in sources.items():
+    imports = [m.group(1) for m in ANY_IMPORT.finditer(text)]
+    if any(name.endswith('.*') for name in imports):
+        note('%s uses a wildcard import; unimported SDK classes cannot be checked there'
+             % os.path.relpath(path, ROOT))
+        continue
+    imported = {name.rsplit('.', 1)[-1] for name in imports if not name.endswith('.*')}
+    # a statically imported constant can itself be a receiver (`FULL_SCREEN_ACTIVE.get()`)
+    static_imports = {m.group(1).rsplit('.', 1)[-1] for m in ANY_IMPORT.finditer(text)
+                      if 'static' in text[max(0, m.start()):m.start() + 20]}
+    # every type declared in this file, top level or nested ('Outer.Inner' -> both names)
+    in_file = set()
+    for name, info in types.items():
+        if info['file'] == path:
+            in_file |= set(name.split('.'))
+    directory = os.path.dirname(path)
+    same_package = {os.path.splitext(os.path.basename(other))[0]
+                    for other in sources if os.path.dirname(other) == directory}
+    known = imported | static_imports | in_file | same_package | JAVA_LANG_TYPES \
+        | {'R', 'BuildConfig'}
+    for match in TYPE_RECEIVER.finditer(text):
+        head = match.group(1)
+        receivers_checked += 1
+        # Single capital letters are type parameters by convention (Class<T>, T.class), and an
+        # ALL_CAPS receiver is a constant rather than a type - neither can be a missing import.
+        if head in known or len(head) == 1 or head.upper() == head:
+            continue
+        err('%s:%d `%s.…` is used but `%s` is not imported, not declared in this file and not '
+            'in the same package — javac reports "cannot find symbol"'
+            % (os.path.relpath(path, ROOT), text[:match.start()].count('\n') + 1, head, head))
+
+
+# ══════════════════ 7. every Gson target class survives resource/code shrinking ═══════════════
+# Gson fills fields by matching JSON keys to the *declared field names* at runtime. If R8 renames
+# those fields the parse silently produces an object whose fields are all null — no crash, no
+# warning, just wrong behaviour in the release build. This is what made the Quran reader report
+# "تعذّر فتح نص القرآن. يرجى إعادة تثبيت التطبيق." on installed builds while working in
+# Android Studio: QuranRepository's models are nested classes, so the
+# `-keep class …model.** { *; }` rule never covered them.
+CLASS_LITERAL = re.compile(r'(?<![\w.$])([A-Z][A-Za-z0-9_]*)\s*\.\s*class\b')
+PROGUARD = os.path.join(ROOT, 'app', 'proguard-rules.pro')
+KEEP_CLASS = re.compile(r'^\s*-keep(?:classmembers|classeswithmembers)?\b[^c]*\bclass\s+'
+                        r'([\w.$*?]+)', re.M)
+
+
+def keep_patterns():
+    if not os.path.isfile(PROGUARD):
+        err('app/proguard-rules.pro is missing, so nothing is kept from shrinking')
+        return []
+    body = open(PROGUARD, encoding='utf-8').read()
+    body = re.sub(r'#[^\n]*', '', body)
+    return KEEP_CLASS.findall(body)
+
+
+def pattern_covers(pattern, dotted, binary):
+    """ProGuard `*` / `**` / `?` against both spellings of a (possibly nested) class name."""
+    regex = re.escape(pattern)
+    regex = regex.replace(r'\*\*', '\x00').replace(r'\*', r'[\w$]*').replace('\x00', r'[\w$.]*')
+    regex = regex.replace(r'\?', r'\w')
+    return any(re.fullmatch(regex, name) is not None for name in (dotted, binary))
+
+
+def qualified_of(simple_name, path, text):
+    """(dotted, binary) names of a class literal used in this file, or None for a library type."""
+    for name, info in types.items():
+        if info['file'] == path and name.split('.')[-1] == simple_name:
+            # the directory under java/ *is* the package, so it needs no prefix
+            root = os.path.dirname(os.path.relpath(path, JAVA_DIR)).replace(os.sep, '.')
+            return root + '.' + name, root + '.' + name.replace('.', '$')
+    for match in ANY_IMPORT.finditer(text):
+        target = match.group(1)
+        if target.rsplit('.', 1)[-1] == simple_name and not target.endswith('.*'):
+            return target, re.sub(r'\.([A-Z])', r'$\1', target)
+    return None
+
+
+kept = keep_patterns()
+gson_targets_checked = 0
+unkept = {}
+for path, text in sources.items():
+    if 'Gson' not in text:
+        continue  # only files that hand a class to Gson can have their fields renamed
+    for match in CLASS_LITERAL.finditer(text):
+        simple_name = match.group(1)
+        # `synchronized (Foo.class)` is a monitor, not a Gson target
+        if text[:match.start()].rstrip().endswith('synchronized ('):
+            continue
+        names = qualified_of(simple_name, path, text)
+        if names is None:
+            continue  # a library's own class; its consumer rules are its own business
+        gson_targets_checked += 1
+        dotted, binary = names
+        if not any(pattern_covers(p, dotted, binary) for p in kept):
+            unkept.setdefault((os.path.relpath(path, ROOT), simple_name, binary),
+                              text[:match.start()].count('\n') + 1)
+for (where, simple_name, binary), line in sorted(unkept.items()):
+    err('%s:%d hands %s to Gson, but no -keep rule in app/proguard-rules.pro covers %s — R8 '
+        'renames its fields in the release build and Gson then silently reads null for every '
+        'one of them (a debug build does not run R8, so it looks fine in Android Studio)'
+        % (where, line, simple_name, binary))
+
+
 print('java files parsed: %d (%d types, %d imports, %d project references, %d manifest '
-      'components, %d SDK calls guarded)'
+      'components, %d SDK calls guarded, %d type receivers, %d Gson targets kept)'
       % (len(sources), len(types), imports_checked, references_checked, manifest_names,
-         guards_checked))
+         guards_checked, receivers_checked, gson_targets_checked))
 unique_notes = sorted(set(notes))
 for item in unique_notes[:20]:
     print('note:', item)
@@ -483,20 +622,31 @@ print('\nNO ERRORS')
 
 
 # ══════════════════════════ self-test ══════════════════════════
+# Paths are relative to the repository root, so the plan can reach files outside java/ too.
+JAVA_ROOT = 'app/src/main/java/' + PACKAGE.replace('.', '/') + '/'
 SELF_TEST_PLAN = [
-    ('ads/AppOpenAdController.java',
+    (JAVA_ROOT + 'ads/AppOpenAdController.java',
      'AdManager.isFullScreenAdActive()',
      'AdManager.isFullScreenAdActiveRenamed()',
-     'renamed method'),
-    ('ads/AppOpenAdController.java',
+     'renamed method', 'isFullScreenAdActiveRenamed'),
+    (JAVA_ROOT + 'ads/AppOpenAdController.java',
      'new AdRequest.Builder().build(), AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT,',
      'new AdRequest.Builder().build(),',
-     'removed SDK overload'),
+     'removed SDK overload', 'AppOpenAd.load'),
+    # the two build/release failures this script gained checks for:
+    (JAVA_ROOT + 'CustomWallpaper.java',
+     'import android.util.Log;',
+     '',
+     'unimported SDK class', '`Log.\u2026` is used but'),
+    ('app/proguard-rules.pro',
+     '-keep class org.Allah_Clock_Live_Wallpaper.utils.QuranRepository$* { *; }',
+     '',
+     'Gson model without a keep rule', 'QuranRepository$TextFile'),
 ]
 
 
 def self_test():
-    """Plants the two mistakes this script exists to catch and asserts it reports both."""
+    """Plants every mistake this script exists to catch and asserts each one is reported."""
     with tempfile.TemporaryDirectory() as tmp:
         shutil.copytree(os.path.join(MAIN, 'java', PACKAGE.split('.')[0]),
                         os.path.join(tmp, 'app', 'src', 'main', 'java', *PACKAGE.split('.')[0].split('.')),
@@ -508,29 +658,29 @@ def self_test():
                         dirs_exist_ok=True)
         shutil.copy(os.path.join(MAIN, 'AndroidManifest.xml'),
                     os.path.join(tmp, 'app', 'src', 'main', 'AndroidManifest.xml'))
+        shutil.copy(os.path.join(ROOT, 'app', 'proguard-rules.pro'),
+                    os.path.join(tmp, 'app', 'proguard-rules.pro'))
         planted = []
-        for relative, old, new, label in SELF_TEST_PLAN:
-            path = os.path.join(tmp, 'app', 'src', 'main', 'java', *PACKAGE.split('.'), relative)
+        for relative, old, new, label, expected in SELF_TEST_PLAN:
+            path = os.path.join(tmp, *relative.split('/'))
             text = open(path, encoding='utf-8').read()
             if old not in text:
                 print('SELF-TEST FAILED: could not plant "%s" in %s' % (label, relative))
                 return 1
             open(path, 'w', encoding='utf-8').write(text.replace(old, new, 1))
-            planted.append(label)
+            planted.append((label, expected))
         result = subprocess.run([sys.executable, os.path.abspath(__file__), '--root', tmp],
                                 capture_output=True, text=True)
         if result.returncode == 0:
             print('SELF-TEST FAILED: the planted errors were not detected')
             print(result.stdout[-2000:])
             return 1
-        missing = [label for label in planted if label == 'renamed method'
-                   and 'isFullScreenAdActiveRenamed' not in result.stdout]
-        missing += [label for label in planted if label == 'removed SDK overload'
-                    and 'AppOpenAd.load' not in result.stdout]
+        missing = [label for label, expected in planted if expected not in result.stdout]
         if missing:
             print('SELF-TEST FAILED: not reported: %s' % ', '.join(missing))
             return 1
-        print('SELF-TEST PASSED: both planted errors are reported (%s)' % ', '.join(planted))
+        print('SELF-TEST PASSED: all %d planted errors are reported (%s)'
+              % (len(planted), ', '.join(label for label, _ in planted)))
         return 0
 
 

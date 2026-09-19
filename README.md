@@ -34,7 +34,7 @@ gradle wrapper --gradle-version 8.13 --distribution-type bin
 Android Studio (بلا `.git` وبلا مجلدات `build/`). تُعاد بناؤها بعد أي تعديل مصدر:
 
 ```bash
-python3 tools/build_package.py     # 410 ملفًا — يجب أن تطابق الشجرة حرفيًا
+python3 tools/build_package.py     # 404 ملفات — يجب أن تطابق الشجرة حرفيًا
 ```
 
 > إن نزّلت الحزمة قديمًا فستبني **نسخة قديمة** من التطبيق؛ تحقّق دائمًا من أنها حديثة
