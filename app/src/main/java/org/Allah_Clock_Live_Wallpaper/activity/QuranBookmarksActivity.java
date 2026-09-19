@@ -10,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
+
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.adapter.QuranBookmarkAdapter;
 import org.Allah_Clock_Live_Wallpaper.model.QuranBookmark;
@@ -18,7 +20,6 @@ import org.Allah_Clock_Live_Wallpaper.utils.QuranRepository;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranStore;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -67,69 +68,100 @@ public final class QuranBookmarksActivity extends AppCompatActivity {
             try {
                 final QuranRepository loaded = QuranRepository.get(getApplicationContext());
                 runOnUiThread(() -> {
-                    if (isFinishing() || isDestroyed()) {
-                        return;
+                    try {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        repository = loaded;
+                        loading.setVisibility(View.GONE);
+                        error.setVisibility(View.GONE);
+                        renderBookmarks();
+                    } catch (Throwable e) {
+                        Log.e("QuranActivity", "Error loading data", e);
+                        showLoadError();
                     }
-                    repository = loaded;
-                    loading.setVisibility(View.GONE);
-                    error.setVisibility(View.GONE);
-                    renderBookmarks();
                 });
-            } catch (IOException failure) {
+            } catch (Throwable e) {
+                Log.e("QuranActivity", "Error loading data", e);
                 runOnUiThread(this::showLoadError);
             }
         });
     }
 
     private void renderBookmarks() {
-        if (repository == null) {
-            return;
-        }
-        List<QuranBookmark> valid = new ArrayList<>();
-        for (QuranBookmark bookmark : store.getBookmarks()) {
-            if (repository.getAyah(bookmark.getSurahNumber(), bookmark.getAyahNumber()) != null) {
-                valid.add(bookmark);
-            } else {
-                // Clean up only invalid legacy entries; valid marks preserve their saved order.
-                store.removeBookmark(bookmark.getSurahNumber(), bookmark.getAyahNumber());
+        try {
+            if (repository == null) {
+                return;
             }
-        }
-        this.adapter = new QuranBookmarkAdapter(valid, repository, LocaleHelper.isArabic(this),
-                new QuranBookmarkAdapter.Listener() {
-                    @Override
-                    public void onOpenBookmark(@NonNull QuranBookmark bookmark) {
-                        startActivity(QuranReaderActivity.createIntent(QuranBookmarksActivity.this,
-                                bookmark.getSurahNumber(), bookmark.getAyahNumber()));
+            List<QuranBookmark> valid = new ArrayList<>();
+            for (QuranBookmark bookmark : store.getBookmarks()) {
+                try {
+                    if (repository.getAyah(bookmark.getSurahNumber(), bookmark.getAyahNumber()) != null) {
+                        valid.add(bookmark);
+                    } else {
+                        // Clean up only invalid legacy entries; valid marks preserve their saved order.
+                        store.removeBookmark(bookmark.getSurahNumber(), bookmark.getAyahNumber());
                     }
-
-                    @Override
-                    public void onRemoveBookmark(@NonNull QuranBookmark bookmark, int position) {
-                        if (store.removeBookmark(bookmark.getSurahNumber(), bookmark.getAyahNumber())) {
-                            adapter.removeAt(position);
-                            Toast.makeText(QuranBookmarksActivity.this,
-                                    R.string.quran_bookmark_removed, Toast.LENGTH_SHORT).show();
-                            updateEmptyState();
+                } catch (Throwable e) {
+                    Log.e("QuranActivity", "Error loading data", e);
+                }
+            }
+            this.adapter = new QuranBookmarkAdapter(valid, repository, LocaleHelper.isArabic(this),
+                    new QuranBookmarkAdapter.Listener() {
+                        @Override
+                        public void onOpenBookmark(@NonNull QuranBookmark bookmark) {
+                            try {
+                                startActivity(QuranReaderActivity.createIntent(QuranBookmarksActivity.this,
+                                        bookmark.getSurahNumber(), bookmark.getAyahNumber()));
+                            } catch (Throwable e) {
+                                Log.e("QuranActivity", "Error loading data", e);
+                            }
                         }
-                    }
-                });
-        this.list.setAdapter(this.adapter);
-        updateEmptyState();
+
+                        @Override
+                        public void onRemoveBookmark(@NonNull QuranBookmark bookmark, int position) {
+                            try {
+                                if (store.removeBookmark(bookmark.getSurahNumber(), bookmark.getAyahNumber())) {
+                                    adapter.removeAt(position);
+                                    Toast.makeText(QuranBookmarksActivity.this,
+                                            R.string.quran_bookmark_removed, Toast.LENGTH_SHORT).show();
+                                    updateEmptyState();
+                                }
+                            } catch (Throwable e) {
+                                Log.e("QuranActivity", "Error loading data", e);
+                            }
+                        }
+                    });
+            this.list.setAdapter(this.adapter);
+            updateEmptyState();
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
+            showLoadError();
+        }
     }
 
     private void updateEmptyState() {
-        boolean isEmpty = adapter == null || adapter.getItemCount() == 0;
-        empty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-        list.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        try {
+            boolean isEmpty = adapter == null || adapter.getItemCount() == 0;
+            empty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+            list.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
+        }
     }
 
     private void showLoadError() {
-        if (isFinishing() || isDestroyed()) {
-            return;
+        try {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            loading.setVisibility(View.GONE);
+            list.setVisibility(View.GONE);
+            empty.setVisibility(View.GONE);
+            error.setVisibility(View.VISIBLE);
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
         }
-        loading.setVisibility(View.GONE);
-        list.setVisibility(View.GONE);
-        empty.setVisibility(View.GONE);
-        error.setVisibility(View.VISIBLE);
     }
 
     @Override

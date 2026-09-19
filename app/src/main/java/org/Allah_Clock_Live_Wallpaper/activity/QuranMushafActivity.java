@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.NumberPicker;
@@ -30,7 +31,6 @@ import org.Allah_Clock_Live_Wallpaper.utils.QuranTheme;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -144,18 +144,27 @@ public final class QuranMushafActivity extends AppCompatActivity {
         loader.execute(() -> {
             try {
                 final QuranRepository loaded = QuranRepository.get(getApplicationContext());
-                runOnUiThread(() -> showRepository(loaded));
-            } catch (IOException failure) {
+                runOnUiThread(() -> {
+                    try {
+                        showRepository(loaded);
+                    } catch (Throwable e) {
+                        Log.e("QuranActivity", "Error loading data", e);
+                        showLoadError();
+                    }
+                });
+            } catch (Throwable e) {
+                Log.e("QuranActivity", "Error loading data", e);
                 runOnUiThread(this::showLoadError);
             }
         });
     }
 
     private void showRepository(@NonNull QuranRepository loaded) {
-        if (isFinishing() || isDestroyed()) {
-            return;
-        }
-        this.repository = loaded;
+        try {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            this.repository = loaded;
 
         // One row per verse of the complete Mushaf, with the surah headings and the Madani page
         // boundaries interleaved exactly where the printed book has them.
@@ -194,6 +203,10 @@ public final class QuranMushafActivity extends AppCompatActivity {
         this.error.setVisibility(View.GONE);
         this.list.setVisibility(View.VISIBLE);
         updateHeaderForTopAyah();
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
+            showLoadError();
+        }
     }
 
     // ══════════════════════════════ header and pill ══════════════════════════════
@@ -412,12 +425,16 @@ public final class QuranMushafActivity extends AppCompatActivity {
     }
 
     private void showLoadError() {
-        if (isFinishing() || isDestroyed()) {
-            return;
+        try {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            this.loading.setVisibility(View.GONE);
+            this.list.setVisibility(View.GONE);
+            this.error.setVisibility(View.VISIBLE);
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
         }
-        this.loading.setVisibility(View.GONE);
-        this.list.setVisibility(View.GONE);
-        this.error.setVisibility(View.VISIBLE);
     }
 
     @Override

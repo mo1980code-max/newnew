@@ -5,10 +5,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.Allah_Clock_Live_Wallpaper.R;
-
+import org.Allah_Clock_Live_Wallpaper.utils.UiMotion;
 
 
 public class BgAdapter extends RecyclerView.Adapter<BgAdapter.ViewHolder> {
@@ -40,17 +41,25 @@ public class BgAdapter extends RecyclerView.Adapter<BgAdapter.ViewHolder> {
         }
     }
 
-    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        return new ViewHolder(LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_bg, viewGroup, false));
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+        ViewHolder holder = new ViewHolder(LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_bg, viewGroup, false));
+        UiMotion.pressable(holder.itemView);
+        return holder;
     }
 
-    public void onBindViewHolder(ViewHolder viewHolder, final int i) {
-        viewHolder.viewStub.setImageResource(this.layouts[i]);
-        viewHolder.viewStub.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                if (BgAdapter.this.clickListener != null) {
-                    BgAdapter.this.clickListener.setClick(BgAdapter.this.layouts[i]);
-                }
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
+        viewHolder.viewStub.setImageResource(this.layouts[position]);
+        viewHolder.itemView.setOnClickListener(view -> {
+            int pos = viewHolder.getBindingAdapterPosition();
+            if (pos == RecyclerView.NO_POSITION) {
+                return;
+            }
+            UiMotion.tick(view);
+            if (BgAdapter.this.clickListener != null) {
+                BgAdapter.this.clickListener.setClick(BgAdapter.this.layouts[pos]);
             }
         });
     }

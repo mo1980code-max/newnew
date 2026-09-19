@@ -198,6 +198,8 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
             tinyDB.putInt("customBg", i);
             tinyDB.putBoolean("isImage", false);
             tinyDB.putBoolean("isCustomBg", true);
+            tinyDB.putString("ImageString", "");
+            tinyDB.putString("isWallpaper", "");
             updateClock();
         });
 
@@ -293,6 +295,9 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                 tinyDB.putBoolean("isImage", false);
                 tinyDB.putBoolean("isCustomBg", false);
                 tinyDB.putInt("bgColor", selected);
+                tinyDB.putString("ImageString", "");
+                tinyDB.putString("isWallpaper", "");
+                tinyDB.putInt("customBg", 0);
                 updateClock();
             });
 
@@ -419,16 +424,63 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
         }
 
         this.mIvMainScreen.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        if (this.tinyDB.getBoolean("isImage")) {
-            String path = this.tinyDB.getString("ImageString");
-            if (path != null && path.length() > 0) {
-                Glide.with(this).load(new File(path)).centerCrop().into(this.mIvMainScreen);
+        try {
+            if (this.tinyDB.getBoolean("isImage")) {
+                String path = this.tinyDB.getString("ImageString");
+                if (path == null || path.isEmpty()) {
+                    path = this.tinyDB.getString("isWallpaper");
+                }
+                if (path != null && !path.isEmpty() && new File(path).exists()) {
+                    Glide.with(this).load(new File(path)).centerCrop().into(this.mIvMainScreen);
+                } else {
+                    int customBg = this.tinyDB.getInt("customBg");
+                    if (customBg != 0) {
+                        this.mIvMainScreen.setImageResource(customBg);
+                    } else {
+                        this.mIvMainScreen.setImageResource(0);
+                        this.mIvMainScreen.setBackgroundColor(this.tinyDB.getInt("bgColor"));
+                    }
+                }
+            } else if (this.tinyDB.getBoolean("isCustomBg")) {
+                int customBg = this.tinyDB.getInt("customBg");
+                if (customBg != 0) {
+                    this.mIvMainScreen.setImageResource(customBg);
+                } else {
+                    String path = this.tinyDB.getString("isWallpaper");
+                    if (path == null || path.isEmpty()) {
+                        path = this.tinyDB.getString("ImageString");
+                    }
+                    if (path != null && !path.isEmpty() && new File(path).exists()) {
+                        Glide.with(this).load(new File(path)).centerCrop().into(this.mIvMainScreen);
+                    } else {
+                        this.mIvMainScreen.setImageResource(0);
+                        this.mIvMainScreen.setBackgroundColor(this.tinyDB.getInt("bgColor"));
+                    }
+                }
+            } else {
+                String path = this.tinyDB.getString("isWallpaper");
+                if (path == null || path.isEmpty()) {
+                    path = this.tinyDB.getString("ImageString");
+                }
+                if (path != null && !path.isEmpty() && new File(path).exists()) {
+                    Glide.with(this).load(new File(path)).centerCrop().into(this.mIvMainScreen);
+                } else {
+                    int customBg = this.tinyDB.getInt("customBg");
+                    if (customBg != 0 && this.tinyDB.getBoolean("isCustomBg")) {
+                        this.mIvMainScreen.setImageResource(customBg);
+                    } else {
+                        this.mIvMainScreen.setImageResource(0);
+                        this.mIvMainScreen.setBackgroundColor(this.tinyDB.getInt("bgColor"));
+                    }
+                }
             }
-        } else if (this.tinyDB.getBoolean("isCustomBg")) {
-            this.mIvMainScreen.setImageResource(this.tinyDB.getInt("customBg"));
-        } else {
-            this.mIvMainScreen.setImageResource(0);
-            this.mIvMainScreen.setBackgroundColor(this.tinyDB.getInt("bgColor"));
+        } catch (Throwable e) {
+            Log.e(TAG, "updateClock background failed", e);
+            try {
+                this.mIvMainScreen.setImageResource(0);
+                this.mIvMainScreen.setBackgroundColor(this.tinyDB.getInt("bgColor"));
+            } catch (Throwable ignored) {
+            }
         }
     }
 
@@ -467,9 +519,12 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                     return;
                 }
                 pruneCustomBackgrounds(destination);
+                String abs = destination.getAbsolutePath();
                 tinyDB.putBoolean("isImage", true);
                 tinyDB.putBoolean("isCustomBg", false);
-                tinyDB.putString("ImageString", destination.getAbsolutePath());
+                tinyDB.putString("ImageString", abs);
+                tinyDB.putString("isWallpaper", abs);
+                tinyDB.putInt("customBg", 0);
                 updateClock();
             });
         }, "import-background").start();

@@ -70,17 +70,21 @@ public class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.View
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder viewHolder, final int i) {
-        final WallpaperItem item = this.items.get(i);
+    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
+        final WallpaperItem item = this.items.get(position);
         viewHolder.viewStub.setImageResource(item.getDrawableRes());
         PremiumBackgroundHelper.bindLock(viewHolder.lock, viewHolder.premiumBadge,
                 viewHolder.itemView.getContext(), item.getDrawableRes());
 
         viewHolder.viewStub.setOnClickListener(null);
         viewHolder.itemView.setOnClickListener(view -> {
+            int pos = viewHolder.getBindingAdapterPosition();
+            if (pos == RecyclerView.NO_POSITION) {
+                return;
+            }
             UiMotion.tick(view);
             if (WallpaperAdapter.this.clickListener != null) {
-                WallpaperAdapter.this.clickListener.setClick(i);
+                WallpaperAdapter.this.clickListener.setClick(pos);
             }
         });
     }

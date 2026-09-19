@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
+
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.adapter.QuranSurahAdapter;
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
@@ -25,7 +27,6 @@ import org.Allah_Clock_Live_Wallpaper.utils.QuranRepository;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranStore;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -79,34 +80,51 @@ public final class QuranIndexActivity extends AppCompatActivity {
         loader.execute(() -> {
             try {
                 final QuranRepository loaded = QuranRepository.get(getApplicationContext());
-                runOnUiThread(() -> showRepository(loaded));
-            } catch (IOException error) {
+                runOnUiThread(() -> {
+                    try {
+                        showRepository(loaded);
+                    } catch (Throwable e) {
+                        Log.e("QuranActivity", "Error loading data", e);
+                        showLoadError();
+                    }
+                });
+            } catch (Throwable e) {
+                Log.e("QuranActivity", "Error loading data", e);
                 runOnUiThread(this::showLoadError);
             }
         });
     }
 
     private void showRepository(@NonNull QuranRepository loaded) {
-        if (isFinishing() || isDestroyed()) {
-            return;
+        try {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            this.repository = loaded;
+            this.loading.setVisibility(View.GONE);
+            this.error.setVisibility(View.GONE);
+            this.surahList.setVisibility(View.VISIBLE);
+            this.surahList.setAdapter(new QuranSurahAdapter(loaded.getSurahs(),
+                    LocaleHelper.isArabic(this), this::openSurah));
+            updateContinueCard();
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
+            showLoadError();
         }
-        this.repository = loaded;
-        this.loading.setVisibility(View.GONE);
-        this.error.setVisibility(View.GONE);
-        this.surahList.setVisibility(View.VISIBLE);
-        this.surahList.setAdapter(new QuranSurahAdapter(loaded.getSurahs(),
-                LocaleHelper.isArabic(this), this::openSurah));
-        updateContinueCard();
     }
 
     private void showLoadError() {
-        if (isFinishing() || isDestroyed()) {
-            return;
+        try {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            this.loading.setVisibility(View.GONE);
+            this.surahList.setVisibility(View.GONE);
+            this.continueCard.setVisibility(View.GONE);
+            this.error.setVisibility(View.VISIBLE);
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
         }
-        this.loading.setVisibility(View.GONE);
-        this.surahList.setVisibility(View.GONE);
-        this.continueCard.setVisibility(View.GONE);
-        this.error.setVisibility(View.VISIBLE);
     }
 
     private void updateContinueCard() {

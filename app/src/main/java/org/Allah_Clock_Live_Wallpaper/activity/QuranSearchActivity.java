@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
+
 import org.Allah_Clock_Live_Wallpaper.R;
 import org.Allah_Clock_Live_Wallpaper.adapter.QuranSearchAdapter;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSearchResult;
@@ -23,7 +25,6 @@ import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranRepository;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -93,14 +94,20 @@ public final class QuranSearchActivity extends AppCompatActivity {
             try {
                 final QuranRepository loaded = QuranRepository.get(getApplicationContext());
                 runOnUiThread(() -> {
-                    if (isFinishing() || isDestroyed()) {
-                        return;
+                    try {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        repository = loaded;
+                        loading.setVisibility(View.GONE);
+                        queueSearch(0L);
+                    } catch (Throwable e) {
+                        Log.e("QuranActivity", "Error loading data", e);
+                        showLoadError();
                     }
-                    repository = loaded;
-                    loading.setVisibility(View.GONE);
-                    queueSearch(0L);
                 });
-            } catch (IOException error) {
+            } catch (Throwable e) {
+                Log.e("QuranActivity", "Error loading data", e);
                 runOnUiThread(this::showLoadError);
             }
         });
@@ -119,34 +126,52 @@ public final class QuranSearchActivity extends AppCompatActivity {
         if (repository == null) {
             return;
         }
-        if (QuranRepository.normalizeForSearch(query).isEmpty()) {
-            adapter.replace(Collections.emptyList());
-            status.setText(R.string.quran_search_prompt);
-            empty.setVisibility(View.GONE);
+        try {
+            if (QuranRepository.normalizeForSearch(query).isEmpty()) {
+                adapter.replace(Collections.emptyList());
+                status.setText(R.string.quran_search_prompt);
+                empty.setVisibility(View.GONE);
+                return;
+            }
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
             return;
         }
         worker.execute(() -> {
-            QuranRepository.SearchResults results = repository.search(query, MAX_VISIBLE_RESULTS);
-            runOnUiThread(() -> showResults(query, results));
+            try {
+                QuranRepository.SearchResults results = repository.search(query, MAX_VISIBLE_RESULTS);
+                runOnUiThread(() -> showResults(query, results));
+            } catch (Throwable e) {
+                Log.e("QuranActivity", "Error loading data", e);
+                runOnUiThread(() -> {
+                    try {
+                        status.setText(R.string.quran_load_failed);
+                    } catch (Throwable ignored) {}
+                });
+            }
         });
     }
 
     private void showResults(@NonNull String query, @NonNull QuranRepository.SearchResults results) {
-        if (isFinishing() || isDestroyed() || !query.equals(input.getText().toString())) {
-            return;
-        }
-        adapter.replace(results.getItems());
-        if (results.getTotalMatches() == 0) {
-            status.setText(R.string.quran_search_no_results);
-            empty.setVisibility(View.VISIBLE);
-            return;
-        }
-        empty.setVisibility(View.GONE);
-        if (results.isTruncated()) {
-            status.setText(getString(R.string.quran_search_results_limited,
-                    results.getItems().size(), results.getTotalMatches()));
-        } else {
-            status.setText(getString(R.string.quran_search_results, results.getTotalMatches()));
+        try {
+            if (isFinishing() || isDestroyed() || !query.equals(input.getText().toString())) {
+                return;
+            }
+            adapter.replace(results.getItems());
+            if (results.getTotalMatches() == 0) {
+                status.setText(R.string.quran_search_no_results);
+                empty.setVisibility(View.VISIBLE);
+                return;
+            }
+            empty.setVisibility(View.GONE);
+            if (results.isTruncated()) {
+                status.setText(getString(R.string.quran_search_results_limited,
+                        results.getItems().size(), results.getTotalMatches()));
+            } else {
+                status.setText(getString(R.string.quran_search_results, results.getTotalMatches()));
+            }
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
         }
     }
 
@@ -155,13 +180,17 @@ public final class QuranSearchActivity extends AppCompatActivity {
     }
 
     private void showLoadError() {
-        if (isFinishing() || isDestroyed()) {
-            return;
+        try {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            loading.setVisibility(View.GONE);
+            empty.setText(R.string.quran_load_failed);
+            empty.setVisibility(View.VISIBLE);
+            status.setText(R.string.quran_load_failed);
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
         }
-        loading.setVisibility(View.GONE);
-        empty.setText(R.string.quran_load_failed);
-        empty.setVisibility(View.VISIBLE);
-        status.setText(R.string.quran_load_failed);
     }
 
     @Override

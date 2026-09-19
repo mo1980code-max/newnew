@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.NumberPicker;
@@ -30,7 +31,6 @@ import org.Allah_Clock_Live_Wallpaper.utils.QuranTheme;
 import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -153,24 +153,33 @@ public final class QuranReaderActivity extends AppCompatActivity {
         loader.execute(() -> {
             try {
                 final QuranRepository loaded = QuranRepository.get(getApplicationContext());
-                runOnUiThread(() -> showRepository(loaded));
-            } catch (IOException error) {
+                runOnUiThread(() -> {
+                    try {
+                        showRepository(loaded);
+                    } catch (Throwable e) {
+                        Log.e("QuranActivity", "Error loading data", e);
+                        showLoadError();
+                    }
+                });
+            } catch (Throwable e) {
+                Log.e("QuranActivity", "Error loading data", e);
                 runOnUiThread(this::showLoadError);
             }
         });
     }
 
     private void showRepository(@NonNull QuranRepository loaded) {
-        if (isFinishing() || isDestroyed()) {
-            return;
-        }
-        this.repository = loaded;
-        QuranBookmark start = resolveStartPosition();
-        QuranSurah surah = loaded.getSurah(start.getSurahNumber());
-        if (surah == null) {
-            showLoadError();
-            return;
-        }
+        try {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            this.repository = loaded;
+            QuranBookmark start = resolveStartPosition();
+            QuranSurah surah = loaded.getSurah(start.getSurahNumber());
+            if (surah == null) {
+                showLoadError();
+                return;
+            }
         this.surahNumber = surah.getNumber();
         boolean arabicUi = LocaleHelper.isArabic(this);
         this.title.setText(getString(R.string.quran_surah_title, surah.getNumber(),
@@ -198,12 +207,16 @@ public final class QuranReaderActivity extends AppCompatActivity {
         this.list.setAdapter(this.adapter);
         this.list.scrollToPosition(Math.min(this.initialRow, rows.size() - 1));
 
-        this.loading.setVisibility(View.GONE);
-        this.error.setVisibility(View.GONE);
-        this.list.setVisibility(View.VISIBLE);
+            this.loading.setVisibility(View.GONE);
+            this.error.setVisibility(View.GONE);
+            this.list.setVisibility(View.VISIBLE);
 
-        this.store.saveLastReading(start.getSurahNumber(), start.getAyahNumber());
-        updateFooterForTopAyah();
+            this.store.saveLastReading(start.getSurahNumber(), start.getAyahNumber());
+            updateFooterForTopAyah();
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
+            showLoadError();
+        }
     }
 
     // ══════════════════════════ header, pill and position ══════════════════════════
@@ -386,12 +399,16 @@ public final class QuranReaderActivity extends AppCompatActivity {
     }
 
     private void showLoadError() {
-        if (isFinishing() || isDestroyed()) {
-            return;
+        try {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            this.loading.setVisibility(View.GONE);
+            this.list.setVisibility(View.GONE);
+            this.error.setVisibility(View.VISIBLE);
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
         }
-        this.loading.setVisibility(View.GONE);
-        this.list.setVisibility(View.GONE);
-        this.error.setVisibility(View.VISIBLE);
     }
 
     @Override

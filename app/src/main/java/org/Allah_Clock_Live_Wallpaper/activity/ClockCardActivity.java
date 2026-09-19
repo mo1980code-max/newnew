@@ -84,6 +84,9 @@ public class ClockCardActivity extends AppCompatActivity {
                 tinyDB.putInt("clockType", 0);
                 tinyDB.putBoolean("isImage", false);
                 tinyDB.putBoolean("isCustomBg", false);
+                tinyDB.putString("ImageString", "");
+                tinyDB.putString("isWallpaper", "");
+                tinyDB.putInt("customBg", 0);
                 tinyDB.putInt("bgColor", Color.parseColor(clocks.getBgColor()));
                 startActivity(new Intent(ClockCardActivity.this, EditorActivity.class));
             }
@@ -102,6 +105,9 @@ public class ClockCardActivity extends AppCompatActivity {
                 tinyDB.putInt("clockType", 2);
                 tinyDB.putBoolean("isImage", false);
                 tinyDB.putBoolean("isCustomBg", false);
+                tinyDB.putString("ImageString", "");
+                tinyDB.putString("isWallpaper", "");
+                tinyDB.putInt("customBg", 0);
                 tinyDB.putInt("bgColor", Color.parseColor(textClocks.getBgColor()));
                 startActivity(new Intent(ClockCardActivity.this, EditorActivity.class));
             }
@@ -119,6 +125,8 @@ public class ClockCardActivity extends AppCompatActivity {
                 tinyDB.putInt("customBg", smartClocks.getBgColor());
                 tinyDB.putBoolean("isImage", false);
                 tinyDB.putBoolean("isCustomBg", true);
+                tinyDB.putString("ImageString", "");
+                tinyDB.putString("isWallpaper", "");
                 tinyDB.putInt("textClockPosition", i);
                 tinyDB.putInt("clockType", 1);
                 startActivity(new Intent(ClockCardActivity.this, EditorActivity.class));
