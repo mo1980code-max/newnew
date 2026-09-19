@@ -43,7 +43,8 @@ python3 tools/build_package.py     # 404 ملفات — يجب أن تطابق �
 ## الفحص قبل أي Pull Request
 
 ```bash
-python3 tools/verify_resources.py                  # الموارد والنصوص وبيانات القرآن
+python3 tools/verify_resources.py                  # الموارد والنصوص وبيانات القرآن + شكل Gson
+python3 tools/verify_resources.py --self-test      # تأكيد أن مدقق شكل Gson يمسك الخطأ فعلًا
 python3 tools/verify_java_symbols.py               # رموز جافا: أصناف، أعضاء، Manifest، تواقيع SDK
 python3 tools/verify_java_symbols.py --self-test   # تأكيد أن المدقق يمسك الأخطاء فعلًا
 node tools/preview/smoke.js                        # منطق الواجهة (48 فحصًا)

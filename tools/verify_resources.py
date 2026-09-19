@@ -31,7 +31,14 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 
+if '--self-test' in sys.argv:
+    # imported lazily below so the module stays importable for the ordinary run
+    pass
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+if '--root' in sys.argv:
+    # used by --self-test: verify a throwaway copy of the tree
+    ROOT = os.path.abspath(sys.argv[sys.argv.index('--root') + 1])
 MAIN = os.path.join(ROOT, 'app', 'src', 'main')
 RES = os.path.join(MAIN, 'res')
 JAVA = os.path.join(MAIN, 'java')
@@ -420,6 +427,145 @@ try:
 except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
     err('could not verify Quran reader data: %s' % exc)
 
+
+# ══════════════ the Gson models must match the JSON they are fed ══════════════
+# Gson binds by field name and *fails the whole parse* when a JSON value does not fit the
+# declared Java type. That is not hypothetical here: `sajda` is `false` for 6221 ayahs and an
+# object for the 15 sajda ayahs, so `boolean sajda` parsed 205 ayahs of surah 7 and then died
+# with "Expected a boolean but was BEGIN_OBJECT at $.chapters[6].verses[205].sajda", which the
+# user saw as "تعذّر فتح نص القرآن". Nothing else in this script compares the two sides,
+# so the check walks every bound object and every key it carries.
+QURAN_REPO = os.path.join(JAVA, 'org', 'Allah_Clock_Live_Wallpaper', 'utils',
+                          'QuranRepository.java')
+MODEL_CLASS = re.compile(r'(?:private\s+)?static\s+final\s+class\s+(\w+)[^{]*\{(.*?)\n    \}',
+                         re.S)
+MODEL_FIELD = re.compile(r'^\s*(?:private\s+)?([A-Za-z_][\w.<>]*)(?:<[^>]*>)?\s+(\w+)\s*;',
+                         re.M)
+PRIMITIVE_OK = {'boolean': ('bool',), 'Boolean': ('bool',),
+                'int': ('int',), 'long': ('int',), 'double': ('int', 'float'),
+                'Integer': ('int',), 'Long': ('int',), 'Double': ('int', 'float'),
+                'String': ('str', 'int')}
+# anything Gson can always fill, whatever the JSON holds
+ANY_SHAPE = {'JsonElement', 'Object', 'JsonObject', 'JsonPrimitive', 'JsonArray'}
+
+
+def json_kind(value):
+    if isinstance(value, bool):
+        return 'bool'          # before int: in Python bool is a subclass of int
+    if isinstance(value, int):
+        return 'int'
+    if isinstance(value, float):
+        return 'float'
+    if isinstance(value, str):
+        return 'str'
+    if isinstance(value, list):
+        return 'list'
+    if isinstance(value, dict):
+        return 'dict'
+    return 'null'
+
+
+def model_fields(source, class_name):
+    """{field: declared type} of one nested model class of QuranRepository."""
+    for name, body in MODEL_CLASS.findall(source):
+        if name != class_name:
+            continue
+        out = {}
+        for declared, field in MODEL_FIELD.findall(body):
+            out[field] = declared
+        return out
+    return None
+
+
+checked_keys = [0]
+# (class, field, declared type, JSON shape) -> [first path, how many values]
+shape_errors = {}
+
+
+def check_shape(models, class_name, value, path, depth=0):
+    """Walk one bound JSON value against its Java model; report every key that cannot bind."""
+    if depth > 4 or not isinstance(value, dict):
+        return
+    fields = models.get(class_name)
+    if fields is None:
+        return
+    for key, item in value.items():
+        if key not in fields:
+            continue                      # Gson ignores unknown keys - harmless
+        declared = fields[key].split('<')[0]
+        kind = json_kind(item)
+        checked_keys[0] += 1
+        if declared in ANY_SHAPE or kind == 'null':
+            continue
+        if kind == 'dict':
+            if declared in PRIMITIVE_OK or declared.startswith('List'):
+                shape_errors.setdefault((class_name, key, fields[key], 'object'),
+                                        ['%s.%s' % (path, key), 0])
+                shape_errors[(class_name, key, fields[key], 'object')][1] += 1
+            else:
+                check_shape(models, declared, item, '%s.%s' % (path, key), depth + 1)
+            continue
+        if kind == 'list':
+            if not declared.startswith('List'):
+                err('QuranRepository.%s.%s is declared `%s` but %s.%s is a JSON array'
+                    % (class_name, key, fields[key], path, key))
+            continue
+        allowed = PRIMITIVE_OK.get(declared)
+        if allowed is None:
+            continue                      # a nested model class: handled by the dict branch
+        if kind not in allowed:
+            shape_errors.setdefault((class_name, key, fields[key], kind),
+                                    ['%s.%s' % (path, key), 0])
+            shape_errors[(class_name, key, fields[key], kind)][1] += 1
+
+
+def check_shapes(models, class_name, values, path, limit=None):
+    for index, value in enumerate(values):
+        if limit is not None and index >= limit:
+            break
+        check_shape(models, class_name, value, '%s[%d]' % (path, index))
+
+
+try:
+    repo_source = open(QURAN_REPO, encoding='utf-8').read()
+    models = {}
+    for name, body in MODEL_CLASS.findall(repo_source):
+        models[name] = dict((field, declared)
+                            for declared, field in MODEL_FIELD.findall(body))
+    if not models:
+        err('could not read the Gson models out of QuranRepository.java')
+    else:
+        bound = 0
+        check_shape(models, 'TextFile', text, 'quran.json')
+        check_shapes(models, 'TextAyah', rows, 'quran.json.quran')
+        bound += len(rows) + 1
+        check_shape(models, 'Info', info, 'quran_info.json')
+        check_shapes(models, 'Chapter', chapters, 'quran_info.json.chapters')
+        bound += len(chapters) + 1
+        bound_verses = [verse for chapter in chapters
+                        for verse in (chapter.get('verses') or [])]
+        check_shapes(models, 'Verse', bound_verses, '$.chapters[*].verses')
+        bound += len(bound_verses)
+        check_shapes(models, 'PageRef', pages, 'quran_info.json.pages.references')
+        check_shapes(models, 'JuzRef', juzs, 'quran_info.json.juzs.references')
+        bound += len(pages) + len(juzs)
+        for ref in list(pages) + list(juzs):
+            check_shape(models, 'Ref', ref.get('start', {}), '$.start')
+            check_shape(models, 'Ref', ref.get('end', {}), '$.end')
+            bound += 2
+        for (class_name, key, declared, kind), (first, count) in sorted(shape_errors.items()):
+            err('QuranRepository.%s.%s is declared `%s` but the JSON holds %s — at %s and %d '
+                'other value(s). Gson throws on the first one and the whole reader fails to '
+                'load; declare the field JsonElement (or a model class) and reduce it in code.'
+                % (class_name, key, declared, 'a JSON ' + kind, first, count - 1))
+        print('gson models: %d classes, %d bound JSON objects, %d field/type pairs compared'
+              % (len(models), bound, checked_keys[0]))
+        if checked_keys[0] < 10000:
+            err('the Gson shape check only compared %d field/type pairs — it is not walking the '
+                'data it is supposed to walk' % checked_keys[0])
+except (OSError, UnicodeDecodeError, NameError) as exc:
+    err('could not check the Gson models against the Quran JSON: %s' % exc)
+
 # ══════════════════════════ report ══════════════════════════
 for note in notes:
     if note:
@@ -430,3 +576,35 @@ if errors:
         print(' -', e)
     sys.exit(1)
 print('\nNO ERRORS')
+
+
+def self_test():
+    """Re-declares `sajda` as a boolean in a copy of the tree and asserts it is reported."""
+    import shutil
+    import subprocess
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        shutil.copytree(MAIN, os.path.join(tmp, 'app', 'src', 'main'))
+        target = os.path.join(tmp, 'app', 'src', 'main', 'java', 'org',
+                              'Allah_Clock_Live_Wallpaper', 'utils', 'QuranRepository.java')
+        source = open(target, encoding='utf-8').read()
+        if 'JsonElement sajda;' not in source:
+            print('SELF-TEST FAILED: `JsonElement sajda;` is gone, so there is nothing to plant')
+            return 1
+        open(target, 'w', encoding='utf-8').write(
+            source.replace('JsonElement sajda;', 'boolean sajda;', 1))
+        result = subprocess.run([sys.executable, os.path.abspath(__file__), '--root', tmp],
+                                capture_output=True, text=True)
+        if result.returncode == 0:
+            print('SELF-TEST FAILED: `boolean sajda` was not reported')
+            return 1
+        if 'BEGIN_OBJECT' not in result.stdout:
+            print('SELF-TEST FAILED: the report does not explain the failure')
+            print(result.stdout[-1500:])
+            return 1
+        print('SELF-TEST PASSED: `boolean sajda` is reported as the crash it causes')
+        return 0
+
+
+if '--self-test' in sys.argv:
+    sys.exit(self_test())

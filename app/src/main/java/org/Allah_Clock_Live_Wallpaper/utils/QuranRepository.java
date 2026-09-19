@@ -7,6 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
 
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
 import org.Allah_Clock_Live_Wallpaper.model.QuranJuz;
@@ -81,6 +83,8 @@ public final class QuranRepository {
     private final Map<String, Integer> globalAyahIndexes = new HashMap<>();
     private final Map<Integer, int[]> pageRanges = new HashMap<>();
     private final List<QuranJuz> juzs = new ArrayList<>();
+    /** Ayahs whose metadata carries a sajda object; cross-checked in {@link #build}. */
+    private int sajdaCount;
 
     private QuranRepository(@NonNull Context context) throws IOException {
         try {
@@ -329,6 +333,9 @@ public final class QuranRepository {
                     throw new IOException("Quran navigation is out of range at "
                             + chapter.chapter + ":" + verseMeta.verse);
                 }
+                if (verseMeta.hasSajda()) {
+                    sajdaCount++;
+                }
                 QuranAyah ayah = new QuranAyah(chapter.chapter, verseMeta.verse,
                         QuranText.withEndGlyph(text.text, verseMeta.verse),
                         normalizeForSearch(text.text), verseMeta.page, verseMeta.juz,
@@ -341,6 +348,14 @@ public final class QuranRepository {
         if (cursor != texts.size()) {
             throw new IOException("Quran metadata and text cover different ayah counts");
         }
+        // The metadata indexes the sajda ayahs twice: once as a key inside every ayah and once as
+        // its own list. They must agree, which also proves the polymorphic key was read as
+        // intended rather than silently swallowed.
+        if (info.sajdas != null && sajdaCount != info.sajdas.count) {
+            throw new IOException("Quran metadata lists " + info.sajdas.count
+                    + " sajda ayahs but " + sajdaCount + " ayahs carry one");
+        }
+        Log.i(LOG_TAG, "metadata consistent: " + sajdaCount + " sajda ayahs");
 
         if (info.pages != null && info.pages.references != null) {
             for (PageRef ref : info.pages.references) {
@@ -671,6 +686,8 @@ public final class QuranRepository {
     private static final class Info {
         CountOnly verses;
         List<Chapter> chapters;
+        /** {@code {"count":15,"references":[…]}} — cross-checked against the per-ayah keys. */
+        CountOnly sajdas;
         CountRef<PageRef> pages;
         CountRef<JuzRef> juzs;
     }
@@ -701,7 +718,34 @@ public final class QuranRepository {
         int page;
         int ruku;
         int maqra;
-        boolean sajda;
+
+        /**
+         * <b>Polymorphic in the bundled metadata, so it must not be declared as a boolean.</b>
+         *
+         * <p>For 6221 of the 6236 ayahs the key is the boolean {@code false}; for the 15 sajda
+         * ayahs it is an object: {@code 7:206 -> {"no":1,"recommended":true,"obligatory":false}}.
+         * Declared as {@code boolean sajda}, Gson hits the first object at
+         * {@code $.chapters[6].verses[205].sajda} and throws
+         * {@code JsonSyntaxException: Expected a boolean but was BEGIN_OBJECT}, which killed the
+         * reader on the loading thread and showed "تعذّر فتح نص القرآن".
+         * {@link JsonElement} accepts every JSON shape, and {@link #hasSajda()} reduces it to the
+         * one bit the app needs.</p>
+         */
+        JsonElement sajda;
+
+        /** @return true for the 15 ayahs that carry a sajda, whatever shape the key has. */
+        boolean hasSajda() {
+            if (sajda == null || sajda.isJsonNull()) {
+                return false;
+            }
+            if (sajda.isJsonPrimitive()) {
+                JsonPrimitive primitive = sajda.getAsJsonPrimitive();
+                return primitive.isBoolean() ? primitive.getAsBoolean()
+                        : Boolean.parseBoolean(primitive.getAsString());
+            }
+            // An object here means "this ayah has a sajda" and carries its number and type.
+            return sajda.isJsonObject();
+        }
     }
 
     private static final class PageRef {

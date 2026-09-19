@@ -1396,3 +1396,119 @@ $ curl -s -o /dev/null -w '%{http_code}' https://api.adoptium.net/...         # 
 | البناء release | `app/proguard-rules.pro` — حفظ نماذج Gson المتداخلة |
 | الأدوات | `tools/verify_java_symbols.py` — الفحصان 6 و7 + اختبار ذاتي موسّع |
 | الحزمة | `Allah-Clock-Live-Wallpaper-android-studio.zip` أُعيد بناؤها |
+
+---
+
+## 25) العطل الحقيقي من Logcat الجهاز: `sajda` متعدّد الأشكال يقتل Gson (19 سبتمبر 2026)
+
+التقرير الحاسم جاء من الجهاز لا من الفحص الساكن:
+
+```
+com.google.gson.JsonSyntaxException: java.lang.IllegalStateException:
+  Expected a boolean but was BEGIN_OBJECT at line 11665 column 31
+  path $.chapters[6].verses[205].sajda
+    at …QuranRepository.readInfo(QuranRepository.java:115)
+    at …QuranRepository.<init>(QuranRepository.java:75)
+    at …QuranIndexActivity.lambda$loadRepository$6(QuranIndexActivity.java:81)
+```
+
+### السبب — مُثبت من الملف نفسه
+
+في `assets/quran_info.json` المفتاح `sajda` **ليس منطقيًا دائمًا**:
+
+| القيمة | العدد |
+|---|---|
+| `false` (منطقي) | 6221 آية |
+| `{"no":n,"recommended":b,"obligatory":b}` (كائن) | **15 آية** — وهي آيات السجدة |
+
+أول كائن يقع عند `$.chapters[6].verses[205]` = **سورة الأعراف (7) الآية 206**، والنموذج كان
+`boolean sajda;` ← Gson يقرأ 205 آية ثم يرمي `JsonSyntaxException` على خيط التحميل ←
+`FATAL EXCEPTION` ← «تعذّر فتح نص القرآن».
+
+فحصتُ **كل** حقول كل البُنى في الملفين (لا هذا الحقل وحده) حتى لا نُصلح عطلًا ونصطدم بالتالي:
+
+```
+verses  n=6236  juz/line/manzil/maqra/page/ruku/verse: int في 6236 · sajda: bool 6221 + dict 15
+chapters/pages/juzs/rukus/manzils/maqras/start/end + quran.json: نوع واحد في كل حقل
+POLYMORPHIC FIELDS: [('verses', 'sajda')]      ← الوحيد
+```
+
+### الإصلاح
+
+```java
+private static final class Verse {
+    int verse, line, juz, manzil, page, ruku, maqra;
+    JsonElement sajda;                 // يقبل أي شكل JSON
+
+    boolean hasSajda() {
+        if (sajda == null || sajda.isJsonNull()) return false;
+        if (sajda.isJsonPrimitive()) {
+            JsonPrimitive p = sajda.getAsJsonPrimitive();
+            return p.isBoolean() ? p.getAsBoolean() : Boolean.parseBoolean(p.getAsString());
+        }
+        return sajda.isJsonObject();   // كائن = هذه آية سجدة
+    }
+}
+```
+
+* أُضيف `CountOnly sajdas` إلى `Info`، و`build()` يعدّ آيات السجدة ويقارنها بفهرس الميتاداتا
+  (`sajdaCount != info.sajdas.count` ⟵ `IOException`) — فلا رقم سحري 15 في الكود، وأي تغيير
+  مستقبلي في المصدر يُكتشف فورًا.
+* أُعيد تشغيل منطق `hasSajda()` حرفيًا على البيانات الحقيقية: **15 آية**، مطابقة لـ`count`،
+  وهي `7:206 13:15 16:50 17:109 19:58 22:18 22:77 25:60 27:26 32:15 38:24 41:38 53:62 84:21 96:19`.
+* وبقي إصلاح الجلسة السابقة نافذ المفعول: `parse()` يلتقط `JsonSyntaxException` (وهو
+  `RuntimeException`) ويحوّله إلى `IOException` — فحتى لو تغيّر شكل بيانات مستقبلًا، النتيجة
+  رسالة خطأ لا `FATAL EXCEPTION`.
+
+### الفحص الجديد الذي كان سيمسك هذا قبل الجهاز
+
+`tools/verify_resources.py` صار يقارن **نموذج Gson بالـJSON الذي يُغذّى به فعليًا**: يقرأ أصناف
+`QuranRepository` المتداخلة، ويمشي كل كائن مرتبط، ويقارن نوع كل مفتاح JSON بالنوع المُعلَن:
+
+```
+gson models: 11 classes, 14490 bound JSON objects, 76266 field/type pairs compared
+```
+
+وله اختبار ذاتي (`--self-test`) يعيد `JsonElement sajda;` إلى `boolean sajda;` في نسخة مؤقتة
+ويشترط أن يُبلَّغ الخطأ:
+
+```
+python3 tools/verify_resources.py --self-test
+  SELF-TEST PASSED: `boolean sajda` is reported as the crash it causes
+```
+
+الرسالة عند الزرع:
+```
+QuranRepository.Verse.sajda is declared `boolean` but the JSON holds a JSON object — at
+$.chapters[*].verses[1159].sajda and 14 other value(s). Gson throws on the first one and the
+whole reader fails to load; declare the field JsonElement (or a model class) …
+```
+
+> **ما كشفه الاختبار الذاتي عن فحصي نفسه**: النسخة الأولى من الفحص كانت تمشي `verse_meta`
+> وهي `dict` من الـtuples لا كائنات JSON، أي أنها **لم تفحص شيئًا** ومرّت بلا خطأ. الاختبار
+> الذاتي هو الذي أظهر ذلك؛ فصار الفحص يمشي `chapters[*].verses` الحقيقية ويعدّ أزواج
+> النوع/الحقل المقارنة، ويرفض النتيجة إن قلّت عن 10000.
+
+### شاشات الخلفيات (طلب الفحص الخامس)
+
+`WallpaperCategoryActivity` و`WallpaperActivity` سليمتان ضدّ `null`: `getCategories()` قائمة
+ثابتة غير قابلة للتغيير ولا تُرجع `null` أبدًا، و`WallpaperCategory` يستبدل `items` الفارغة
+بقائمة فارغة، والفهرس يُفحص قبل `startActivity`، و`WallpaperActivity` تنهي نفسها إن كانت
+الفئة `null`، و`viewOf()` ترتدّ إلى الـ`RecyclerView` إن لم تكن الخلية مرسومة، و`onResume`
+يتحقّق من المحوّل قبل `notifyDataSetChanged`. عطل الخلفيات الحقيقي كان في مسار صورة الخلفية
+الحية (§24) لا في هاتين الشاشتين.
+
+### حدود الفحص
+
+لا JDK في هذه البيئة (ومستودعات Maven وAdoptium محجوبة)، فلم يُشغَّل `javac` ولا R8. ما فُحص:
+المدقّان + اختباراهما الذاتيان + `smoke.js` + `javalang` (الملف المعدَّل يُحلَّل ويحوي
+الأصناف الأحد عشر) + إعادة تشغيل منطق `hasSajda()` على البيانات الفعلية. الترجمة الحقيقية:
+`./gradlew assembleDebug`.
+
+### الملفات
+
+| الملف | التعديل |
+|---|---|
+| `utils/QuranRepository.java` | `JsonElement sajda` + `hasSajda()` + `Info.sajdas` + عدّ ومطابقة آيات السجدة |
+| `tools/verify_resources.py` | فحص شكل Gson مقابل JSON (76266 مقارنة) + `--root` + `--self-test` |
+| `Allah-Clock-Live-Wallpaper-android-studio.zip` | أُعيد بناؤها |
