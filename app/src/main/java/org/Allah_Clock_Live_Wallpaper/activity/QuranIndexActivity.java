@@ -26,6 +26,7 @@ import org.Allah_Clock_Live_Wallpaper.utils.LocaleHelper;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranRepository;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranStore;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
+import org.Allah_Clock_Live_Wallpaper.utils.UiMotion;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -65,6 +66,13 @@ public final class QuranIndexActivity extends AppCompatActivity {
                 QuranBookmarksActivity.class)));
         findViewById(R.id.quranIndexSource).setOnClickListener(view -> showTextSource());
         findViewById(R.id.quranMushafCard).setOnClickListener(view -> openMushaf());
+        // A failed load used to be a dead end. Tapping the message puts the spinner back and
+        // runs the load again, so a transient failure does not need a restart of the app.
+        UiMotion.pressable(this.error);
+        this.error.setOnClickListener(view -> {
+            UiMotion.tick(view);
+            loadRepository();
+        });
 
         this.surahList.setLayoutManager(new LinearLayoutManager(this));
         loadRepository();
@@ -77,22 +85,45 @@ public final class QuranIndexActivity extends AppCompatActivity {
     }
 
     private void loadRepository() {
-        loader.execute(() -> {
-            try {
-                final QuranRepository loaded = QuranRepository.get(getApplicationContext());
-                runOnUiThread(() -> {
-                    try {
-                        showRepository(loaded);
-                    } catch (Throwable e) {
-                        Log.e("QuranActivity", "Error loading data", e);
-                        showLoadError();
-                    }
-                });
-            } catch (Throwable e) {
-                Log.e("QuranActivity", "Error loading data", e);
-                runOnUiThread(this::showLoadError);
+        showLoading();
+        try {
+            loader.execute(() -> {
+                try {
+                    final QuranRepository loaded = QuranRepository.get(getApplicationContext());
+                    runOnUiThread(() -> {
+                        try {
+                            showRepository(loaded);
+                        } catch (Throwable e) {
+                            Log.e("QuranActivity", "Error loading data", e);
+                            showLoadError();
+                        }
+                    });
+                } catch (Throwable e) {
+                    Log.e("QuranActivity", "Error loading data", e);
+                    runOnUiThread(this::showLoadError);
+                }
+            });
+        } catch (Throwable e) {
+            // The pool is shut down in onDestroy; a retry that lands after that must fail
+            // quietly instead of throwing RejectedExecutionException out of the click handler.
+            Log.e("QuranActivity", "Error loading data", e);
+            showLoadError();
+        }
+    }
+
+    /** Spinner on, everything else off: the state both the first load and a retry start from. */
+    private void showLoading() {
+        try {
+            if (isFinishing() || isDestroyed()) {
+                return;
             }
-        });
+            this.loading.setVisibility(View.VISIBLE);
+            this.surahList.setVisibility(View.GONE);
+            this.continueCard.setVisibility(View.GONE);
+            this.error.setVisibility(View.GONE);
+        } catch (Throwable e) {
+            Log.e("QuranActivity", "Error loading data", e);
+        }
     }
 
     private void showRepository(@NonNull QuranRepository loaded) {
