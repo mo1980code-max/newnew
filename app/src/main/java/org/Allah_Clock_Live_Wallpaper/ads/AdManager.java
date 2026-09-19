@@ -283,15 +283,21 @@ public final class AdManager {
     public static void showRewarded(@NonNull Activity activity,
                                     @NonNull String loadingMessage,
                                     @NonNull RewardedCallback callback) {
-        if (!canRequestAds() || activity.isFinishing() || activity.isDestroyed()) {
-            callback.onRewardCancelled();
+        final AtomicBoolean rewarded = new AtomicBoolean(false);
+        final AtomicBoolean shown = new AtomicBoolean(false);
+        final AtomicBoolean settled = new AtomicBoolean(false);
+        final boolean adsUnavailable = !canRequestAds();
+
+        if (adsUnavailable || activity.isFinishing() || activity.isDestroyed()) {
+            // "No consent yet / SDK not ready" is the same dead end as "no fill": the user asked
+            // to unlock something and there is no video to watch. Routing it through settle()
+            // lets UNLOCK_WHEN_REWARDED_UNAVAILABLE decide, instead of cancelling every premium
+            // background for as long as ads cannot be requested.
+            settle(settled, rewarded, shown, adsUnavailable, callback);
             return;
         }
 
         final Dialog loading = UiCompat.showLoading(activity, loadingMessage);
-        final AtomicBoolean rewarded = new AtomicBoolean(false);
-        final AtomicBoolean shown = new AtomicBoolean(false);
-        final AtomicBoolean settled = new AtomicBoolean(false);
 
         RewardedAd.load(activity.getApplicationContext(), AdConfig.REWARDED_UNIT_ID,
                 new AdRequest.Builder().build(), new RewardedAdLoadCallback() {
@@ -299,21 +305,21 @@ public final class AdManager {
                     public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
                         UiCompat.dismissSafely(loading);
                         if (activity.isFinishing() || activity.isDestroyed()) {
-                            settle(settled, rewarded, shown, callback);
+                            settle(settled, rewarded, shown, !shown.get(), callback);
                             return;
                         }
                         rewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                             @Override
                             public void onAdDismissedFullScreenContent() {
                 FULL_SCREEN_ACTIVE.set(false);
-                                settle(settled, rewarded, shown, callback);
+                                settle(settled, rewarded, shown, !shown.get(), callback);
                             }
 
                             @Override
                             public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
                 FULL_SCREEN_ACTIVE.set(false);
                                 Log.w(TAG, "rewarded show failed: " + adError.getMessage());
-                                settle(settled, rewarded, shown, callback);
+                                settle(settled, rewarded, shown, !shown.get(), callback);
                             }
 
                             @Override
@@ -329,7 +335,7 @@ public final class AdManager {
                         // later app-open ad) and the caller would never get its callback.
                         FULL_SCREEN_ACTIVE.set(false);
                         Log.w(TAG, "rewarded show threw", t);
-                        settle(settled, rewarded, shown, callback);
+                        settle(settled, rewarded, shown, !shown.get(), callback);
                     }
                     }
 
@@ -337,23 +343,28 @@ public final class AdManager {
                     public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
                         Log.w(TAG, "rewarded load failed: " + loadAdError.getMessage());
                         UiCompat.dismissSafely(loading);
-                        settle(settled, rewarded, shown, callback);
+                        settle(settled, rewarded, shown, !shown.get(), callback);
                     }
                 });
     }
 
     /**
      * Grants the reward when the video was watched to the end. When the ad never made it
-     * on screen (no fill, no network …) the fail-open switch in {@link AdConfig} decides
-     * whether the user still gets the unlock instead of being trapped by a broken ad.
-     * A user who closed a playing video early never gets it for free.
+     * on screen (no fill, no network, consent still missing …) the fail-open switch in
+     * {@link AdConfig} decides whether the user still gets the unlock instead of being
+     * trapped by a broken ad. A user who closed a playing video early never gets it for free.
+     *
+     * @param unavailable true when no ad could be shown at all — either because the request
+     *                    never produced one ({@code !shown}) or because ads may not be
+     *                    requested in the first place ({@code !canRequestAds()}).
      */
     private static void settle(AtomicBoolean settled, AtomicBoolean rewarded,
-                               AtomicBoolean shown, RewardedCallback callback) {
+                               AtomicBoolean shown, boolean unavailable,
+                               RewardedCallback callback) {
         if (!settled.compareAndSet(false, true)) {
             return;
         }
-        if (rewarded.get() || (!shown.get() && AdConfig.UNLOCK_WHEN_REWARDED_UNAVAILABLE)) {
+        if (rewarded.get() || (unavailable && AdConfig.UNLOCK_WHEN_REWARDED_UNAVAILABLE)) {
             callback.onRewardEarned();
         } else {
             callback.onRewardCancelled();

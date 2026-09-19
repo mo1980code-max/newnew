@@ -2,7 +2,6 @@ package org.Allah_Clock_Live_Wallpaper.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -75,7 +74,11 @@ public class WallpaperActivity extends AppCompatActivity {
                     return;
                 }
                 final WallpaperItem item = images.get(i);
-                PremiumBackgroundHelper.onBackgroundClick(viewOf(i), item.getDrawableRes(),
+                // The grid itself, not the cell: the helper only needs a view attached to this
+                // Activity. Looking the cell up by position mapped the inner list index onto the
+                // RecyclerView's own position space, which the injected native ad row shifts by
+                // one, and returned null whenever the cell was off screen.
+                PremiumBackgroundHelper.onBackgroundClick(recyclerViewCategory, item.getDrawableRes(),
                         () -> openWallpaper(item), () -> adapter.notifyDataSetChanged());
             }
         });
@@ -100,13 +103,6 @@ public class WallpaperActivity extends AppCompatActivity {
         Intent intent = new Intent(WallpaperActivity.this, SetWallpaperActivity.class);
         intent.putExtra(SetWallpaperActivity.EXTRA_WALLPAPER_RES, item.getDrawableRes());
         startActivity(intent);
-    }
-
-    /** The view of one grid position, so the rewarded helper can find its host Activity. */
-    private View viewOf(int position) {
-        View cell = this.recyclerViewCategory.getLayoutManager() == null ? null
-                : this.recyclerViewCategory.getLayoutManager().findViewByPosition(position);
-        return cell == null ? this.recyclerViewCategory : cell;
     }
 
     @Override
