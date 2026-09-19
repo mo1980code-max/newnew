@@ -113,6 +113,62 @@
     <color name="quranNightGold">#D9B36A</color>
     <color name="quranNightIconBar">#0D0D0C</color>
 
+    <!--
+      ── Three more reading washes ──────────────────────────────────────────
+      Every wash is a complete palette of the same ten roles, so switching one repaints the
+      whole screen (page, header, chips, ayah markers, prostration markers) in place.
+      Parchment and olive are light washes; emerald and midnight are the two deep ones beside
+      night. Names keep the roles the code uses (green/greenDark/softGreen) even where the wash
+      itself is sepia or blue: greenDark is always the chip's ink on its softGreen chip.
+    -->
+    <!-- رَقّ: warm sepia parchment. -->
+    <color name="quranParchmentPaper">#F6EBD3</color>
+    <color name="quranParchmentSurface">#FCF5E6</color>
+    <color name="quranParchmentInk">#3A2E1F</color>
+    <color name="quranParchmentBody">#4E4130</color>
+    <color name="quranParchmentMuted">#7C6A52</color>
+    <color name="quranParchmentLine">#E4D5B6</color>
+    <color name="quranParchmentGreen">#7A5B25</color>
+    <color name="quranParchmentGreenDark">#4A3614</color>
+    <color name="quranParchmentSoftGreen">#EFE0C1</color>
+    <color name="quranParchmentGold">#A9762A</color>
+
+    <!-- زيتوني: soft olive paper. -->
+    <color name="quranOlivePaper">#EFF1E3</color>
+    <color name="quranOliveSurface">#F9FAF1</color>
+    <color name="quranOliveInk">#28301F</color>
+    <color name="quranOliveBody">#454F39</color>
+    <color name="quranOliveMuted">#6E785D</color>
+    <color name="quranOliveLine">#DBE0C7</color>
+    <color name="quranOliveGreen">#4E6A39</color>
+    <color name="quranOliveGreenDark">#2E4421</color>
+    <color name="quranOliveSoftGreen">#E5EBD6</color>
+    <color name="quranOliveGold">#A2892C</color>
+
+    <!-- أخضر: the deep green of a printed Mushaf. -->
+    <color name="quranEmeraldPaper">#0E3B2C</color>
+    <color name="quranEmeraldSurface">#164936</color>
+    <color name="quranEmeraldInk">#F3EBD6</color>
+    <color name="quranEmeraldBody">#DCE7D8</color>
+    <color name="quranEmeraldMuted">#A5C0AD</color>
+    <color name="quranEmeraldLine">#245C46</color>
+    <color name="quranEmeraldGreen">#9FD2B3</color>
+    <color name="quranEmeraldGreenDark">#0F3E2D</color>
+    <color name="quranEmeraldSoftGreen">#CFE7D8</color>
+    <color name="quranEmeraldGold">#D8B15E</color>
+
+    <!-- أزرق: deep midnight blue. -->
+    <color name="quranMidnightPaper">#0B1424</color>
+    <color name="quranMidnightSurface">#111E33</color>
+    <color name="quranMidnightInk">#DDE7F7</color>
+    <color name="quranMidnightBody">#C4D2E8</color>
+    <color name="quranMidnightMuted">#7E8CA6</color>
+    <color name="quranMidnightLine">#1F2E48</color>
+    <color name="quranMidnightGreen">#93B8EA</color>
+    <color name="quranMidnightGreenDark">#12284A</color>
+    <color name="quranMidnightSoftGreen">#C8DCF8</color>
+    <color name="quranMidnightGold">#D9B671</color>
+
     <!-- ── Home tiles: the Quran and the athkar get their own gold-framed, bigger tiles
       The clock/wallpaper tiles are 108dp rasters. These two are 140dp with a double gold
       frame, so the two "reading" entries stand apart from the two "design" entries. -->

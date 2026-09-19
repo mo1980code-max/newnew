@@ -1287,3 +1287,99 @@ effectively-final) فلا يراها محلّل نحوي، وقد روجعت ي�
 
 تحديث مدقق رموز جافا `tools/verify_java_symbols.py` ليعكس التوقيع الرباعي لـ `AppOpenAd.load` واجتياز الاختبار الذاتي `--self-test`، وإعادة بناء الحزمة الجاهزة `Allah-Clock-Live-Wallpaper-android-studio.zip`.
 
+
+---
+
+## 25) قارئ القرآن: مواضع السجود الخمسة عشر + ست خلفيات قراءة (19 سبتمبر 2026)
+
+ملاحظتك: «افحص القرآن، أريده جميلًا، ومواضع السجدات والخلفيات لا تعمل».
+
+### 1) ما وُجد في الفحص
+
+| الشيء | ما كان في الشجرة قبل هذا القسم |
+|---|---|
+| مواضع السجود | `assets/quran_info.json` يحمل `sajda` لكل آية (15 موضعًا: 11 مستحبة + 4 واجبة)، وكان `QuranRepository` يقرأه **فقط ليعدّه** في التحقق عند الإقلاع. لا حقل في `QuranAyah`، ولا رسم في `QuranFlowAdapter`، ولا نصّ ولا أيقونة — فالمواضع كانت **موجودة في البيانات ومفقودة من الشاشة** |
+| خلفيات القراءة | `QuranTheme` كان لوحتين فقط (ورق/ليل) بـ`apply(Context, boolean)`، والقارئ يرسم `root.setBackgroundColor(theme.paper)` — أي **لا خلفيات أصلًا** ولا منتقٍ لها |
+| معرض خلفيات الهاتف | سليم: 24 صورة في `drawable-nodpi` و`WallpaperCatalog` يطابقها — لم يُلمس |
+
+### 2) مواضع السجود
+
+* **البيانات**: `QuranAyah` صار يحمل `sajdahNumber` (1..15 أو `NO_SAJDAH`) و`sajdahObligatory`،
+  و`QuranRepository` يقرأ `{"no":n,"recommended":b,"obligatory":b}` ويقدّم
+  `getSajdahAyahs()` و`getSajdahOnPage(page)`. تحقّق الإقلاع صار يشترط **15** لا «عددا ما».
+* **الرسم**: `SajdahMarkerSpan` يرسم **محرابًا** (قوسًا مدببًا + قاعدة + نقطة السراج) بـ`Path`
+  لا بحرف U+06E9 (۩) — فذلك الحرف غائب من معظم خطوط الأجهزة وكان سيظهر مربعًا في أهم موضع.
+  يُدرج بعد علامة رقم الآية عبر `QuranText.appendAyah(..., sajdahNumber, sajdahColor)`،
+  ويحتفظ بحدوده كاملة في مقاييس السطر كما تفعل `AyahNumberSpan`.
+* **الشاشة**: شارة ذهبية `موضع سجدة` في أسفل القارئَين تظهر **فقط** في الصفحات الـ15،
+  والنقر عليها يفتح `QuranReaderDialogs.showSajdah`: رقم السجدة، واجبة (عزيمة)/مستحبة،
+  الموضع (سورة/آية/صفحة)، نصّ الآية بعلامتها ومحرابها، وكيف تُؤدّى — وزر «الانتقال إلى الآية».
+
+### 3) خلفيات القراءة الست
+
+`QuranTheme.STYLES` = ورق · رَقّ · زيتوني · أخضر · ليل · أزرق ليلي. لكل واحدة **عشرة أدوار**
+في `values/colors.xml` (40 لونًا جديدًا) و**خلفية** `res/drawable/quran_bg_*.xml`:
+`layer-list` من تدرّج الورق + ضوء ذهبي خفيف من أعلى الصفحة + إطار مزدوج — أشكال عادية لا
+`vector` متدرّج، ليعمل على minSdk 23 كما على أندرويد 16.
+
+`apply(Context, int style)` تحلّ محلّ `apply(Context, boolean)` (التي بقيت للاختصار:
+ورق ⇄ ليل عبر `nextNightStyle()`)، و`isNightStyle()` تغطي الثلاث العميقة (أخضر/ليل/أزرق)
+فتتبعها الأيقونات كما كان. `QuranStore.getBackgroundStyle()/saveBackgroundStyle()` يحفظان
+الاختيار **ومعه مفتاح الليل القديم**، فتبقى صفحة من رقّى تطبيقه كما اختارها.
+المنتقي `QuranReaderDialogs.showBackgroundPicker` يعرض مربّعًا من خلفية كل wash نفسها،
+والتبديل يعيد الطلاء في المكان: `root.setBackground(...)` + `adapter.refreshTheme()` بلا
+إعادة بناء ولا فقدان للموضع.
+
+### 4) لمسة «أريده جميلًا»
+
+* زخرفة `ic_quran_ornament.xml` (معين ذهبي بين خطّين) تحت عنوان كل سورة، يلوّنها
+  `QuranFlowAdapter` بذهب الخلفية المختارة.
+* أيقونتان جديدتان: `ic_quran_background.xml` (منتقي الخلفية) و`ic_quran_sajdah.xml` (المحراب).
+* كل الأسطح تقرأ من `QuranTheme` نفسها، فالإطار والشارة والزخرفة تتبدّل مع الخلفية.
+
+### 5) الفحص
+
+```
+python3 tools/verify_resources.py                  # NO ERRORS · 209 نصًا en/ar · 229 drawable
+                                                   # quran data: … 15 sajdas (4 obligatory)
+python3 tools/verify_java_symbols.py               # NO ERRORS
+node tools/preview/smoke.js                        # ALL CHECKS PASSED (66 فحصًا، منها 17 جديدة)
+python3 tools/build_package.py                     # أُعيد بناؤها
+```
+
+* **مدقق الموارد** صار يفحص مواضع السجود نفسها: 15 علمًا داخل الآيات = كتلة `sajdas` =
+  الترقيم 1..15، أربعة واجبة، ولا صفحتان تحملان موضعين (وهذا ما يسمح للشارة بتسمية آية واحدة).
+  **اختُبر بالتخريب**: قلبُ 32:15 من واجبة إلى مستحبة أظهر `2 ERROR(S)`، ثم عاد `NO ERRORS`
+  بعد إرجاع الملف (والملف مُعاد بايت-ببايت: `git status` نظيف).
+* **smoke.js**: 9 فحوص للسجود (العدد، 7:206→96:19، أربعة واجبة، لا محراب في الفاتحة،
+  محراب واحد على 32:15، ظهور الشارة/اختفاؤها) و8 للخلفيات (الست، أسماؤها في اللغتين،
+  الثلاث الليلية، تدرّج مختلف لكل واحدة، إعادة الطلاء في المكان، بقاء الصفحة).
+
+**حدود الفحص**: لا JDK ولا Android SDK في هذه البيئة، فلم يُترجم الكود. ما فُحص: مدققا
+المستودع، ومحلّل جافا نحوي (`javalang`) مرّر **90/90** ملفًا ومنها الجديدان
+`SajdahMarkerSpan` و`QuranReaderDialogs` — وهذا نحوٌ لا دلالة (لا تواقيع ولا أنواع).
+الاختبارات الآلية `SajdahMarkerSpanTest` و`QuranRepositorySajdahTest` كُتبت بأسلوب اختبارات
+المستودع لكنها **تحتاج جهازًا**: `./gradlew connectedDebugAndroidTest`، وأول بناء يبقى
+`./gradlew assembleDebug`.
+
+### الملفات
+
+| المجموعة | الملفات |
+|---|---|
+| البيانات | `model/QuranAyah.java` · `utils/QuranRepository.java` |
+| الرسم | `utils/SajdahMarkerSpan.java` (جديد) · `utils/QuranText.java` · `utils/QuranParagraph.java` · `adapter/QuranFlowAdapter.java` |
+| الخلفيات | `utils/QuranTheme.java` · `utils/QuranStore.java` · `res/values/colors.xml` · `res/drawable/quran_bg_*.xml` (6 جديدة) |
+| الشاشات | `utils/QuranReaderDialogs.java` (جديد) · `activity/QuranReaderActivity.java` · `activity/QuranMushafActivity.java` · `layout/activity_quran_*.xml` · `layout/item_quran_surah_header.xml` |
+| الأيقونات | `res/drawable/ic_quran_background.xml` · `ic_quran_sajdah.xml` · `ic_quran_ornament.xml` · `bg_quran_pick_row.xml` |
+| النصوص | `values/strings.xml` + `values-ar/strings.xml` (17 نصًا في كل لغة) |
+| الفحص والمعاينة | `tools/verify_resources.py` · `tools/preview/{build_assets.py,app.js,app.css,index.html,smoke.js,README.md}` · `androidTest/…/SajdahMarkerSpanTest.java` · `QuranRepositorySajdahTest.java` |
+| التوثيق والحزمة | `README.md` · `UPGRADE_NOTES.md` · `Allah-Clock-Live-Wallpaper-android-studio.zip` |
+
+### أول ما يُجرَّب على الجهاز
+
+1. `./gradlew assembleDebug` — أولًا، فهذا القسم لم يُترجم هنا.
+2. افتح القرآن → زرّ الخلفية (أيقونة الصفحة) → جرّب **رَقّ** ثم **أزرق ليلي**: الصفحة تتبدّل
+   في مكانها وبلا فقدان للموضع، ويحفظ الاختيار بعد إغلاق القارئ.
+3. اذهب إلى الصفحة 415 (سورة السجدة) أو اضغط الشارة → علامة المحراب بجانب ۝١٥، والشارة
+   الذهبية أسفل الصفحة، والنقر عليها يشرح السجدة وينقلك إليها.
+4. تأكد أن مواضع السجود الأربعة الواجبة (32:15 · 41:38 · 53:62 · 96:19) تُعرض «واجبة (عزيمة)».

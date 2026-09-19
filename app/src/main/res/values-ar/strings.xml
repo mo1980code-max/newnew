@@ -214,6 +214,28 @@
     <string name="cd_quran_night_mode">تشغيل أو إيقاف وضع القراءة الليلية للقرآن</string>
     <string name="quran_night_enabled">تم تشغيل القراءة الليلية — ورقي ناعم على أسود خالص</string>
     <string name="quran_day_enabled">تم تشغيل القراءة النهارية — حبر على ورق</string>
+
+    <!-- ── مواضع السجود الخمسة عشر ─────────────────────────────────────── -->
+    <string name="quran_sajdah_chip">موضع سجدة</string>
+    <string name="cd_quran_sajdah">عرض سجدة التلاوة في هذه الصفحة</string>
+    <string name="quran_sajdah_title">سجدة التلاوة %1$d</string>
+    <string name="quran_sajdah_obligatory">سجدة واجبة (عزيمة)</string>
+    <string name="quran_sajdah_recommended">سجدة مستحبة</string>
+    <string name="quran_sajdah_ayah">الموضع: سورة %1$d · الآية %2$d · الصفحة %3$d</string>
+    <string name="quran_sajdah_howto">هذه إحدى آيات السجود الخمس عشرة. يسجد القارئ والسامع عندها سجدة واحدة: يكبّر للسجود ثم يسجد ويسبّح ربه الأعلى ثم يرفع، بلا ركوع ولا تسليم، وتُؤدّى على الحال التي يُقرأ عليها القرآن.</string>
+    <string name="quran_sajdah_go">الانتقال إلى الآية</string>
+    <string name="quran_sajdah_count">في المصحف %1$d موضع سجدة</string>
+
+    <!-- ── خلفيات القراءة ──────────────────────────────────────────────── -->
+    <string name="cd_quran_background">تغيير خلفية القراءة</string>
+    <string name="quran_background_title">خلفية القراءة</string>
+    <string name="quran_background_applied">تم تطبيق خلفية %1$s</string>
+    <string name="quran_bg_paper">ورق</string>
+    <string name="quran_bg_parchment">رَقّ</string>
+    <string name="quran_bg_olive">زيتوني</string>
+    <string name="quran_bg_green">أخضر</string>
+    <string name="quran_bg_night">ليل</string>
+    <string name="quran_bg_midnight">أزرق ليلي</string>
     <string name="quran_surah_header_meta">الجزء %1$d · %2$d آية</string>
     <string name="quran_mushaf_hint">مرّر عبر الصفحات الـ604. انقر أي آية لحفظها، وانقرها مرة أخرى لإزالة الحفظ.</string>
     <string name="quran_surah_header">سورة %1$s</string>

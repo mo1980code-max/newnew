@@ -193,6 +193,72 @@ setTimeout(() => {
     html('quranPages').slice(0, 90));
   vm.runInContext('toggleVerse(1, 7)', sandbox);
 
+  console.log('\nthe fifteen ayahs of prostration (مواضع السجود)');
+  check('the bundled metadata flags exactly fifteen prostration ayahs',
+    (D.quran.sajdahs || []).length === 15, String((D.quran.sajdahs || []).length));
+  const firstSajdah = D.quran.sajdahs[0], lastSajdah = D.quran.sajdahs[14];
+  check('they run from 7:206 to 96:19 in mushaf order',
+    firstSajdah.s === 7 && firstSajdah.a === 206 && lastSajdah.s === 96 && lastSajdah.a === 19,
+    JSON.stringify([firstSajdah, lastSajdah]));
+  check('four of them are obligatory and eleven recommended',
+    D.quran.sajdahs.filter((x) => x.oblig).length === 4,
+    String(D.quran.sajdahs.filter((x) => x.oblig).length));
+  check('Al-Fatiha carries none, so its pages print no mihrab',
+    html('quranPages').indexOf('sajdahMark') < 0, 'a marker was printed on Al-Fatiha');
+  // Surat as-Sajdah carries 32:15, one of the four obligatory prostrations.
+  vm.runInContext('state.sajdahSurah = true; state.page = 0; renderQuran()', sandbox);
+  const sajdahSurah = D.quranSajdahPages;
+  check('surat as-Sajdah opens in its own Madani pages',
+    sajdahSurah.surah === 32 && sajdahSurah.breaks.length >= 3,
+    JSON.stringify(sajdahSurah));
+  const pageOfAyah15 = sajdahSurah.breaks.findIndex((v, i) =>
+    (i === 0 ? 1 : sajdahSurah.breaks[i - 1] + 1) <= 15 && 15 <= v);
+  vm.runInContext('state.page = ' + pageOfAyah15 + '; renderQuran()', sandbox);
+  const sajdahHtml = html('quranPages');
+  check('32:15 prints the mihrab beside its ayah number',
+    /data-ayah="15"[\s\S]*ayahNumber[\s\S]*sajdahMark/.test(sajdahHtml),
+    'no mihrab on 32:15');
+  check('exactly one mihrab is drawn on that page',
+    (sajdahHtml.match(/class="sajdahMark"/g) || []).length === 1,
+    String((sajdahHtml.match(/class="sajdahMark"/g) || []).length));
+  check('the footer chip appears on a prostration page',
+    els.quranSajdah.classList.contains('hidden') === false
+      && els.quranSajdah.textContent === D.ar.quran_sajdah_chip,
+    JSON.stringify(els.quranSajdah.textContent));
+  vm.runInContext('state.page = 0; renderQuran()', sandbox);
+  check('the footer chip disappears on a plain page',
+    els.quranSajdah.classList.contains('hidden') === true, 'the chip stayed');
+  vm.runInContext('state.sajdahSurah = false; state.page = 0; renderQuran()', sandbox);
+
+  console.log('\nreading backgrounds (QuranTheme.STYLES)');
+  check('the reader offers the six washes QuranTheme lists',
+    D.washes.length === 6
+      && D.washes.map((w) => w.key).join(',') === 'paper,parchment,olive,green,night,midnight',
+    JSON.stringify(D.washes.map((w) => w.key)));
+  check('each wash is named by a real string in both languages',
+    D.washes.every((w) => D.ar[w.name] && D.en[w.name]),
+    JSON.stringify(D.washes.map((w) => w.name)));
+  check('the three deep washes are the ones the night flag covers',
+    vm.runInContext('D.washes.filter((w, i) => isNightWash(i)).map((w) => w.key).join(",")',
+      sandbox) === 'green,night,midnight',
+    'isNightWash disagrees with QuranTheme.isNightStyle');
+  check('every wash carries its own gradient read from quran_bg_*.xml',
+    D.washes.every((w) => /^#[0-9A-Fa-f]{6,8}$/.test(w.top) && w.top !== w.bottom),
+    JSON.stringify(D.washes.map((w) => w.top + '->' + w.bottom)));
+  check('no two washes paint the same page',
+    new Set(D.washes.map((w) => w.top + w.bottom)).size === 6, 'two washes collide');
+  vm.runInContext('setWash(1)', sandbox);
+  check('picking a wash repaints the page in place',
+    els.quranScreen.style['--quranBgTop'] === D.washes[1].top
+      && els.quranScreen.style['--quranInk'] === D.washes[1].palette.ink,
+    JSON.stringify(els.quranScreen.style['--quranBgTop']));
+  check('the wash switch keeps the reader on the same page',
+    vm.runInContext('state.page', sandbox) === 0, String(vm.runInContext('state.page', sandbox)));
+  check('the swatch row shows which wash is active',
+    /class="washSwatch on" data-wash="1"/.test(html('quranWashRow')),
+    html('quranWashRow').slice(0, 80));
+  vm.runInContext('setWash(0)', sandbox);
+
   console.log('\nnight reading (the in-reader theme)');
   check('the night palette is the app\'s own colours',
     D.night.quranNightPaper === '#121212' && D.night.quranNightInk === '#E0D6C3',

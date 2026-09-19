@@ -18,7 +18,8 @@ catch - and that a hand-edited bilingual app makes often:
   6. every findViewById(R.id.x) has a matching @+id/x in some layout;
   7. Java braces balance (a crude syntax sniff, but it catches a bad edit fast);
   8. the bundled Quran assets are byte-identical to the reviewed upstream repository (git blob
-     SHAs pinned), carry all 114 surahs / 6,236 ayahs, and their 604 Madani pages and 30 juzs
+     SHAs pinned), carry all 114 surahs / 6,236 ayahs, their 604 Madani pages and 30 juzs, and
+     the fifteen ayahs of prostration the reader prints a mihrab marker for
      cover every ayah exactly once.
 
 Exit code is non-zero when anything fails, so it can gate a commit.
@@ -414,9 +415,56 @@ try:
                 break
             last_reference = start
 
-    print('quran data: %d surahs, %d ayahs, %d Madani pages, %d juzs, upstream blobs %s… / %s…'
-          % (len(chapters), len(rows), len(pages), len(juzs), QURAN_TEXT_BLOB[:12],
-             QURAN_INFO_BLOB[:12]))
+    # ── the fifteen ayahs of prostration, which the reader prints a mihrab for ──
+    # The app reads the inline per-verse flags (QuranAyah.getSajdahNumber), so this checks the
+    # same three things QuranRepository enforces at load time: the summary block agrees with the
+    # inline flags, there are exactly fifteen, and no Madani page carries two of them - which is
+    # what lets the footer chip name one ayah per page.
+    inline_sajdahs = []
+    for chapter in chapters:
+        for verse in chapter.get('verses') or []:
+            flag = verse.get('sajda')
+            if isinstance(flag, dict):
+                inline_sajdahs.append((chapter.get('chapter'), verse.get('verse'), flag))
+            elif flag not in (False, None):
+                err('Quran sajda flag at %s:%s is neither false nor an object'
+                    % (chapter.get('chapter'), verse.get('verse')))
+    summary = info.get('sajdas') if isinstance(info, dict) else None
+    references = (summary or {}).get('references') if isinstance(summary, dict) else None
+    if not isinstance(references, list) or len(references) != 15:
+        err('Quran metadata must list the 15 ayahs of prostration, found %s'
+            % (len(references) if isinstance(references, list) else 'none'))
+        references = []
+    if len(inline_sajdahs) != 15:
+        err('Quran metadata must flag 15 prostration ayahs inline, found %d'
+            % len(inline_sajdahs))
+    if (summary or {}).get('count') != len(inline_sajdahs):
+        err('Quran sajdas summary (%s) disagrees with the inline flags (%d)'
+            % ((summary or {}).get('count'), len(inline_sajdahs)))
+    inline_positions = sorted((s_, a) for s_, a, _ in inline_sajdahs)
+    summary_positions = sorted((r.get('chapter'), r.get('verse')) for r in references)
+    if inline_positions != summary_positions:
+        err('Quran sajda summary and inline flags name different ayahs')
+    for index, (_, _, flag) in enumerate(sorted(inline_sajdahs), 1):
+        if flag.get('no') != index:
+            err('Quran sajda numbering breaks at %d' % index)
+            break
+        if 'obligatory' not in flag or 'recommended' not in flag:
+            err('Quran sajda %d must state both obligatory and recommended' % index)
+            break
+    obligatory = [f for _, _, f in inline_sajdahs if f.get('obligatory')]
+    if len(obligatory) != 4:
+        err('Four of the fifteen prostrations are obligatory, found %d' % len(obligatory))
+    sajdah_pages = [verse_meta.get((s_, a), (None,))[0] for s_, a in inline_positions]
+    if None in sajdah_pages:
+        err('A prostration ayah is missing from the Madani page metadata')
+    elif len(set(sajdah_pages)) != len(sajdah_pages):
+        err('Two ayahs of prostration share one Madani page; the footer chip assumes one')
+
+    print('quran data: %d surahs, %d ayahs, %d Madani pages, %d juzs, %d sajdas (%d obligatory), '
+          'upstream blobs %s… / %s…'
+          % (len(chapters), len(rows), len(pages), len(juzs), len(inline_sajdahs),
+             len(obligatory), QURAN_TEXT_BLOB[:12], QURAN_INFO_BLOB[:12]))
 except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
     err('could not verify Quran reader data: %s' % exc)
 

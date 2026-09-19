@@ -140,11 +140,22 @@
           <div class="meta" id="quranMeta"></div>
           <div class="hint" data-i18n="quran_mushaf_hint"></div>
         </div>
+        <!-- The six reading washes: QuranTheme.STYLES, each swatch its own quran_bg_*.xml -->
+        <div class="washBar">
+          <div class="washRow" id="quranWashRow"></div>
+          <div class="washName" id="quranWashName"></div>
+        </div>
         <div class="quranPager" id="quranPages"></div>
+        <div class="sajdahNote hidden" id="quranSajdahNote"></div>
         <div class="quranFooter">
           <button class="pageArrow" id="quranPrev">‹</button>
           <div class="pageChip"><span id="quranRange"></span><b id="quranPageChip"></b></div>
           <button class="pageArrow" id="quranNext">›</button>
+        </div>
+        <!-- The gold chip only appears on the fifteen pages carrying an ayah of prostration -->
+        <div class="sajdahBar">
+          <button class="sajdahChip hidden" id="quranSajdah"></button>
+          <button class="sajdahToggle" id="quranSajdahToggle">مواضع السجود</button>
         </div>
         <div class="quranSource" data-i18n="quran_text_source_short"></div>
       </div>
@@ -157,7 +168,11 @@
         <b>نص الآية ١:١ نفسه</b> من المورد — لا نص مكتوب يدويًا. مواضع القطع أدناه ليست
         تخمينًا: الآيات تتدفق في فقرة واحدة لكل صفحة حسب بيانات المصحف. الدائرة والرقم يحاكيان
         <code>AyahNumberSpan</code> في التطبيق.</span>
-      <code>activity_quran_reader.xml · QuranReaderActivity.java · QuranFlowAdapter.java</code>
+      <span>خلفيات القراءة الست (<code>QuranTheme.STYLES</code>) تُرسم من
+        <code>quran_bg_*.xml</code> نفسها، ومواضع السجود الخمسة عشر تُقرأ من
+        <code>quran_info.json</code>: علامة المحراب بجانب رقم الآية، والشارة الذهبية أسفل
+        الصفحة. زرّ «مواضع السجود» يفتح سورة السجدة حيث الآية ٣٢:١٥.</span>
+      <code>activity_quran_reader.xml · QuranReaderActivity.java · QuranFlowAdapter.java · SajdahMarkerSpan.java · QuranReaderDialogs.java</code>
     </figcaption>
   </figure>
 

@@ -25,6 +25,7 @@ public final class QuranStore {
     private static final String PREF_LAST_AYAH = "quranLastAyahV1";
     private static final String PREF_TEXT_SIZE = "quranTextSizeSpV1";
     private static final String PREF_NIGHT_MODE = "quranNightModeV1";
+    private static final String PREF_BACKGROUND = "quranBackgroundStyleV1";
 
     public static final int DEFAULT_TEXT_SIZE_SP = 23;
     public static final int MIN_TEXT_SIZE_SP = 18;
@@ -105,6 +106,27 @@ public final class QuranStore {
         if (textSizeSp >= MIN_TEXT_SIZE_SP && textSizeSp <= MAX_TEXT_SIZE_SP) {
             this.tinyDB.putInt(PREF_TEXT_SIZE, textSizeSp);
         }
+    }
+
+    /**
+     * The wash the reader reads in ({@code QuranTheme.STYLE_*}): paper, parchment, olive,
+     * emerald, night or midnight. An unknown saved value falls back to paper rather than to a
+     * blank page, so a preference written by an older or newer build can never hide the text.
+     */
+    public int getBackgroundStyle() {
+        return QuranTheme.normalize(
+                this.tinyDB.getInt(PREF_BACKGROUND, QuranTheme.DEFAULT_STYLE));
+    }
+
+    /**
+     * Saves the chosen wash, and with it the night flag the older releases used: the two keys
+     * describe the same setting, so a reader who upgrades keeps the dark page they had picked
+     * and the night button still toggles back to paper.
+     */
+    public void saveBackgroundStyle(int style) {
+        int normalized = QuranTheme.normalize(style);
+        this.tinyDB.putInt(PREF_BACKGROUND, normalized);
+        this.tinyDB.putBoolean(PREF_NIGHT_MODE, QuranTheme.isNightStyle(normalized));
     }
 
     /**

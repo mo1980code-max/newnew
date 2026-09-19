@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
 import org.Allah_Clock_Live_Wallpaper.model.QuranJuz;
@@ -54,6 +55,8 @@ public final class QuranRepository {
     public static final int AYAH_COUNT = 6236;
     public static final int PAGE_COUNT = 604;
     public static final int JUZ_COUNT = 30;
+    /** The ayahs of prostration the bundled metadata carries: eleven recommended, four obligatory. */
+    public static final int SAJDAH_COUNT = 15;
 
     private static final String ASSET_TEXT = "quran.json";
     private static final String ASSET_INFO = "quran_info.json";
@@ -69,6 +72,8 @@ public final class QuranRepository {
     private final Map<String, Integer> globalAyahIndexes = new HashMap<>();
     private final Map<Integer, int[]> pageRanges = new HashMap<>();
     private final List<QuranJuz> juzs = new ArrayList<>();
+    /** Every ayah of prostration, in mushaf order (7:206 first, 96:19 last). */
+    private final List<QuranAyah> sajdahAyahs = new ArrayList<>();
 
     private QuranRepository(@NonNull Context context) throws IOException {
         List<TextAyah> texts = readTexts(context);
@@ -221,22 +226,25 @@ public final class QuranRepository {
                 QuranAyah ayah = new QuranAyah(chapter.chapter, verseMeta.verse,
                         text.text,
                         normalizeForSearch(text.text), verseMeta.page, verseMeta.juz,
-                        verseMeta.line);
+                        verseMeta.line, verseMeta.sajdahNumber(), verseMeta.sajdahObligatory());
                 ayahs.add(ayah);
                 globalAyahIndexes.put(ayah.getKey(), allAyahs.size());
                 allAyahs.add(ayah);
-                if (verseMeta.hasSajda()) {
+                if (ayah.isSajdahAyah()) {
                     sajdaAyahs++;
+                    sajdahAyahs.add(ayah);
                 }
             }
         }
         if (cursor != texts.size()) {
             throw new IOException("Quran metadata and text cover different ayah counts");
         }
-        if (info.sajdas == null || info.sajdas.count != sajdaAyahs) {
-            // The inline per-verse flags and the summary sajdas block must agree, or the
-            // bundled metadata is not the reviewed upstream file.
-            throw new IOException("Quran metadata must count " + sajdaAyahs
+        if (info.sajdas == null || info.sajdas.count != sajdaAyahs
+                || sajdaAyahs != SAJDAH_COUNT) {
+            // The inline per-verse flags, the summary sajdas block and the fifteen positions a
+            // printed Mushaf marks must all agree, or the bundled metadata is not the reviewed
+            // upstream file and the reader would print the wrong prostration markers.
+            throw new IOException("Quran metadata must count " + SAJDAH_COUNT
                     + " sajda ayahs, found "
                     + (info.sajdas == null ? "none" : info.sajdas.count));
         }
@@ -382,6 +390,34 @@ public final class QuranRepository {
         for (QuranJuz juz : juzs) {
             if (juz.getPageNumber() == pageNumber) {
                 return juz;
+            }
+        }
+        return null;
+    }
+
+    // ══════════ the fifteen ayahs of prostration ══════════
+
+    /**
+     * The fifteen ayahs of prostration in mushaf order, as the bundled metadata numbers them
+     * (7:206 is the first, 96:19 the last). The list is read straight off the same companion
+     * metadata a printed Madani Mushaf prints its mihrab markers from, so the reader never
+     * carries its own list of positions.
+     */
+    @NonNull
+    public List<QuranAyah> getSajdahAyahs() {
+        return Collections.unmodifiableList(sajdahAyahs);
+    }
+
+    /**
+     * The ayah of prostration printed on one Madani page, or {@code null} when the page carries
+     * none. At most one of the fifteen falls on a page, so a page either reads plain or carries
+     * the mihrab marker in its margin — which is exactly what the reader's footer chip reports.
+     */
+    @Nullable
+    public QuranAyah getSajdahOnPage(int pageNumber) {
+        for (QuranAyah ayah : sajdahAyahs) {
+            if (ayah.getMushafPage() == pageNumber) {
+                return ayah;
             }
         }
         return null;
@@ -603,15 +639,35 @@ public final class QuranRepository {
          */
         JsonElement sajda;
 
-        /** True exactly for the ayahs the metadata flags as a prostration ayah. */
-        boolean hasSajda() {
-            if (sajda == null || sajda.isJsonNull()) {
+        /**
+         * The prostration's own number (1..15), or 0 when the ayah carries none. The metadata
+         * numbers them in mushaf order, which is the number a printed Mushaf's margin marker
+         * refers to.
+         */
+        int sajdahNumber() {
+            JsonObject value = sajdaObject();
+            if (value == null) {
+                return 0;
+            }
+            JsonElement number = value.get("no");
+            return number != null && number.isJsonPrimitive() && number.getAsInt() > 0
+                    ? number.getAsInt() : 0;
+        }
+
+        /** Whether this prostration is obligatory (عزيمة) rather than merely recommended. */
+        boolean sajdahObligatory() {
+            JsonObject value = sajdaObject();
+            if (value == null) {
                 return false;
             }
-            if (sajda.isJsonPrimitive()) {
-                return sajda.getAsBoolean();
-            }
-            return sajda.isJsonObject();
+            JsonElement obligatory = value.get("obligatory");
+            return obligatory != null && obligatory.isJsonPrimitive()
+                    && obligatory.getAsBoolean();
+        }
+
+        @Nullable
+        private JsonObject sajdaObject() {
+            return sajda != null && sajda.isJsonObject() ? sajda.getAsJsonObject() : null;
         }
     }
 

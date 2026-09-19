@@ -7,6 +7,8 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
+
 /**
  * Small, testable text helpers shared by the Quran surfaces.
  *
@@ -38,11 +40,33 @@ public final class QuranText {
      */
     public static void appendAyah(@NonNull SpannableStringBuilder out, @NonNull String rawText,
                                   int ayahNumber, float density, @ColorInt int markerColor) {
+        appendAyah(out, rawText, ayahNumber, density, markerColor, QuranAyah.NO_SAJDAH,
+                SajdahMarkerSpan.PRIMARY_GOLD);
+    }
+
+    /**
+     * Appends an intact verse, its end-of-ayah number and — for the fifteen ayahs of
+     * prostration — the mihrab marker that a printed Mushaf carries for them.
+     *
+     * <p>{@code sajdahNumber} is the prostration number of the bundled metadata, or
+     * {@link QuranAyah#NO_SAJDAH} for the other 6,221 ayahs. The marker is a second atomic
+     * replacement drawn by {@link SajdahMarkerSpan}, so it scales with the reader's text size and
+     * never depends on the device font carrying U+06E9.</p>
+     */
+    public static void appendAyah(@NonNull SpannableStringBuilder out, @NonNull String rawText,
+                                  int ayahNumber, float density, @ColorInt int markerColor,
+                                  int sajdahNumber, @ColorInt int sajdahColor) {
         out.append(rawText).append('\u00A0');
         int markerStart = out.length();
         out.append('\uFFFC');
         out.setSpan(new AyahNumberSpan(ayahNumber, density, markerColor), markerStart,
                 out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (sajdahNumber != QuranAyah.NO_SAJDAH) {
+            int sajdahStart = out.length();
+            out.append('\uFFFC');
+            out.setSpan(new SajdahMarkerSpan(density, sajdahColor), sajdahStart, out.length(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
     }
 
     @NonNull
@@ -50,6 +74,20 @@ public final class QuranText {
                                                         float density, @ColorInt int markerColor) {
         SpannableStringBuilder out = new SpannableStringBuilder();
         appendAyah(out, rawText, ayahNumber, density, markerColor);
+        return out;
+    }
+
+    /**
+     * One ayah on its own — the way the prostration dialog quotes it — with its end-of-ayah
+     * number and, for the fifteen ayahs of prostration, its mihrab marker.
+     */
+    @NonNull
+    public static SpannableStringBuilder withAyahNumber(@NonNull String rawText, int ayahNumber,
+                                                        float density, @ColorInt int markerColor,
+                                                        int sajdahNumber,
+                                                        @ColorInt int sajdahColor) {
+        SpannableStringBuilder out = new SpannableStringBuilder();
+        appendAyah(out, rawText, ayahNumber, density, markerColor, sajdahNumber, sajdahColor);
         return out;
     }
 

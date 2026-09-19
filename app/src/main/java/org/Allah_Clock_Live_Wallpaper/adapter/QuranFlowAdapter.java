@@ -11,11 +11,13 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.OneShotPreDrawListener;
+import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -107,11 +109,13 @@ public final class QuranFlowAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     static final class SurahHolder extends RecyclerView.ViewHolder {
         final TextView name;
         final TextView meta;
+        final ImageView ornament;
 
         SurahHolder(View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.quranSurahHeaderName);
             meta = itemView.findViewById(R.id.quranSurahHeaderMeta);
+            ornament = itemView.findViewById(R.id.quranSurahHeaderOrnament);
         }
     }
 
@@ -167,6 +171,9 @@ public final class QuranFlowAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             SurahHolder header = (SurahHolder) holder;
             header.name.setText(row.surah.getArabicName());
             header.name.setTextColor(theme.ink);
+            // The divider under the heading is tinted, not swapped, so a wash change repaints it.
+            ImageViewCompat.setImageTintList(header.ornament,
+                    android.content.res.ColorStateList.valueOf(theme.gold));
             header.meta.setText(header.meta.getContext().getString(R.string.quran_surah_header_meta,
                     Math.max(1, row.juz), row.surah.getAyahCount()));
             header.meta.setTextColor(theme.muted);
@@ -177,9 +184,11 @@ public final class QuranFlowAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     }
 
     private void bindParagraph(ParagraphHolder holder, Row row) {
+        // The end-of-ayah number follows the day/night marker colour; the mihrab marker of an
+        // ayah of prostration is always the wash's gold, as a Mushaf prints it.
         QuranParagraph paragraph = new QuranParagraph(row.ayahs,
                 holder.text.getResources().getDisplayMetrics().density,
-                theme.isNight() ? theme.gold : AyahNumberSpan.PRIMARY_GREEN);
+                theme.isNight() ? theme.gold : AyahNumberSpan.PRIMARY_GREEN, theme.gold);
         for (int i = 0; i < row.ayahs.size(); i++) {
             final QuranAyah ayah = row.ayahs.get(i);
             int start = paragraph.start(i);

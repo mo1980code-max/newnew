@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageButton;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,10 +26,10 @@ import org.Allah_Clock_Live_Wallpaper.model.QuranAyah;
 import org.Allah_Clock_Live_Wallpaper.model.QuranBookmark;
 import org.Allah_Clock_Live_Wallpaper.model.QuranJuz;
 import org.Allah_Clock_Live_Wallpaper.model.QuranSurah;
+import org.Allah_Clock_Live_Wallpaper.utils.QuranReaderDialogs;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranRepository;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranStore;
 import org.Allah_Clock_Live_Wallpaper.utils.QuranTheme;
-import org.Allah_Clock_Live_Wallpaper.utils.TinyDB;
 import org.Allah_Clock_Live_Wallpaper.utils.UiCompat;
 
 import java.util.ArrayList;
@@ -66,6 +67,10 @@ public final class QuranMushafActivity extends AppCompatActivity {
     private TextView surahName;
     private TextView juzChip;
     private TextView pagePill;
+    /** The gold chip that appears only while the page under the finger carries a sajdah. */
+    private TextView sajdahChip;
+    /** The ayah of prostration of that page, so tapping the chip explains the right one. */
+    private QuranAyah sajdahAyah;
 
     private int textSizeSp;
     private int pendingPage = -1;
@@ -85,8 +90,8 @@ public final class QuranMushafActivity extends AppCompatActivity {
         UiCompat.applyEdgeToEdge(this);
 
         this.store = new QuranStore(this);
-        TinyDB preferences = new TinyDB(this);
-        this.theme = new QuranTheme(this, this.store.isNightMode(preferences));
+        // The wash the reader last read in; the night flag of older releases is folded into it.
+        this.theme = new QuranTheme(this, this.store.getBackgroundStyle());
         this.textSizeSp = this.store.getTextSizeSp();
 
         this.root = findViewById(R.id.quranMushafRoot);
@@ -96,6 +101,7 @@ public final class QuranMushafActivity extends AppCompatActivity {
         this.surahName = findViewById(R.id.quranMushafSurahName);
         this.juzChip = findViewById(R.id.quranMushafJuz);
         this.pagePill = findViewById(R.id.quranMushafPagePill);
+        this.sajdahChip = findViewById(R.id.quranMushafSajdah);
 
         this.list.setLayoutManager(new LinearLayoutManager(this));
         this.list.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -114,6 +120,9 @@ public final class QuranMushafActivity extends AppCompatActivity {
 
         findViewById(R.id.quranMushafBack).setOnClickListener(view -> finish());
         findViewById(R.id.quranMushafNight).setOnClickListener(view -> toggleNightMode());
+        findViewById(R.id.quranMushafBackground)
+                .setOnClickListener(view -> showBackgroundPicker());
+        this.sajdahChip.setOnClickListener(view -> showSajdah());
         findViewById(R.id.quranMushafTextSize).setOnClickListener(view -> showTextSizePicker());
         findViewById(R.id.quranMushafBookmarks).setOnClickListener(view -> startActivity(
                 new Intent(this, QuranBookmarksActivity.class)));
@@ -226,6 +235,47 @@ public final class QuranMushafActivity extends AppCompatActivity {
         this.pagePill.setText(getString(R.string.quran_page_number, ayah.getMushafPage(),
                 QuranRepository.PAGE_COUNT));
         this.pendingPage = ayah.getMushafPage();
+        // The gold chip follows the page: it is there only on the fifteen sajdah pages.
+        this.sajdahAyah = this.repository.getSajdahOnPage(ayah.getMushafPage());
+        this.sajdahChip.setVisibility(this.sajdahAyah != null ? View.VISIBLE : View.GONE);
+    }
+
+    /** Explains the prostration of the page the reader is on, then offers to jump to its ayah. */
+    private void showSajdah() {
+        final QuranAyah ayah = this.sajdahAyah;
+        if (ayah == null || this.repository == null) {
+            return;
+        }
+        QuranReaderDialogs.showSajdah(this, this.theme, ayah,
+                this.repository.getSurah(ayah.getSurahNumber()), () -> {
+                    if (this.adapter != null) {
+                        this.adapter.scrollToAyah(this.list, ayah.getSurahNumber(),
+                                ayah.getAyahNumber());
+                    }
+                });
+    }
+
+    /** The six reading washes; the chosen one repaints the scroll in place and is remembered. */
+    private void showBackgroundPicker() {
+        QuranReaderDialogs.showBackgroundPicker(this, this.theme, this::applyBackground);
+    }
+
+    /**
+     * Paints a new wash. Nothing is rebuilt: the column reads its colours from the same
+     * {@link QuranTheme} instance, so 604 pages of scroll keep their exact place.
+     */
+    private void applyBackground(int style) {
+        if (this.theme.getStyle() == style) {
+            return;
+        }
+        this.theme.apply(this, style);
+        this.store.saveBackgroundStyle(style);
+        applyTheme();
+        if (this.adapter != null) {
+            this.adapter.refreshTheme();
+        }
+        Toast.makeText(this, getString(R.string.quran_background_applied,
+                getString(QuranTheme.nameOf(style))), Toast.LENGTH_SHORT).show();
     }
 
     /** Turns to a Madani page; out-of-range requests are ignored rather than clamped. */
@@ -268,15 +318,9 @@ public final class QuranMushafActivity extends AppCompatActivity {
 
     /** Swaps the palette in place: the column repaints without losing its position. */
     private void toggleNightMode() {
-        boolean night = !this.theme.isNight();
-        this.theme.apply(this, night);
-        this.store.saveNightMode(new TinyDB(this), night);
-        applyTheme();
-        if (this.adapter != null) {
-            this.adapter.refreshTheme();
-        }
-        Toast.makeText(this, night ? R.string.quran_night_enabled : R.string.quran_day_enabled,
-                Toast.LENGTH_SHORT).show();
+        applyBackground(this.theme.nextNightStyle());
+        Toast.makeText(this, this.theme.isNight() ? R.string.quran_night_enabled
+                : R.string.quran_day_enabled, Toast.LENGTH_SHORT).show();
     }
 
     /** Paints every surface of the screen from the active theme. */
@@ -284,9 +328,9 @@ public final class QuranMushafActivity extends AppCompatActivity {
         if (this.theme == null) {
             return;
         }
-        this.root.setBackgroundColor(this.theme.paper);
-        getWindow().setBackgroundDrawableResource(this.theme.isNight()
-                ? R.color.quranNightPaper : R.color.quranPaper);
+        // The wash paints the whole scroll: gradient, lamp light and Mushaf frame in one layer.
+        this.root.setBackground(ContextCompat.getDrawable(this, this.theme.background));
+        getWindow().setBackgroundDrawableResource(this.theme.background);
 
         GradientDrawable card = new GradientDrawable();
         card.setShape(GradientDrawable.RECTANGLE);
@@ -304,6 +348,7 @@ public final class QuranMushafActivity extends AppCompatActivity {
 
         tint(R.id.quranMushafBack, this.theme.ink);
         tint(R.id.quranMushafNight, this.theme.isNight() ? this.theme.gold : this.theme.green);
+        tint(R.id.quranMushafBackground, this.theme.green);
         tint(R.id.quranMushafTextSize, this.theme.green);
         tint(R.id.quranMushafBookmarks, this.theme.green);
         tint(R.id.quranMushafTitle, this.theme.ink);
@@ -312,6 +357,11 @@ public final class QuranMushafActivity extends AppCompatActivity {
         this.juzChip.setTextColor(this.theme.greenDark);
         ((TextView) findViewById(R.id.quranMushafHint)).setTextColor(this.theme.muted);
         this.pagePill.setTextColor(this.theme.greenDark);
+
+        // The sajdah chip carries its own gold: it is a Mushaf margin mark, not a footer label.
+        this.sajdahChip.setTextColor(this.theme.gold);
+        this.sajdahChip.setCompoundDrawableTintList(
+                android.content.res.ColorStateList.valueOf(this.theme.gold));
     }
 
     private void tint(int viewId, int colour) {

@@ -508,6 +508,46 @@ figcaption code { display: block; margin-top: 8px; font-size: 11px; color: #7f8e
 .quranSheet .basmalah { text-align: right; color: var(--quranGold); margin-bottom: 10px; }
 .verse { cursor: pointer; border-radius: 6px; }
 .verse.saved { background: rgba(201, 162, 39, 0.2); }
+/* ── reading washes (QuranTheme.STYLES) and the ayahs of prostration ────────── */
+/* The page itself is painted from the wash's own layer-list: gradient, lamp light and frame. */
+.quranPage { background:
+  linear-gradient(var(--quranBgGlow, transparent), transparent 38%),
+  linear-gradient(var(--quranBgTop, var(--quranPaper)), var(--quranBgBottom, var(--quranPaper))); }
+.quranPage .quranHeader, .quranPage .quranSheet {
+  background: color-mix(in srgb, var(--quranSurface, var(--quranPaper)) 88%, transparent);
+}
+.washBar { display: flex; align-items: center; gap: 8px; padding: 2px 16px 6px; }
+.washRow { display: flex; gap: 6px; flex: 1; }
+.washSwatch {
+  width: 34px; height: 26px; border-radius: 8px; border: 1.5px solid; cursor: pointer;
+  padding: 0; font-size: 13px; line-height: 1; opacity: .62;
+}
+.washSwatch.on { opacity: 1; box-shadow: 0 0 0 2px var(--quranGold); }
+.washName { font-size: 11px; color: var(--quranMuted); min-width: 52px; text-align: end; }
+.sajdahBar { display: flex; align-items: center; gap: 8px; padding: 6px 16px 8px; }
+.sajdahChip {
+  border: 1px solid var(--quranGold); border-radius: 10px; background: transparent;
+  color: var(--quranGold); font-family: var(--arabic); font-size: 11px; font-weight: 700;
+  padding: 5px 10px; cursor: pointer;
+}
+.sajdahToggle {
+  margin-inline-start: auto; border: 1px dashed var(--quranLine); border-radius: 10px;
+  background: transparent; color: var(--quranMuted); font-family: var(--arabic); font-size: 11px;
+  padding: 5px 10px; cursor: pointer;
+}
+.sajdahNote {
+  margin: 0 16px 6px; padding: 8px 10px; border: 1px solid var(--quranGold); border-radius: 12px;
+  font-family: var(--arabic); font-size: 11px; line-height: 1.9; color: var(--quranBody);
+  direction: rtl; text-align: right;
+}
+.sajdahNote b { color: var(--quranGold); display: block; }
+/* The mihrab of SajdahMarkerSpan, drawn as markup so no font has to carry U+06E9. */
+.sajdahMark {
+  display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
+  width: 0.9em; height: 1.25em; margin-inline: 2px 4px; color: var(--quranGold);
+}
+.sajdahMark svg { width: 100%; height: 100%; }
+
 /* Visual mock of AyahNumberSpan; the Android span does its own font-metric centering. */
 .ayahNumber {
   display: inline-flex; align-items: center; justify-content: center;

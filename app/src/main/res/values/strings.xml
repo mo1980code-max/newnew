@@ -247,6 +247,28 @@
     <string name="cd_quran_night_mode">Turn the Quran night reading theme on or off</string>
     <string name="quran_night_enabled">Night reading on — soft parchment on true black</string>
     <string name="quran_day_enabled">Day reading on — ink on paper</string>
+
+    <!-- ── The fifteen ayahs of prostration (مواضع السجود) ───────────────── -->
+    <string name="quran_sajdah_chip">Prostration</string>
+    <string name="cd_quran_sajdah">Show the prostration on this page</string>
+    <string name="quran_sajdah_title">Prostration %1$d</string>
+    <string name="quran_sajdah_obligatory">Obligatory prostration</string>
+    <string name="quran_sajdah_recommended">Recommended prostration</string>
+    <string name="quran_sajdah_ayah">Position: surah %1$d, ayah %2$d · page %3$d</string>
+    <string name="quran_sajdah_howto">One of the fifteen ayahs of prostration. The reader and the listener make a single prostration here: say the takbir, prostrate, glorify the Lord Most High, then rise. It has no bowing and no closing salutation, and it is prayed as it is read, in any state of purity.</string>
+    <string name="quran_sajdah_go">Go to the ayah</string>
+    <string name="quran_sajdah_count">%1$d ayahs of prostration in the Mushaf</string>
+
+    <!-- ── Reading backgrounds ─────────────────────────────────────────── -->
+    <string name="cd_quran_background">Change the reading background</string>
+    <string name="quran_background_title">Reading background</string>
+    <string name="quran_background_applied">%1$s background applied</string>
+    <string name="quran_bg_paper">Paper</string>
+    <string name="quran_bg_parchment">Parchment</string>
+    <string name="quran_bg_olive">Olive</string>
+    <string name="quran_bg_green">Emerald</string>
+    <string name="quran_bg_night">Night</string>
+    <string name="quran_bg_midnight">Midnight</string>
     <string name="quran_surah_header_meta">Juz %1$d · %2$d verses</string>
     <string name="quran_mushaf_hint">Scroll through all 604 pages. Tap a verse to save it, tap it again to remove the save.</string>
     <string name="quran_surah_header">Surah %1$s</string>

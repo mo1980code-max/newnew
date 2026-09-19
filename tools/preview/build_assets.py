@@ -166,6 +166,36 @@ print('quran reader: surah %d, %d flowing paragraphs, ending at ayahs %s'
       % (TARGET_SURAH, len(page_breaks), page_breaks))
 
 
+# ══════════════════ the fifteen ayahs of prostration (مواضع السجود) ══════════════════
+# Read straight off the same companion metadata the app reads: the inline per-verse flags, so the
+# mock can never show a marker the app would not draw, or miss one it would.
+sajdahs = []
+for chapter in metadata['chapters']:
+    for verse in chapter['verses']:
+        flag = verse.get('sajda')
+        if isinstance(flag, dict):
+            sajdahs.append({'no': flag['no'], 's': chapter['chapter'], 'a': verse['verse'],
+                            'oblig': bool(flag.get('obligatory')), 'page': verse['page']})
+assert len(sajdahs) == metadata['sajdas']['count'] == 15, \
+    'the metadata must flag exactly 15 sajdah ayahs, found %d' % len(sajdahs)
+data['quran']['sajdahs'] = sajdahs
+
+# The mock's second reading target: surat as-Sajdah, so the prostration marker and the footer's
+# gold chip are both visible without paging through 200 Madani pages.
+SAJDAH_SURAH = 32
+verses = next(c['verses'] for c in metadata['chapters'] if c['chapter'] == SAJDAH_SURAH)
+sajdah_breaks, sajdah_numbers = [], []
+for i, verse in enumerate(verses):
+    if i == len(verses) - 1 or verses[i + 1]['page'] != verse['page']:
+        sajdah_breaks.append(verse['verse'])
+        sajdah_numbers.append(verse['page'])
+data['quranSajdahPages'] = {'surah': SAJDAH_SURAH, 'breaks': sajdah_breaks,
+                            'numbers': sajdah_numbers}
+print('sajdah ayahs: %d (%s) · second reader target: surah %d in %d pages'
+      % (len(sajdahs), ', '.join('%d:%d' % (x['s'], x['a']) for x in sajdahs[:3]) + ' …',
+         SAJDAH_SURAH, len(sajdah_breaks)))
+
+
 # ══════════════════════════════════ qibla ══════════════════════════════════
 KAABA_LAT, KAABA_LON = 21.422487, 39.826206
 coords = re.search(r'CITY_COORDS\s*=\s*\{(.*?)\};',
@@ -334,6 +364,48 @@ for res in ('quranNightPaper', 'quranNightSurface', 'quranNightInk', 'quranNight
             'quranNightMuted', 'quranNightLine', 'quranNightGreen', 'quranNightGold'):
     data['night'][res] = colors.get(res)
 assert all(data['night'].values()), 'a night colour is missing from values/colors.xml'
+# The six reading washes: QuranTheme.STYLES in order, each one's ten palette roles read from
+# values/colors.xml and its background read out of the layer-list the app actually ships, so the
+# mock paints the reader with the same gradient, lamp light and frame as the APK.
+WASHES = [
+    (1, 'paper', ''), (2, 'parchment', 'Parchment'), (3, 'olive', 'Olive'),
+    (4, 'green', 'Emerald'), (5, 'night', 'Night'), (6, 'midnight', 'Midnight'),
+]
+washes = []
+for style, key, suffix in WASHES:
+    prefix = 'quran' + (suffix or 'Paper').replace('Paper', '')
+    if key == 'paper':
+        prefix = 'quran'
+    elif key == 'night':
+        prefix = 'quranNight'
+    elif key == 'green':
+        prefix = 'quranEmerald'
+    else:
+        prefix = 'quran' + suffix
+    palette = {}
+    for role in ('Paper', 'Surface', 'Ink', 'Body', 'Muted', 'Line', 'Green', 'GreenDark',
+                 'SoftGreen', 'Gold'):
+        value = colors.get(prefix + role)
+        assert value, 'missing colour %s for the %s wash' % (prefix + role, key)
+        palette[role[0].lower() + role[1:]] = value
+    wash_xml = os.path.join(RES, 'drawable', 'quran_bg_%s.xml' % key)
+    root = ET.parse(wash_xml).getroot()
+    gradients = root.findall('.//gradient')
+    frame = root.findall('.//stroke')
+    assert len(gradients) >= 2, 'quran_bg_%s.xml must carry the wash and the lamp light' % key
+    washes.append({
+        'style': style, 'key': key, 'name': 'quran_bg_' + key,
+        'palette': palette,
+        'top': gradients[0].get(A + 'startColor'),
+        'bottom': gradients[0].get(A + 'endColor'),
+        'glow': gradients[1].get(A + 'startColor'),
+        'frame': frame[0].get(A + 'color') if frame else None,
+    })
+assert len(washes) == 6, 'QuranTheme offers six washes'
+data['washes'] = washes
+print('reading washes: %s (palettes + backgrounds read from res/)'
+      % ', '.join(w['key'] for w in washes))
+
 data['glass'] = {k: colors.get(k) for k in (
     'glassTileTop', 'glassTileBottom', 'glassTileRim', 'glassTileGold', 'glassIconIvory',
     'homeBackdropTop', 'homeBackdropBottom')}

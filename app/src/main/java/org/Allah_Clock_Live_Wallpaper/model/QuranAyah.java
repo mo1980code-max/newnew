@@ -11,9 +11,14 @@ import androidx.annotation.NonNull;
  *
  * <p>The mushaf fields ({@code page}, {@code juz}, {@code line}) come from the official
  * companion metadata of the same repository: the 604 Madani pages, the 30 juzs and the position
- * of the ayah on its printed page.</p>
+ * of the ayah on its printed page. The same metadata flags the fifteen ayahs of prostration
+ * (مواضع السجود) and whether each is obligatory or recommended; the reader draws that flag as the
+ * mihrab marker a printed Mushaf carries in its margin.</p>
  */
 public final class QuranAyah {
+
+    /** The ayah is not one of the fifteen ayahs of prostration. */
+    public static final int NO_SAJDAH = 0;
 
     private final int surahNumber;
     private final int ayahNumber;
@@ -24,9 +29,18 @@ public final class QuranAyah {
     private final int page;
     private final int juz;
     private final int line;
+    private final int sajdahNumber;
+    private final boolean sajdahObligatory;
 
     public QuranAyah(int surahNumber, int ayahNumber, @NonNull String text,
                      @NonNull String normalizedSearchText, int page, int juz, int line) {
+        this(surahNumber, ayahNumber, text, normalizedSearchText, page, juz, line,
+                NO_SAJDAH, false);
+    }
+
+    public QuranAyah(int surahNumber, int ayahNumber, @NonNull String text,
+                     @NonNull String normalizedSearchText, int page, int juz, int line,
+                     int sajdahNumber, boolean sajdahObligatory) {
         this.surahNumber = surahNumber;
         this.ayahNumber = ayahNumber;
         this.text = text;
@@ -34,6 +48,8 @@ public final class QuranAyah {
         this.page = page;
         this.juz = juz;
         this.line = line;
+        this.sajdahNumber = sajdahNumber;
+        this.sajdahObligatory = sajdahObligatory;
     }
 
     public int getSurahNumber() {
@@ -71,6 +87,27 @@ public final class QuranAyah {
      */
     public int getLine() {
         return line;
+    }
+
+    /**
+     * The prostration number (1..15) the bundled metadata assigns to this ayah, or
+     * {@link #NO_SAJDAH} when the ayah carries no prostration.
+     */
+    public int getSajdahNumber() {
+        return sajdahNumber;
+    }
+
+    /** True exactly when this ayah is one of the fifteen ayahs of prostration. */
+    public boolean isSajdahAyah() {
+        return sajdahNumber != NO_SAJDAH;
+    }
+
+    /**
+     * Whether the prostration of this ayah is obligatory (عزيمة) rather than recommended:
+     * four of the fifteen are obligatory, the other eleven are recommended.
+     */
+    public boolean isSajdahObligatory() {
+        return sajdahObligatory;
     }
 
     /** Stable, compact key used by the local bookmark store. */

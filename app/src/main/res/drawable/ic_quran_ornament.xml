@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The ornamental divider under a surah heading: a gold diamond between two hairlines,
+  the way a printed Mushaf closes its surah band. Tinted at runtime in the wash's gold.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="16dp"
+    android:viewportWidth="96"
+    android:viewportHeight="16">
+    <path
+        android:pathData="M2,8 L38,8"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.10"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M58,8 L94,8"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.10"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M48,1.6 L54.4,8 L48,14.4 L41.6,8 z"
+        android:fillColor="#FF000000" />
+    <path
+        android:pathData="M48,4.6 L51.4,8 L48,11.4 L44.6,8 z"
+        android:fillColor="#FFFFFFFF" />
+    <path
+        android:pathData="M35.70,8.00 a1.50,1.50 0 1,0 3.00,0 a1.50,1.50 0 1,0 -3.00,0 z"
+        android:fillColor="#FF000000" />
+    <path
+        android:pathData="M57.30,8.00 a1.50,1.50 0 1,0 3.00,0 a1.50,1.50 0 1,0 -3.00,0 z"
+        android:fillColor="#FF000000" />
+</vector>

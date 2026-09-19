@@ -19,6 +19,9 @@ const state = {
   cat: 'all',
   page: 0,               // current position in the Quran reader preview
   night: false,          // the reader's own night theme, not the system one
+  wash: 0,               // index into D.washes: the reader's background (QuranTheme.STYLES)
+  sajdahSurah: false,    // false = al-Fatiha, true = surat as-Sajdah (carries ayah 32:15)
+  sajdahOpen: false,     // the prostration note under the page
   marked: {},            // "surah:ayah" -> saved, the mock's QuranStore bookmark
 };
 
@@ -131,35 +134,78 @@ const QURAN_SCREENS = ['quranScreen', 'quranNightScreen'];
 /* The reader's palette, in both themes, taken from colors.xml (and the quranNight* tokens added
    for the in-reader toggle). Setting them as CSS variables is what makes one class flip the whole
    page - sheet, ink, ornaments, footer - exactly like QuranTheme.apply() does in the app. */
-function applyQuranPalette(el, night) {
-  const C = D.colors, N = D.night;
+/* The wash itself, read from D.washes - which build_assets.py reads out of values/colors.xml and
+   out of res/drawable/quran_bg_*.xml, so the mock paints the same gradient, lamp light and frame
+   the APK draws. One CSS variable set per wash, exactly like QuranTheme.apply(). */
+function applyWash(el, wash, night) {
+  const P = wash.palette;
   const pairs = [
-    ['--quranPaper', night ? N.quranNightPaper : C.quranPaper],
-    ['--quranInk', night ? N.quranNightInk : C.quranInk],
-    ['--quranBody', night ? N.quranNightBody : C.quranBody],
-    ['--quranMuted', night ? N.quranNightMuted : C.quranMuted],
-    ['--quranLine', night ? N.quranNightLine : C.quranLine],
-    ['--quranGreen', night ? N.quranNightGreen : C.quranGreen],
-    ['--quranGold', night ? N.quranNightGold : C.quranGold],
+    ['--quranPaper', P.paper],
+    ['--quranSurface', P.surface],
+    ['--quranInk', P.ink],
+    ['--quranBody', P.body],
+    ['--quranMuted', P.muted],
+    ['--quranLine', P.line],
+    ['--quranGreen', P.green],
+    ['--quranGreenDark', P.greenDark],
+    ['--quranSoftGreen', P.softGreen],
+    ['--quranGold', P.gold],
+    ['--quranBgTop', wash.top],
+    ['--quranBgBottom', wash.bottom],
+    ['--quranBgGlow', wash.glow],
+    ['--quranBgFrame', wash.frame || wash.top],
   ];
   pairs.forEach((p) => el.style.setProperty(p[0], p[1]));
+  el.classList.toggle('night', night);
+}
+
+/* Kept for the night phone beside the reader: it always shows the night wash. */
+function applyQuranPalette(el, night) {
+  applyWash(el, washOf(night ? 'night' : washKey()), night);
+}
+
+function washKey() { return D.washes[state.wash].key; }
+function washOf(key) { return D.washes.filter((w) => w.key === key)[0]; }
+
+/* The reader's target: al-Fatiha by default, surat as-Sajdah when the sajdah demo is on, so the
+   mihrab marker and the footer chip are both visible without paging through 200 Madani pages. */
+function readerTarget() {
+  return state.sajdahSurah ? D.quranSajdahPages : D.quranPages;
+}
+
+/* The prostration flag of one ayah, straight off the metadata the app reads (QuranAyah.sajdah). */
+function sajdahOf(surah, ayah) {
+  return (D.quran.sajdahs || []).filter((x) => x.s === surah && x.a === ayah)[0] || null;
+}
+
+/* The mihrab SajdahMarkerSpan draws: an arch, a base and the lamp dot inside it. Drawn as markup
+   here for the same reason it is drawn from a Path in the app - no font has to carry U+06E9. */
+function sajdahMark() {
+  return '<span class="sajdahMark"><svg viewBox="0 0 24 24" aria-hidden="true">'
+    + '<path d="M7.2 20 L7.2 10.4 Q7.2 4.6 12 2.4 Q16.8 4.6 16.8 10.4 L16.8 20" fill="none" '
+    + 'stroke="currentColor" stroke-width="1.7"/>'
+    + '<path d="M5.4 20.6 L18.6 20.6" stroke="currentColor" stroke-width="1.7" '
+    + 'stroke-linecap="round"/>'
+    + '<circle cx="12" cy="14.2" r="1.6" fill="currentColor"/></svg></span>';
 }
 
 /* @return one entry per page: its markup plus the ayah range it carries, which is what the
    footer prints (the app's Screen carries the same two numbers). */
 function buildQuranPages() {
-  const n = D.quranPages.surah;
-  const breaks = D.quranPages.breaks;
+  const target = readerTarget();
+  const n = target.surah;
+  const breaks = target.breaks;
   const pages = [];
   let html = '', first = 1;
   ayahsOf(n).forEach((text, i) => {
     const ayah = i + 1;
     const saved = isMarked(n, ayah) ? ' saved' : '';
+    const mark = sajdahOf(n, ayah) ? sajdahMark() : '';
     html += '<span class="verse' + saved + '" data-surah="' + n + '" data-ayah="' + ayah + '">'
-      + text + '\u00A0<span class="ayahNumber">' + arabicIndic(ayah) + '</span></span> ';
+      + text + '\u00A0<span class="ayahNumber">' + arabicIndic(ayah) + '</span>' + mark + '</span> ';
     if (breaks.indexOf(ayah) >= 0) {
       pages.push({ html: html, first: first, last: ayah,
-        number: D.quranPages.numbers[pages.length] });
+        number: target.numbers[pages.length] });
       html = '';
       first = ayah + 1;
     }
@@ -181,7 +227,7 @@ function renderQuranPages() {
   });
 }
 
-function quranPageCount() { return D.quranPages.breaks.length; }
+function quranPageCount() { return readerTarget().breaks.length; }
 function quranPage() { return buildQuranPages()[state.page]; }
 
 function flipPage(delta) {
@@ -190,22 +236,43 @@ function flipPage(delta) {
   renderQuran();
 }
 
-function setNight(on) {
-  state.night = on;
+/* The three deep washes are the app's isNightStyle(): emerald, night and midnight. */
+function isNightWash(index) {
+  return ['green', 'night', 'midnight'].indexOf(D.washes[index].key) >= 0;
+}
+
+/* Paints the wash that is selected right now onto both phones. Nothing else touches the
+   palette, so a wash switch never depends on the night flag being consistent. */
+function applyWashes() {
   QURAN_SCREENS.forEach((id, i) => {
     const el = document.getElementById(id);
     if (!el) return;
-    // Only the second phone is the night-reading figure, so it stays dark whatever the toggle
-    // says; the reader's own screen follows the toggle.
-    const dark = on || i > 0;
-    el.classList.toggle('night', dark);
-    applyQuranPalette(el, dark);
+    // Only the second phone is the night-reading figure, so it stays dark whatever the reader
+    // picked; the first phone follows the wash exactly like the app's own reader.
+    const dark = state.night || i > 0;
+    applyWash(el, i > 0 ? washOf('night') : D.washes[state.wash], dark);
   });
   document.querySelectorAll('[data-icon="ic_quran_night"]').forEach((el, i) => {
-    el.classList.toggle('nightOn', on || i > 0);
+    el.classList.toggle('nightOn', state.night || i > 0);
   });
   const label = document.getElementById('quranNightState');
-  if (label) label.textContent = on ? cap('night') : cap('day');
+  if (label) label.textContent = state.night ? cap('night') : cap('day');
+}
+
+/* One place changes the wash, exactly like QuranReaderActivity.applyBackground(style): the
+   palette is swapped on the live element and the page keeps its place. */
+function setWash(index) {
+  state.wash = index;
+  state.night = isNightWash(index);
+  // A full re-render, the way the app repaints every surface from the one QuranTheme instance;
+  // renderQuran() ends in applyWashes(), so nothing here re-derives the night flag.
+  renderQuran();
+}
+
+/* The night button is a shortcut to the night wash, as QuranTheme.nextNightStyle() is. */
+function setNight(on) {
+  const target = D.washes.filter((w) => w.key === (on ? 'night' : 'paper'))[0];
+  setWash(Math.max(0, D.washes.indexOf(target)));
 }
 
 function toggleVerse(surahNumber, ayahNumber) {
@@ -215,8 +282,50 @@ function toggleVerse(surahNumber, ayahNumber) {
   return state.marked[key] === true;
 }
 
+/* The six washes as swatches, each painted with its own quran_bg_*.xml gradient, the way
+   QuranReaderDialogs lists them. Tapping one is what the app's dialog row does. */
+function renderWashRow() {
+  const row = document.getElementById('quranWashRow');
+  if (!row) return;
+  row.innerHTML = D.washes.map((w, i) => '<button class="washSwatch'
+    + (i === state.wash ? ' on' : '') + '" data-wash="' + i + '" title="' + t(w.name)
+    + '" style="background:linear-gradient(' + w.top + ',' + w.bottom + ');'
+    + 'border-color:' + (w.frame || w.top) + '"><span style="color:' + w.palette.gold
+    + '">&#10003;</span></button>').join('');
+  const label = document.getElementById('quranWashName');
+  if (label) label.textContent = t(D.washes[state.wash].name);
+}
+
+/* The footer's gold chip: present only while the open page carries one of the fifteen. */
+function renderSajdahChip() {
+  const target = readerTarget();
+  const open = quranPage();
+  const here = open ? (D.quran.sajdahs || []).filter((x) => x.s === target.surah
+    && x.a >= open.first && x.a <= open.last) : [];
+  const hit = here[0] || null;
+  const chip = document.getElementById('quranSajdah');
+  if (chip) {
+    chip.classList.toggle('hidden', !hit);
+    chip.textContent = t('quran_sajdah_chip');
+  }
+  const note = document.getElementById('quranSajdahNote');
+  if (note) {
+    const show = Boolean(hit) && state.sajdahOpen;
+    note.classList.toggle('hidden', !show);
+    if (show) {
+      const surah = surahOf(hit.s);
+      note.innerHTML = '<b>' + fmt(t('quran_sajdah_title'), hit.no) + '</b>'
+        + '<span>' + fmt(t('quran_sajdah_ayah'), hit.s, hit.a, hit.page) + ' · '
+        + (hit.oblig ? t('quran_sajdah_obligatory') : t('quran_sajdah_recommended')) + ' · '
+        + surah.arabic + '</span>'
+        + '<span>' + t('quran_sajdah_howto') + '</span>';
+    }
+  }
+}
+
 function renderQuran() {
-  const surah = surahOf(D.quranPages.surah);
+  const target = readerTarget();
+  const surah = surahOf(target.surah);
   document.getElementById('quranTitle').textContent =
     fmt(t('quran_surah_title'), surah.n, state.lang === 'ar' ? surah.arabic : surah.translit);
   const revelation = t(surah.meccan ? 'quran_meccan' : 'quran_medinan');
@@ -229,6 +338,9 @@ function renderQuran() {
   const open = quranPage();
   const range = document.getElementById('quranRange');
   if (range && open) range.textContent = fmt(t('quran_page_number'), open.number, 604);
+  renderWashRow();
+  renderSajdahChip();
+  applyWashes();
   // The chip inside the page footer and the read-out beside the demo's page stepper show the
   // same numbers; both are updated from the one place.
   const label = cap('page') + ' ' + arabicIndic(state.page + 1) + ' ' + cap('of') + ' '
@@ -243,7 +355,6 @@ function renderQuran() {
     next.disabled = state.page >= count - 1;
     next.classList.toggle('off', state.page >= count - 1);
   }
-  setNight(state.night);
 }
 
 /* ─────────── rendering ─────────── */
@@ -639,6 +750,32 @@ function wire() {
       toggleVerse(Number(verse.dataset.surah), Number(verse.dataset.ayah));
     });
   });
+  // The reading wash: the picker the app opens from ic_quran_background, as a swatch row.
+  const washRow = document.getElementById('quranWashRow');
+  if (washRow) washRow.addEventListener('click', (e) => {
+    const btn = e.target.closest ? e.target.closest('.washSwatch') : null;
+    if (!btn) return;
+    setWash(parseInt(btn.dataset.wash, 10));
+  });
+  const washBtn = document.getElementById('quranWashBtn');
+  if (washBtn) washBtn.addEventListener('click', () => {
+    // Cycling is the mock's shortcut for the dialog: paper -> parchment -> ... -> midnight.
+    setWash((state.wash + 1) % D.washes.length);
+  });
+  // The sajdah demo: surat as-Sajdah carries 32:15, one of the four obligatory prostrations.
+  const sajdahToggle = document.getElementById('quranSajdahToggle');
+  if (sajdahToggle) sajdahToggle.addEventListener('click', () => {
+    state.sajdahSurah = !state.sajdahSurah;
+    state.page = 0;
+    state.sajdahOpen = false;
+    renderQuran();
+  });
+  const sajdahChip = document.getElementById('quranSajdah');
+  if (sajdahChip) sajdahChip.addEventListener('click', () => {
+    state.sajdahOpen = !state.sajdahOpen;
+    renderQuran();
+  });
+
   document.getElementById('quranBack').addEventListener('click', () => {
     document.getElementById('ph-home').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });

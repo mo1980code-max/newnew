@@ -20,6 +20,16 @@ public final class QuranParagraph {
 
     public QuranParagraph(@NonNull List<QuranAyah> ayahs, float density,
                           @ColorInt int markerColor) {
+        this(ayahs, density, markerColor, SajdahMarkerSpan.PRIMARY_GOLD);
+    }
+
+    /**
+     * Builds one flowing fragment. The mihrab marker of an ayah of prostration is drawn in
+     * {@code sajdahColor}, the theme's gold, so it reads as a Mushaf margin mark rather than as
+     * part of the verse text.
+     */
+    public QuranParagraph(@NonNull List<QuranAyah> ayahs, float density,
+                          @ColorInt int markerColor, @ColorInt int sajdahColor) {
         if (ayahs.isEmpty()) {
             throw new IllegalArgumentException("A Quran paragraph must contain ayahs");
         }
@@ -33,7 +43,8 @@ public final class QuranParagraph {
             }
             starts[i] = text.length();
             QuranAyah ayah = ayahs.get(i);
-            QuranText.appendAyah(text, ayah.getText(), ayah.getAyahNumber(), density, markerColor);
+            QuranText.appendAyah(text, ayah.getText(), ayah.getAyahNumber(), density, markerColor,
+                    ayah.getSajdahNumber(), sajdahColor);
             ends[i] = text.length();
         }
     }

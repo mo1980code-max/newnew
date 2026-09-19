@@ -4,6 +4,7 @@
   and its juz), printed centred above the first verse of the surah, the way a Mushaf opens it.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_horizontal"
@@ -31,4 +32,16 @@
         android:gravity="center"
         android:textColor="@color/quranMuted"
         android:textSize="12sp" />
+
+    <!-- The hairline ornament a printed Mushaf closes its surah band with; QuranFlowAdapter
+         tints it in the active wash's gold, so it follows every background change. -->
+    <ImageView
+        android:id="@+id/quranSurahHeaderOrnament"
+        android:layout_width="150dp"
+        android:layout_height="25dp"
+        android:layout_marginTop="10dp"
+        android:contentDescription="@null"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_quran_ornament"
+        app:tint="@color/quranGold" />
 </LinearLayout>
