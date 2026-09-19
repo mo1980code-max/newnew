@@ -160,8 +160,11 @@ public class MainActivity extends AppCompatActivity {
         this.frameClock.setOnClickListener(view ->
                 startActivity(new Intent(MainActivity.this, ClockFuntionActivity.class)));
 
+        // The background tile is the entry point to the existing clock/background editor.
+        // Keep the editor as the single source of truth for wallpaper, typography and preview
+        // settings instead of routing the click to the now-obsolete category screen.
         this.frameWallpaper.setOnClickListener(view ->
-                startActivity(new Intent(MainActivity.this, WallpaperCategoryActivity.class)));
+                startActivity(new Intent(MainActivity.this, EditorActivity.class)));
 
         this.frameQuran.setOnClickListener(view ->
                 startActivity(new Intent(MainActivity.this, QuranIndexActivity.class)));
